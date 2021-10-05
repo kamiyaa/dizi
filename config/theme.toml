@@ -1,0 +1,42 @@
+[regular]
+fg = "white"
+
+[directory]
+fg = "light_blue"
+bold = true
+
+[link]
+fg = "cyan"
+bold = true
+
+[ext]
+
+[ext.m3u8]
+fg = "red"
+
+[ext.wav]
+fg = "magenta"
+[ext.flac]
+fg = "magenta"
+[ext.mp3]
+fg = "magenta"
+[ext.avi]
+fg = "magenta"
+[ext.m3u]
+fg = "magenta"
+[ext.mov]
+fg = "magenta"
+[ext.m4v]
+fg = "magenta"
+[ext.mp4]
+fg = "magenta"
+[ext.mkv]
+fg = "magenta"
+[ext.m4a]
+fg = "magenta"
+[ext.ts]
+fg = "magenta"
+[ext.webm]
+fg = "magenta"
+[ext.wmv]
+fg = "magenta"

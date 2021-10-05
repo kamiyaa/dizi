@@ -1,0 +1,18 @@
+[client]
+socket = "/tmp/kamiyaa/dizi-server-socket"
+
+home_dir = "~/music"
+
+[client.player]
+shuffle = false
+repeat = true
+next = true
+# on_song_change = ""
+
+[client.display]
+show_borders = true
+show_hidden = false
+
+[client.display.sort]
+reverse = false
+sort_method = "natural"

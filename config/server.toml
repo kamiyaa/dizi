@@ -1,0 +1,2 @@
+[server]
+socket = "/tmp/kamiyaa/dizi-server-socket"

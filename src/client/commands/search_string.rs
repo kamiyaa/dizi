@@ -1,0 +1,44 @@
+use dizi_commands::error::DiziResult;
+
+use crate::context::AppContext;
+use crate::fs::DirList;
+use crate::util::search::SearchPattern;
+
+use super::cursor_move;
+
+pub fn search_string_fwd(curr_list: &DirList, pattern: &str) -> Option<usize> {
+    let offset = curr_list.index? + 1;
+    let contents_len = curr_list.contents.len();
+    for i in 0..contents_len {
+        let file_name_lower = curr_list.contents[(offset + i) % contents_len]
+            .file_name()
+            .to_lowercase();
+        if file_name_lower.contains(pattern) {
+            return Some((offset + i) % contents_len);
+        }
+    }
+    None
+}
+pub fn search_string_rev(curr_list: &DirList, pattern: &str) -> Option<usize> {
+    let offset = curr_list.index?;
+    let contents_len = curr_list.contents.len();
+    for i in (0..contents_len).rev() {
+        let file_name_lower = curr_list.contents[(offset + i) % contents_len]
+            .file_name()
+            .to_lowercase();
+        if file_name_lower.contains(pattern) {
+            return Some((offset + i) % contents_len);
+        }
+    }
+    None
+}
+
+pub fn search_string(context: &mut AppContext, pattern: &str) -> DiziResult<()> {
+    let pattern = pattern.to_lowercase();
+    let index = search_string_fwd(context.curr_list_ref().unwrap(), pattern.as_str());
+    if let Some(index) = index {
+        let _ = cursor_move::cursor_move(index, context);
+    }
+    context.set_search_context(SearchPattern::String(pattern));
+    Ok(())
+}
