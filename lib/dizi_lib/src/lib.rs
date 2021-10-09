@@ -1,6 +1,6 @@
-pub mod constants;
 pub mod error;
 pub mod macros;
-pub mod player;
-pub mod server;
+pub mod request;
+pub mod response;
+pub mod song;
 pub mod traits;

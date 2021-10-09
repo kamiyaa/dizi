@@ -2,9 +2,10 @@ use std::path::PathBuf;
 
 use serde_derive::{Deserialize, Serialize};
 
-use crate::constants::*;
 use crate::macros::dizi_json;
 use crate::traits::DiziJsonCommand;
+
+use super::constants::*;
 
 dizi_json!(PlayerGet, API_PLAYER_GET);
 dizi_json!(PlayerPlay, API_PLAYER_PLAY);
@@ -17,8 +18,10 @@ dizi_json!(PlayerToggleNext, API_PLAYER_TOGGLE_NEXT);
 dizi_json!(PlayerGetVolume, API_PLAYER_GET_VOLUME);
 dizi_json!(PlayerVolumeUp, API_PLAYER_VOLUME_UP);
 dizi_json!(PlayerVolumeDown, API_PLAYER_VOLUME_DOWN);
-dizi_json!(PlayerRewind, API_PLAYER_REWIND);
 dizi_json!(PlayerFastForward, API_PLAYER_FAST_FORWARD);
+dizi_json!(PlayerRewind, API_PLAYER_REWIND);
+dizi_json!(PlayerNext, API_PLAYER_NEXT);
+dizi_json!(PlayerPrevious, API_PLAYER_PREVIOUS);
 
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
@@ -161,6 +164,20 @@ impl PlayerVolumeDown {
 }
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
+pub struct PlayerFastForward {
+    pub command: String,
+    pub amount: usize,
+}
+impl PlayerFastForward {
+    pub fn new(amount: usize) -> Self {
+        Self {
+            command: Self::path().to_string(),
+            amount,
+        }
+    }
+}
+
+#[derive(Clone, Debug, Deserialize, Serialize)]
 pub struct PlayerRewind {
     pub command: String,
     pub amount: usize,
@@ -175,15 +192,25 @@ impl PlayerRewind {
 }
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
-pub struct PlayerFastForward {
+pub struct PlayerNext {
     pub command: String,
-    pub amount: usize,
 }
-impl PlayerFastForward {
-    pub fn new(amount: usize) -> Self {
+impl PlayerNext {
+    pub fn new() -> Self {
         Self {
             command: Self::path().to_string(),
-            amount,
+        }
+    }
+}
+
+#[derive(Clone, Debug, Deserialize, Serialize)]
+pub struct PlayerPrevious {
+    pub command: String,
+}
+impl PlayerPrevious {
+    pub fn new() -> Self {
+        Self {
+            command: Self::path().to_string(),
         }
     }
 }

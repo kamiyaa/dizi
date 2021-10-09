@@ -15,6 +15,8 @@ pub enum DiziErrorKind {
     Glob,
     InvalidParameters,
 
+    SendError,
+
     DecoderError,
     NoDevice,
     UnrecognizedFormat,

@@ -16,6 +16,7 @@ pub enum AppEvent {
     Termion(Event),
     PreviewDir(io::Result<DirList>),
     Signal(i32),
+    Server(String),
 }
 
 #[derive(Debug, Clone, Copy)]

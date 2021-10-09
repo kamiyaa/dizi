@@ -1,4 +1,4 @@
-use dizi_lib::constants::*;
+use dizi_lib::request::constants::*;
 
 use super::constants::*;
 use super::{AppCommand, Command};

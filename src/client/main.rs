@@ -82,6 +82,8 @@ fn run_app(args: Args) -> DiziResult<()> {
     let keymap = AppKeyMapping::get_config(KEYMAP_FILE);
 
     if let Err(_) = UnixStream::connect(&config.client_ref().socket) {
+        println!("Server is not running");
+        println!("Starting server...");
         process::Command::new("dizi-server")
             .stdout(process::Stdio::null())
             .stderr(process::Stdio::null())

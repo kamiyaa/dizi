@@ -7,8 +7,7 @@ use std::thread;
 use rodio::{OutputStream, OutputStreamHandle, Sink};
 
 use dizi_lib::error::DiziResult;
-
-use crate::audio::Song;
+use dizi_lib::song::Song;
 
 #[derive(Clone, Debug)]
 pub enum PlayerRequest {
@@ -18,11 +17,13 @@ pub enum PlayerRequest {
     GetVolume,
     SetVolume(f32),
     GetLen,
+    GetPaused,
 }
 
 #[derive(Clone, Debug)]
 pub enum PlayerResponse {
     Ok,
+    IsPaused(bool),
     Len(usize),
     Volume(f32),
 }
@@ -98,6 +99,14 @@ impl PlayerStream {
             sink.len()
         } else {
             0
+        }
+    }
+
+    pub fn is_paused(&self) -> bool {
+        if let Some(sink) = self.sink.as_ref() {
+            sink.is_paused()
+        } else {
+            true
         }
     }
 }

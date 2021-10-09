@@ -45,6 +45,10 @@ pub fn get_input_while_composite<'a>(
     }
 }
 
+pub fn process_server_event(context: &mut AppContext, s: &str) {
+    context.message_queue_mut().push_info(s.to_string());
+}
+
 pub fn process_noninteractive(event: AppEvent, context: &mut AppContext) {
     match event {
         AppEvent::PreviewDir(Ok(dirlist)) => process_dir_preview(context, dirlist),

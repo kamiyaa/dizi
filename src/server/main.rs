@@ -1,13 +1,14 @@
 mod audio;
 mod client;
-mod command;
-mod commands;
+mod client_command;
+mod client_commands;
 mod config;
 mod context;
 mod events;
 mod server;
+mod server_command;
+mod server_commands;
 
-use std::io;
 use std::path::PathBuf;
 
 use lazy_static::lazy_static;

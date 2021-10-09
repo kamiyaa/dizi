@@ -2,7 +2,7 @@ use std::io::Write;
 use std::path;
 
 use dizi_lib::error::DiziResult;
-use dizi_lib::player::*;
+use dizi_lib::request::player::*;
 
 use crate::context::AppContext;
 

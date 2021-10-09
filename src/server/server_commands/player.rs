@@ -2,6 +2,7 @@ use std::path::Path;
 
 use dizi_lib::error::DiziResult;
 
+use crate::audio::PlayerStatus;
 use crate::context::AppContext;
 
 pub fn player_play(context: &mut AppContext, path: &Path) -> DiziResult<()> {
@@ -12,8 +13,13 @@ pub fn player_pause(context: &mut AppContext) -> DiziResult<()> {
     context.player_context_mut().player_mut().pause()
 }
 
-pub fn player_toggle_play(context: &mut AppContext) -> DiziResult<()> {
-    context.player_context_mut().player_mut().toggle_play()
+pub fn player_resume(context: &mut AppContext) -> DiziResult<()> {
+    context.player_context_mut().player_mut().resume()
+}
+
+pub fn player_toggle_play(context: &mut AppContext) -> DiziResult<PlayerStatus> {
+    let status = context.player_context_mut().player_mut().toggle_play()?;
+    Ok(status)
 }
 
 pub fn player_get_volume(context: &mut AppContext, amount: usize) -> DiziResult<f32> {
@@ -21,7 +27,7 @@ pub fn player_get_volume(context: &mut AppContext, amount: usize) -> DiziResult<
     Ok(volume)
 }
 
-pub fn player_volume_increase(context: &mut AppContext, amount: usize) -> DiziResult<()> {
+pub fn player_volume_increase(context: &mut AppContext, amount: usize) -> DiziResult<usize> {
     let volume = context.player_context_mut().player_mut().get_volume()?;
 
     let amount: f32 = amount as f32 / 100.0;
@@ -36,10 +42,12 @@ pub fn player_volume_increase(context: &mut AppContext, amount: usize) -> DiziRe
         .player_mut()
         .set_volume(volume)?;
     eprintln!("volume is now: {}", volume);
-    Ok(())
+
+    let volume: usize = (volume * 100.0) as usize;
+    Ok(volume)
 }
 
-pub fn player_volume_decrease(context: &mut AppContext, amount: usize) -> DiziResult<()> {
+pub fn player_volume_decrease(context: &mut AppContext, amount: usize) -> DiziResult<usize> {
     let volume = context.player_context_mut().player_mut().get_volume()?;
 
     let amount: f32 = amount as f32 / 100.0;
@@ -54,5 +62,7 @@ pub fn player_volume_decrease(context: &mut AppContext, amount: usize) -> DiziRe
         .player_mut()
         .set_volume(volume)?;
     eprintln!("volume is now: {}", volume);
-    Ok(())
+
+    let volume: usize = (volume * 100.0) as usize;
+    Ok(volume)
 }

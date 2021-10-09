@@ -1,17 +1,11 @@
-use std::fs::File;
-use std::io::BufReader;
-use std::path::{Path, PathBuf};
+use std::path::Path;
 use std::sync::mpsc;
 use std::thread;
 
-use rodio::source::Source;
-use rodio::{Decoder, OutputStream, OutputStreamHandle};
-
 use dizi_lib::error::DiziResult;
+use dizi_lib::song::Song;
 
-use crate::audio::{
-    player_stream_thread, PlayerRequest, PlayerResponse, PlayerStream, Playlist, Song,
-};
+use crate::audio::{player_stream_thread, PlayerRequest, PlayerResponse, Playlist};
 
 #[derive(Copy, Clone, Debug)]
 pub enum PlayerStatus {
@@ -89,7 +83,7 @@ impl Player {
     pub fn pause(&mut self) -> DiziResult<()> {
         self.player_stream_req().send(PlayerRequest::Pause);
 
-        let resp = self.player_stream_res().recv();
+        let _ = self.player_stream_res().recv();
         self.status = PlayerStatus::Paused;
         Ok(())
     }
@@ -97,16 +91,22 @@ impl Player {
     pub fn resume(&mut self) -> DiziResult<()> {
         self.player_stream_req().send(PlayerRequest::Resume);
 
-        let resp = self.player_stream_res().recv();
+        let _ = self.player_stream_res().recv();
         self.status = PlayerStatus::Playing;
         Ok(())
     }
 
-    pub fn toggle_play(&mut self) -> DiziResult<()> {
+    pub fn toggle_play(&mut self) -> DiziResult<PlayerStatus> {
         match self.status {
-            PlayerStatus::Playing => self.pause(),
-            PlayerStatus::Paused => self.resume(),
-            _ => Ok(()),
+            PlayerStatus::Playing => {
+                self.pause();
+                Ok(PlayerStatus::Paused)
+            }
+            PlayerStatus::Paused => {
+                self.resume();
+                Ok(PlayerStatus::Playing)
+            }
+            _ => Ok(PlayerStatus::Stopped),
         }
     }
 
@@ -134,6 +134,13 @@ impl Player {
         match self.player_stream_res().recv().map(|r| r.unwrap()) {
             Ok(PlayerResponse::Len(u)) => Ok(u),
             _ => Ok(0),
+        }
+    }
+
+    pub fn is_paused(&self) -> bool {
+        match self.player_stream_res().recv().map(|r| r.unwrap()) {
+            Ok(PlayerResponse::IsPaused(u)) => u,
+            _ => true,
         }
     }
 }

@@ -78,3 +78,21 @@ impl std::convert::From<rodio::decoder::DecoderError> for DiziError {
         }
     }
 }
+
+impl<T> std::convert::From<std::sync::mpsc::SendError<T>> for DiziError {
+    fn from(err: std::sync::mpsc::SendError<T>) -> Self {
+        Self {
+            _kind: DiziErrorKind::SendError,
+            _cause: "Failed to send message".to_string(),
+        }
+    }
+}
+
+impl<T> std::convert::From<crossbeam::channel::SendError<T>> for DiziError {
+    fn from(err: crossbeam::channel::SendError<T>) -> Self {
+        Self {
+            _kind: DiziErrorKind::SendError,
+            _cause: "Failed to send message".to_string(),
+        }
+    }
+}

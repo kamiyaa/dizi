@@ -1,3 +1,6 @@
+use std::io::{BufRead, BufReader};
+use std::thread;
+
 use termion::event::Event;
 
 use dizi_lib::error::DiziResult;
@@ -19,6 +22,21 @@ pub fn run(
 ) -> DiziResult<()> {
     context.flush_stream();
 
+    // server listener
+    {
+        let stream = context.clone_stream()?;
+        let event_tx = context.events.event_tx.clone();
+
+        let _ = thread::spawn(move || {
+            let cursor = BufReader::new(stream);
+            for line in cursor.lines() {
+                if let Ok(line) = line {
+                    event_tx.send(AppEvent::Server(line));
+                }
+            }
+        });
+    }
+
     while context.quit == QuitType::DoNot {
         backend.render(TuiView::new(&context));
 
@@ -28,6 +46,7 @@ pub fn run(
         };
 
         match event {
+            AppEvent::Server(message) => input::process_server_event(context, message.as_str()),
             AppEvent::Termion(Event::Mouse(event)) => {
                 context.flush_event();
             }

@@ -1,7 +1,7 @@
 use std::io::Write;
 
 use dizi_lib::error::DiziResult;
-use dizi_lib::server::*;
+use dizi_lib::request::server::*;
 
 use crate::context::{AppContext, QuitType};
 

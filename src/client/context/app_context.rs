@@ -39,7 +39,6 @@ pub struct AppContext {
 impl AppContext {
     pub fn new(config: config::AppConfig, cwd: PathBuf, stream: UnixStream) -> Self {
         let events = Events::new();
-        let event_tx = events.event_tx.clone();
 
         Self {
             quit: QuitType::DoNot,
@@ -51,6 +50,10 @@ impl AppContext {
             message_queue: MessageQueue::new(),
             config,
         }
+    }
+
+    pub fn clone_stream(&self) -> io::Result<UnixStream> {
+        self.stream.try_clone()
     }
 
     pub fn flush_stream(&mut self) -> io::Result<()> {

@@ -1,14 +1,11 @@
-use std::collections::HashMap;
-use std::path::PathBuf;
-
-use dizi_lib::constants::*;
 use dizi_lib::error::DiziResult;
-use dizi_lib::player;
+use dizi_lib::request::constants::*;
+use dizi_lib::request::player;
 
-use crate::commands::*;
-use crate::context::{AppContext, PlayerContext};
+use crate::client_commands::*;
+use crate::events::ClientEventSender;
 
-pub fn run_command(context: &mut AppContext, s: &str) -> DiziResult<()> {
+pub fn run_command(server_req: &ClientEventSender, s: &str) -> DiziResult<()> {
     let json_res: Result<serde_json::Map<String, serde_json::Value>, serde_json::Error> =
         serde_json::from_str(s);
 
@@ -18,25 +15,25 @@ pub fn run_command(context: &mut AppContext, s: &str) -> DiziResult<()> {
         Ok(json_map) => match json_map.get("command") {
             Some(serde_json::Value::String(command)) => match command.as_str() {
                 API_SERVER_QUIT => {
-                    quit_server(context);
+                    quit_server(server_req);
                 }
                 API_PLAYER_PLAY => {
                     let cmd: player::PlayerPlay = serde_json::from_str(s).unwrap();
-                    player_play(context, &cmd.path)?;
+                    player_play(server_req, &cmd.path)?;
                 }
                 API_PLAYER_PAUSE => {
-                    player_pause(context)?;
+                    player_pause(server_req)?;
                 }
                 API_PLAYER_TOGGLE_PLAY => {
-                    player_toggle_play(context)?;
+                    player_toggle_play(server_req)?;
                 }
                 API_PLAYER_VOLUME_UP => {
                     let cmd: player::PlayerVolumeUp = serde_json::from_str(s).unwrap();
-                    player_volume_increase(context, cmd.amount)?;
+                    player_volume_increase(server_req, cmd.amount)?;
                 }
                 API_PLAYER_VOLUME_DOWN => {
                     let cmd: player::PlayerVolumeDown = serde_json::from_str(s).unwrap();
-                    player_volume_decrease(context, cmd.amount)?;
+                    player_volume_decrease(server_req, cmd.amount)?;
                 }
                 s => {
                     eprintln!("Error: '{:?}' not implemented", s);

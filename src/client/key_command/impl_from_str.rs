@@ -4,8 +4,8 @@ use std::time;
 use dirs_next::home_dir;
 use shellexpand::tilde_with_context;
 
-use dizi_lib::constants::*;
 use dizi_lib::error::{DiziError, DiziErrorKind};
+use dizi_lib::request::constants::*;
 
 use crate::util::select::SelectOption;
 use crate::util::sort_type::SortType;

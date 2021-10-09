@@ -20,3 +20,6 @@ pub const API_PLAYER_VOLUME_DOWN: &str      = "/player/volume/decrease";
 
 pub const API_PLAYER_REWIND: &str           = "/player/rewind";
 pub const API_PLAYER_FAST_FORWARD: &str     = "/player/fastforward";
+
+pub const API_PLAYER_NEXT: &str             = "/player/next";
+pub const API_PLAYER_PREVIOUS: &str         = "/player/prev";
