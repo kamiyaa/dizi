@@ -35,12 +35,11 @@ whenever mocp is playing music, other audio/video apps stop working and vice ver
 
 ## TODOs
 
- - [ ] Pipewire to play audio
- - [ ] Pulseaudio to play audio
- - [ ] play/pause support
+ - [x] play/pause support
  - [ ] playlist support
  - [ ] show music progress
  - [ ] shuffle, repeat, next
  - [ ] volume support
  - [ ] theming support
+ - [ ] Pipewire to play audio
  - [ ] custom layout support
