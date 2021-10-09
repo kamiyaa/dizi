@@ -1,16 +1,10 @@
-use std::io;
-use std::path;
-
 use signal_hook::consts::signal;
 use termion::event::{Event, Key, MouseButton, MouseEvent};
-use tui::layout::{Constraint, Direction, Layout};
 
-use crate::commands::cursor_move;
 use crate::config::AppKeyMapping;
 use crate::context::AppContext;
 use crate::event::AppEvent;
 use crate::fs::DirList;
-use crate::history::DirectoryHistory;
 use crate::key_command::{AppExecute, Command, CommandKeybind};
 use crate::ui;
 use crate::ui::views::TuiCommandMenu;

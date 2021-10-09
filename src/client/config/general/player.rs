@@ -1,5 +1,3 @@
-use std::path::PathBuf;
-
 use serde_derive::Deserialize;
 
 use crate::config::Flattenable;

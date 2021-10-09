@@ -1,5 +1,5 @@
 use std::io;
-use std::io::{Read, Write};
+use std::io::Write;
 use std::os::unix::net::UnixStream;
 use std::path::{Path, PathBuf};
 use std::sync::mpsc;
@@ -8,7 +8,7 @@ use crate::config;
 use crate::context::MessageQueue;
 use crate::event::{AppEvent, Events};
 use crate::fs::DirList;
-use crate::history::{DirectoryHistory, History};
+use crate::history::History;
 use crate::util::search::SearchPattern;
 
 #[derive(Clone, Copy, Debug, PartialEq)]

@@ -5,7 +5,7 @@ use dizi_commands::error::DiziResult;
 use crate::config::AppKeyMapping;
 use crate::context::{AppContext, QuitType};
 use crate::event::AppEvent;
-use crate::key_command::{AppExecute, Command, CommandKeybind};
+use crate::key_command::{AppExecute, CommandKeybind};
 use crate::preview::preview_default;
 use crate::ui::views::TuiView;
 use crate::ui::TuiBackend;

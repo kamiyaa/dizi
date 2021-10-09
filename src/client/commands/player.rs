@@ -1,16 +1,13 @@
-use std::io::{Read, Write};
+use std::io::Write;
 use std::path;
 
 use dizi_commands::error::DiziResult;
-use dizi_commands::structs::{PlayerPause, PlayerPlay, PlayerTogglePlay};
+use dizi_commands::player::*;
 
-use crate::commands::reload;
 use crate::context::AppContext;
-use crate::ui::TuiBackend;
 
 pub fn player_play(
     context: &mut AppContext,
-    backend: &mut TuiBackend,
     path: path::PathBuf,
 ) -> DiziResult<()> {
     let request = PlayerPlay::new(path);
@@ -22,7 +19,7 @@ pub fn player_play(
     Ok(())
 }
 
-pub fn player_toggle_play(context: &mut AppContext, backend: &mut TuiBackend) -> DiziResult<()> {
+pub fn player_toggle_play(context: &mut AppContext) -> DiziResult<()> {
     let request = PlayerTogglePlay::new();
 
     let json = serde_json::to_string(&request).unwrap();
@@ -31,3 +28,24 @@ pub fn player_toggle_play(context: &mut AppContext, backend: &mut TuiBackend) ->
     context.flush_stream()?;
     Ok(())
 }
+
+pub fn player_volume_increase(context: &mut AppContext, amount: usize) -> DiziResult<()> {
+    let request = PlayerVolumeUp::new(amount);
+
+    let json = serde_json::to_string(&request).unwrap();
+
+    context.stream.write(json.as_bytes())?;
+    context.flush_stream()?;
+    Ok(())
+}
+
+pub fn player_volume_decrease(context: &mut AppContext, amount: usize) -> DiziResult<()> {
+    let request = PlayerVolumeDown::new(amount);
+
+    let json = serde_json::to_string(&request).unwrap();
+
+    context.stream.write(json.as_bytes())?;
+    context.flush_stream()?;
+    Ok(())
+}
+

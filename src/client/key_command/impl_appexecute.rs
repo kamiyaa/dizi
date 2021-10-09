@@ -52,8 +52,12 @@ impl AppExecute for Command {
             Self::Sort(t) => sort::set_sort(context, *t),
             Self::SortReverse => sort::toggle_reverse(context),
 
-            Self::OpenFile => open_file::open(context, backend),
-            Self::PlayerTogglePlay => player::player_toggle_play(context, backend),
+            Self::OpenFile => open_file::open(context),
+            Self::PlayerTogglePlay => player::player_toggle_play(context),
+
+            Self::PlayerVolumeUp(i) => player::player_volume_increase(context, *i),
+            Self::PlayerVolumeDown(i) => player::player_volume_decrease(context, *i),
+
             /*
                         Self::PlayerToggleShuffle => {
 
@@ -62,12 +66,6 @@ impl AppExecute for Command {
 
                         }
                         Self::PlayerToggleNext => {
-
-                        }
-                        Self::PlayerVolumeUp => {
-
-                        }
-                        Self::PlayerVolumeDown => {
 
                         }
                         Self::PlayerRewind => {

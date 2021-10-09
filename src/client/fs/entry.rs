@@ -1,6 +1,6 @@
 use std::{fs, io, path};
 
-use crate::fs::{FileType, Metadata};
+use crate::fs::Metadata;
 
 use crate::util::display_option::DisplayOption;
 

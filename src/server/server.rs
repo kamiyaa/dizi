@@ -12,7 +12,6 @@ use lazy_static::lazy_static;
 
 use rodio::{OutputStream, OutputStreamHandle};
 
-use dizi_commands::api_command::ApiCommand;
 use dizi_commands::error::DiziResult;
 
 use crate::audio::Playlist;
@@ -40,25 +39,9 @@ pub fn setup_socket(config: &AppConfig) -> DiziResult<UnixListener> {
 pub fn handle_client(stream: UnixStream, context: Arc<Mutex<AppContext>>) {
     let cursor = BufReader::new(stream);
     for line in cursor.lines() {
-        match line {
-            Ok(line) => {
-                eprintln!("line: {}", line);
-                // parse into json
-                let json_res: Result<HashMap<String, String>, serde_json::Error> =
-                    serde_json::from_str(&line);
-
-                if let Ok(json_map) = json_res {
-                    if let Some(s) = json_map.get("command") {
-                        if let Ok(command) = ApiCommand::from_str(s) {
-                            let mut context = context.lock().unwrap();
-                            run_command(&mut context, command, &json_map);
-                        }
-                    }
-                }
-            }
-            Err(e) => {
-                eprintln!("Error reading from client: {:?}", e);
-            }
+        if let Ok(line) = line {
+            let mut context = context.lock().unwrap();
+            run_command(&mut context, &line);
         }
     }
 }

@@ -7,7 +7,7 @@ use std::thread;
 use rodio::source::Source;
 use rodio::{Decoder, OutputStream, OutputStreamHandle};
 
-use crate::audio::{PlayerStream, PlayerStreamMsg, Song};
+use crate::audio::{PlayerStream, PlayerRequest, PlayerResponse, Song};
 use dizi_commands::api_command::ApiCommand;
 use dizi_commands::error::DiziResult;
 
@@ -26,8 +26,8 @@ pub struct Player {
     next: bool,
     current_song: Option<Song>,
     player_handle: thread::JoinHandle<DiziResult<()>>,
-    player_stream_tx: mpsc::Sender<PlayerStreamMsg>,
-    player_rx: mpsc::Receiver<DiziResult<()>>,
+    player_stream_tx: mpsc::Sender<PlayerRequest>,
+    player_rx: mpsc::Receiver<DiziResult<PlayerResponse>>,
 }
 
 impl Player {
@@ -41,17 +41,25 @@ impl Player {
                 PlayerStream::new(stream, stream_handle, player_tx, player_stream_rx);
             while let Ok(msg) = player_stream.event_rx.recv() {
                 match msg {
-                    PlayerStreamMsg::Play(song) => {
+                    PlayerRequest::Play(song) => {
                         player_stream.play(song.file_path());
-                        player_stream.event_tx.send(Ok(()));
+                        player_stream.event_tx.send(Ok(PlayerResponse::Ok));
                     }
-                    PlayerStreamMsg::Pause => {
+                    PlayerRequest::Pause => {
                         player_stream.pause();
-                        player_stream.event_tx.send(Ok(()));
+                        player_stream.event_tx.send(Ok(PlayerResponse::Ok));
                     }
-                    PlayerStreamMsg::Resume => {
+                    PlayerRequest::Resume => {
                         player_stream.resume();
-                        player_stream.event_tx.send(Ok(()));
+                        player_stream.event_tx.send(Ok(PlayerResponse::Ok));
+                    }
+                    PlayerRequest::GetVolume => {
+                        let volume = player_stream.get_volume();
+                        player_stream.event_tx.send(Ok(PlayerResponse::Volume(volume)));
+                    }
+                    PlayerRequest::SetVolume(volume) => {
+                        player_stream.set_volume(volume);
+                        player_stream.event_tx.send(Ok(PlayerResponse::Ok));
                     }
                 }
             }
@@ -74,38 +82,38 @@ impl Player {
         let song = Song::new(path)?;
 
         self.player_stream_tx
-            .send(PlayerStreamMsg::Play(song.clone()));
+            .send(PlayerRequest::Play(song.clone()));
 
         match self.player_rx.recv().map(|r| r.unwrap()) {
-            Ok(res) => {
+            Ok(PlayerResponse::Ok) => {
                 self.status = PlayerStatus::Playing;
                 self.current_song = Some(song);
             }
-            Err(_) => {}
+            _ => {}
         }
         Ok(())
     }
 
     pub fn pause(&mut self) -> DiziResult<()> {
-        self.player_stream_tx.send(PlayerStreamMsg::Pause);
+        self.player_stream_tx.send(PlayerRequest::Pause);
 
         match self.player_rx.recv().map(|r| r.unwrap()) {
-            Ok(res) => {
+            Ok(PlayerResponse::Ok) => {
                 self.status = PlayerStatus::Paused;
             }
-            Err(_) => {}
+            _ => {}
         }
         Ok(())
     }
 
     pub fn resume(&mut self) -> DiziResult<()> {
-        self.player_stream_tx.send(PlayerStreamMsg::Resume);
+        self.player_stream_tx.send(PlayerRequest::Resume);
 
         match self.player_rx.recv().map(|r| r.unwrap()) {
-            Ok(res) => {
+            Ok(PlayerResponse::Ok) => {
                 self.status = PlayerStatus::Playing;
             }
-            Err(_) => {}
+            _ => {}
         }
         Ok(())
     }
@@ -114,6 +122,23 @@ impl Player {
         match self.status {
             PlayerStatus::Playing => self.pause(),
             PlayerStatus::Paused => self.resume(),
+            _ => Ok(()),
+        }
+    }
+
+    pub fn get_volume(&self) -> DiziResult<f32> {
+        self.player_stream_tx.send(PlayerRequest::GetVolume);
+
+        match self.player_rx.recv().map(|r| r.unwrap()) {
+            Ok(PlayerResponse::Volume(volume)) => Ok(volume),
+            _ => Ok(0.0),
+        }
+    }
+
+    pub fn set_volume(&self, volume: f32) -> DiziResult<()> {
+        self.player_stream_tx.send(PlayerRequest::SetVolume(volume));
+
+        match self.player_rx.recv().map(|r| r.unwrap()) {
             _ => Ok(()),
         }
     }

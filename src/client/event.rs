@@ -1,5 +1,4 @@
 use std::io;
-use std::path;
 use std::sync::mpsc;
 use std::thread;
 

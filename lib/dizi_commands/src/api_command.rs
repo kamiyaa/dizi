@@ -12,13 +12,15 @@ pub enum ApiCommand {
     PlayerGet,
     PlayerPlay,
     PlayerPause,
+    PlayerResume,
     PlayerTogglePlay,
     PlayerToggleShuffle,
     PlayerToggleRepeat,
     PlayerToggleNext,
 
-    PlayerVolumeUp,
-    PlayerVolumeDown,
+    PlayerGetVolume,
+    PlayerVolumeUp(usize),
+    PlayerVolumeDown(usize),
 
     PlayerRewind,
     PlayerFastForward,
@@ -36,14 +38,16 @@ impl ApiCommand {
             Self::PlayerGet => API_PLAYER_GET,
             Self::PlayerPlay => API_PLAYER_PLAY,
             Self::PlayerPause => API_PLAYER_PAUSE,
+            Self::PlayerResume => API_PLAYER_RESUME,
 
             Self::PlayerTogglePlay => API_PLAYER_TOGGLE_PLAY,
             Self::PlayerToggleShuffle => API_PLAYER_TOGGLE_SHUFFLE,
             Self::PlayerToggleRepeat => API_PLAYER_TOGGLE_REPEAT,
             Self::PlayerToggleNext => API_PLAYER_TOGGLE_NEXT,
 
-            Self::PlayerVolumeUp => API_PLAYER_VOLUME_UP,
-            Self::PlayerVolumeDown => API_PLAYER_VOLUME_DOWN,
+            Self::PlayerGetVolume => API_PLAYER_GET_VOLUME,
+            Self::PlayerVolumeUp(_) => API_PLAYER_VOLUME_UP,
+            Self::PlayerVolumeDown(_) => API_PLAYER_VOLUME_DOWN,
 
             Self::PlayerRewind => API_PLAYER_REWIND,
             Self::PlayerFastForward => API_PLAYER_FAST_FORWARD,
@@ -65,14 +69,16 @@ impl std::str::FromStr for ApiCommand {
             API_PLAYER_GET => Ok(Self::PlayerGet),
             API_PLAYER_PLAY => Ok(Self::PlayerPlay),
             API_PLAYER_PAUSE => Ok(Self::PlayerPause),
+            API_PLAYER_RESUME => Ok(Self::PlayerResume),
 
             API_PLAYER_TOGGLE_PLAY => Ok(Self::PlayerTogglePlay),
             API_PLAYER_TOGGLE_SHUFFLE => Ok(Self::PlayerToggleShuffle),
             API_PLAYER_TOGGLE_REPEAT => Ok(Self::PlayerToggleRepeat),
             API_PLAYER_TOGGLE_NEXT => Ok(Self::PlayerToggleNext),
 
-            API_PLAYER_VOLUME_UP => Ok(Self::PlayerVolumeUp),
-            API_PLAYER_VOLUME_DOWN => Ok(Self::PlayerVolumeDown),
+            API_PLAYER_GET_VOLUME => Ok(Self::PlayerGetVolume),
+            API_PLAYER_VOLUME_UP => Ok(Self::PlayerVolumeUp(1)),
+            API_PLAYER_VOLUME_DOWN => Ok(Self::PlayerVolumeDown(1)),
 
             API_PLAYER_REWIND => Ok(Self::PlayerRewind),
             API_PLAYER_FAST_FORWARD => Ok(Self::PlayerFastForward),

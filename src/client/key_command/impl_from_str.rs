@@ -92,9 +92,21 @@ impl std::str::FromStr for Command {
         } else if command == API_PLAYER_TOGGLE_NEXT {
             Ok(Self::PlayerToggleNext)
         } else if command == API_PLAYER_VOLUME_UP {
-            Ok(Self::PlayerVolumeUp(1))
+            match arg {
+                "" => Ok(Self::PlayerVolumeUp(1)),
+                arg => match arg.trim().parse::<usize>() {
+                    Ok(s) => Ok(Self::PlayerVolumeUp(s)),
+                    Err(e) => Err(DiziError::new(DiziErrorKind::ParseError, e.to_string())),
+                },
+            }
         } else if command == API_PLAYER_VOLUME_DOWN {
-            Ok(Self::PlayerVolumeDown(1))
+            match arg {
+                "" => Ok(Self::PlayerVolumeDown(1)),
+                arg => match arg.trim().parse::<usize>() {
+                    Ok(s) => Ok(Self::PlayerVolumeDown(s)),
+                    Err(e) => Err(DiziError::new(DiziErrorKind::ParseError, e.to_string())),
+                },
+            }
         } else if command == API_PLAYER_REWIND {
             Ok(Self::PlayerRewind(time::Duration::new(1, 0)))
         } else if command == API_PLAYER_FAST_FORWARD {
