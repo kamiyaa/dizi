@@ -79,8 +79,7 @@ pub fn search_skim(context: &mut AppContext, backend: &mut TuiBackend) -> DiziRe
         }
 
         for sk_item in skim_output.selected_items {
-            let item: Option<&DiziSkimItem> =
-                (*sk_item).as_any().downcast_ref::<DiziSkimItem>();
+            let item: Option<&DiziSkimItem> = (*sk_item).as_any().downcast_ref::<DiziSkimItem>();
 
             match item {
                 Some(item) => {

@@ -1,5 +1,5 @@
-use std::path;
 use std::io;
+use std::path;
 
 use dizi_commands::error::DiziResult;
 
@@ -15,9 +15,7 @@ pub fn cd(path: &path::Path, context: &mut AppContext) -> io::Result<()> {
 fn _change_directory(path: &path::Path, context: &mut AppContext) -> io::Result<()> {
     cd(path, context)?;
     let options = context.config_ref().display_options_ref().clone();
-    context
-        .history_mut()
-        .populate_to_root(path, &options)?;
+    context.history_mut().populate_to_root(path, &options)?;
 
     Ok(())
 }

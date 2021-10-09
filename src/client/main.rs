@@ -14,9 +14,9 @@ use std::os::unix::net::UnixStream;
 use std::path::PathBuf;
 use std::process;
 
+use dizi_commands::error::DiziResult;
 use lazy_static::lazy_static;
 use structopt::StructOpt;
-use dizi_commands::error::DiziResult;
 
 use crate::config::{AppConfig, AppKeyMapping, AppTheme, ConfigStructure};
 use crate::context::AppContext;
@@ -79,9 +79,10 @@ fn run_app(args: Args) -> DiziResult<()> {
     let config = AppConfig::get_config(CONFIG_FILE);
     let keymap = AppKeyMapping::get_config(KEYMAP_FILE);
 
+    eprintln!("{:#?}", keymap);
+
     if let Err(_) = UnixStream::connect(&config.client_ref().socket) {
-        process::Command::new("dizi-server")
-            .spawn();
+        process::Command::new("dizi-server").spawn();
     }
     let stream = UnixStream::connect(&config.client_ref().socket)?;
 
@@ -93,8 +94,9 @@ fn run_app(args: Args) -> DiziResult<()> {
         .client_ref()
         .display_options_ref()
         .clone();
-    context.history_mut().populate_to_root(cwd.as_path(), &display_options)?;
-
+    context
+        .history_mut()
+        .populate_to_root(cwd.as_path(), &display_options)?;
 
     let mut backend: ui::TuiBackend = ui::TuiBackend::new()?;
     run(&mut backend, &mut context, keymap)?;

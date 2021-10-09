@@ -7,7 +7,11 @@ use crate::util::select::SelectOption;
 
 use super::cursor_move;
 
-pub fn select_files(context: &mut AppContext, pattern: &str, options: &SelectOption) -> DiziResult<()> {
+pub fn select_files(
+    context: &mut AppContext,
+    pattern: &str,
+    options: &SelectOption,
+) -> DiziResult<()> {
     if pattern.is_empty() {
         select_without_pattern(context, options)
     } else {

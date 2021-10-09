@@ -30,7 +30,6 @@ impl AppExecute for Command {
             Self::CursorMovePageUp => cursor_move::page_up(context, backend),
             Self::CursorMovePageDown => cursor_move::page_down(context, backend),
 
-            Self::OpenFile => open_file::open(context, backend),
             Self::ParentDirectory => parent_directory::parent_directory(context),
 
             Self::Close => quit::close(context),
@@ -52,7 +51,36 @@ impl AppExecute for Command {
 
             Self::Sort(t) => sort::set_sort(context, *t),
             Self::SortReverse => sort::toggle_reverse(context),
-            s => { Ok(()) },
+
+            Self::OpenFile => open_file::open(context, backend),
+            Self::PlayerTogglePlay => player::player_toggle_play(context, backend),
+            /*
+                        Self::PlayerToggleShuffle => {
+
+                        }
+                        Self::PlayerToggleRepeat => {
+
+                        }
+                        Self::PlayerToggleNext => {
+
+                        }
+                        Self::PlayerVolumeUp => {
+
+                        }
+                        Self::PlayerVolumeDown => {
+
+                        }
+                        Self::PlayerRewind => {
+
+                        }
+                        Self::PlayerFastForward => {
+
+                        }
+            */
+            s => {
+                eprintln!("Error: '{:?}' not implemented", s);
+                Ok(())
+            }
         }
     }
 }

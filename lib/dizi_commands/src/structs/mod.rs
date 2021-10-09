@@ -1,3 +1,3 @@
-pub mod player_play;
+pub mod player;
 
-pub use self::player_play::PlayerPlay;
+pub use self::player::*;

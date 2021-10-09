@@ -17,7 +17,7 @@ pub struct RawPlayerOption {
     #[serde(default)]
     pub next: bool,
     #[serde(default)]
-    pub on_song_change: Option<String>
+    pub on_song_change: Option<String>,
 }
 
 impl Flattenable<PlayerOption> for RawPlayerOption {
@@ -37,7 +37,7 @@ impl std::default::Default for RawPlayerOption {
             shuffle: false,
             repeat: true,
             next: true,
-            on_song_change: None
+            on_song_change: None,
         }
     }
 }
@@ -47,7 +47,7 @@ pub struct PlayerOption {
     pub shuffle: bool,
     pub repeat: bool,
     pub next: bool,
-    pub on_song_change: Option<String>
+    pub on_song_change: Option<String>,
 }
 
 impl std::default::Default for PlayerOption {
@@ -56,7 +56,7 @@ impl std::default::Default for PlayerOption {
             shuffle: false,
             repeat: true,
             next: true,
-            on_song_change: None
+            on_song_change: None,
         }
     }
 }

@@ -1,57 +1,121 @@
 use std::fs::File;
 use std::io::BufReader;
 use std::path::{Path, PathBuf};
+use std::sync::mpsc;
 use std::thread;
 
-use rodio::{Decoder, OutputStream, OutputStreamHandle};
 use rodio::source::Source;
+use rodio::{Decoder, OutputStream, OutputStreamHandle};
 
+use crate::audio::{PlayerStream, PlayerStreamMsg, Song};
+use dizi_commands::api_command::ApiCommand;
 use dizi_commands::error::DiziResult;
-use crate::audio::Song;
 
-#[derive(Clone, Debug)]
+#[derive(Copy, Clone, Debug)]
 pub enum PlayerStatus {
-    Playing(Song),
-    Paused(Song),
+    Playing,
+    Paused,
     Stopped,
 }
 
-#[derive(Clone, Debug)]
+#[derive(Debug)]
 pub struct Player {
-//    pipewire: PipewireData,
     status: PlayerStatus,
     shuffle: bool,
     repeat: bool,
     next: bool,
+    current_song: Option<Song>,
+    player_handle: thread::JoinHandle<DiziResult<()>>,
+    player_stream_tx: mpsc::Sender<PlayerStreamMsg>,
+    player_rx: mpsc::Receiver<DiziResult<()>>,
 }
 
 impl Player {
     pub fn new() -> Self {
+        let (player_tx, player_rx) = mpsc::channel();
+        let (player_stream_tx, player_stream_rx) = mpsc::channel();
+
+        let player_handle = thread::spawn(move || {
+            let (stream, stream_handle) = OutputStream::try_default()?;
+            let mut player_stream =
+                PlayerStream::new(stream, stream_handle, player_tx, player_stream_rx);
+            while let Ok(msg) = player_stream.event_rx.recv() {
+                match msg {
+                    PlayerStreamMsg::Play(song) => {
+                        player_stream.play(song.file_path());
+                        player_stream.event_tx.send(Ok(()));
+                    }
+                    PlayerStreamMsg::Pause => {
+                        player_stream.pause();
+                        player_stream.event_tx.send(Ok(()));
+                    }
+                    PlayerStreamMsg::Resume => {
+                        player_stream.resume();
+                        player_stream.event_tx.send(Ok(()));
+                    }
+                }
+            }
+            Ok(())
+        });
+
         Self {
             status: PlayerStatus::Stopped,
             shuffle: false,
             repeat: true,
             next: true,
+            current_song: None,
+            player_handle,
+            player_stream_tx,
+            player_rx,
         }
     }
 
-    pub fn play(&mut self, path: &Path) -> DiziResult<thread::JoinHandle<DiziResult<()>>> {
+    pub fn play(&mut self, path: &Path) -> DiziResult<()> {
         let song = Song::new(path)?;
 
-        let path_clone = path.to_path_buf();
+        self.player_stream_tx
+            .send(PlayerStreamMsg::Play(song.clone()));
 
-        let handle = thread::spawn(move || {
-            let (_stream, stream_handle) = OutputStream::try_default()?;
-            let file = File::open(&path_clone)?;
-            let buffer = BufReader::new(file);
+        match self.player_rx.recv().map(|r| r.unwrap()) {
+            Ok(res) => {
+                self.status = PlayerStatus::Playing;
+                self.current_song = Some(song);
+            }
+            Err(_) => {}
+        }
+        Ok(())
+    }
 
-            let sink = stream_handle.play_once(buffer)?;
-            sink.sleep_until_end();
-            Ok(())
-        });
+    pub fn pause(&mut self) -> DiziResult<()> {
+        self.player_stream_tx.send(PlayerStreamMsg::Pause);
 
-        self.status = PlayerStatus::Playing(song);
-        Ok(handle)
+        match self.player_rx.recv().map(|r| r.unwrap()) {
+            Ok(res) => {
+                self.status = PlayerStatus::Paused;
+            }
+            Err(_) => {}
+        }
+        Ok(())
+    }
+
+    pub fn resume(&mut self) -> DiziResult<()> {
+        self.player_stream_tx.send(PlayerStreamMsg::Resume);
+
+        match self.player_rx.recv().map(|r| r.unwrap()) {
+            Ok(res) => {
+                self.status = PlayerStatus::Playing;
+            }
+            Err(_) => {}
+        }
+        Ok(())
+    }
+
+    pub fn toggle_play(&mut self) -> DiziResult<()> {
+        match self.status {
+            PlayerStatus::Playing => self.pause(),
+            PlayerStatus::Paused => self.resume(),
+            _ => Ok(()),
+        }
     }
 }
 

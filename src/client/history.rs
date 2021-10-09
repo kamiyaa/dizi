@@ -33,8 +33,7 @@ impl DirectoryHistory for History {
                 }
                 dirlists.push(new_dirlist);
             } else {
-                let mut new_dirlist =
-                    DirList::from_path(curr.to_path_buf().clone(), options)?;
+                let mut new_dirlist = DirList::from_path(curr.to_path_buf().clone(), options)?;
                 if let Some(ancestor) = prev.as_ref() {
                     if let Some(i) = get_index_of_value(&new_dirlist.contents, ancestor) {
                         new_dirlist.index = Some(i);

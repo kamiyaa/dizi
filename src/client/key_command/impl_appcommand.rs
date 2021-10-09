@@ -54,7 +54,6 @@ impl AppCommand for Command {
 
             Self::PlayerRewind(_) => API_PLAYER_REWIND,
             Self::PlayerFastForward(_) => API_PLAYER_FAST_FORWARD,
-
         }
     }
 }

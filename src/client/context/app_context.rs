@@ -1,6 +1,8 @@
+use std::io;
+use std::io::{Read, Write};
 use std::os::unix::net::UnixStream;
-use std::sync::mpsc;
 use std::path::{Path, PathBuf};
+use std::sync::mpsc;
 
 use crate::config;
 use crate::context::MessageQueue;
@@ -51,6 +53,12 @@ impl AppContext {
         }
     }
 
+    pub fn flush_stream(&mut self) -> io::Result<()> {
+        const NEWLINE: &[u8] = &['\n' as u8];
+        self.stream.write(NEWLINE)?;
+        Ok(())
+    }
+
     // event related
     pub fn poll_event(&self) -> Result<AppEvent, mpsc::RecvError> {
         self.events.next()
@@ -97,14 +105,10 @@ impl AppContext {
         self._cwd = path.to_path_buf();
     }
 
-
     pub fn curr_list_ref(&self) -> Option<&DirList> {
         self.history.get(self.cwd())
     }
     pub fn curr_list_mut(&mut self) -> Option<&mut DirList> {
         self.history.get_mut(self._cwd.as_path())
     }
-
-
 }
-

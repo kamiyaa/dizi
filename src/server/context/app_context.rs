@@ -4,7 +4,7 @@ use crate::config;
 
 use super::PlayerContext;
 
-#[derive(Clone)]
+#[derive(Debug)]
 pub struct AppContext {
     config: config::AppConfig,
     player_context: PlayerContext,

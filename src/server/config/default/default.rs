@@ -34,7 +34,8 @@ impl std::default::Default for ServerConfig {
 
 impl ConfigStructure for ServerConfig {
     fn get_config(file_name: &str) -> Self {
-        parse_to_config_file::<RawServerConfig, ServerConfig>(file_name).unwrap_or_else(Self::default)
+        parse_to_config_file::<RawServerConfig, ServerConfig>(file_name)
+            .unwrap_or_else(Self::default)
     }
 }
 
@@ -59,9 +60,7 @@ pub struct AppConfig {
 
 impl AppConfig {
     pub fn new(server: ServerConfig) -> Self {
-        Self {
-            _server: server,
-        }
+        Self { _server: server }
     }
 
     pub fn server_ref(&self) -> &ServerConfig {

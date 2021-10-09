@@ -3,7 +3,7 @@ use tui::layout::Rect;
 use tui::style::{Color, Modifier, Style};
 use tui::widgets::Widget;
 
-use crate::fs::{FileType, DirEntry, DirList, LinkType};
+use crate::fs::{DirEntry, DirList, FileType, LinkType};
 use crate::util::format;
 use crate::util::string::UnicodeTruncate;
 use crate::util::style;

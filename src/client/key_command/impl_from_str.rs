@@ -1,8 +1,10 @@
 use std::path;
+use std::time;
 
 use dirs_next::home_dir;
 use shellexpand::tilde_with_context;
 
+use dizi_commands::constants::*;
 use dizi_commands::error::{DiziError, DiziErrorKind};
 
 use crate::util::select::SelectOption;
@@ -26,7 +28,11 @@ impl std::str::FromStr for Command {
             None => (s, ""),
         };
 
-        if command == CMD_CHANGE_DIRECTORY {
+        if command == CMD_CLOSE {
+            Ok(Self::Close)
+        } else if command == CMD_QUIT {
+            Ok(Self::Quit)
+        } else if command == CMD_CHANGE_DIRECTORY {
             match arg {
                 "" => match HOME_DIR.as_ref() {
                     Some(s) => Ok(Self::ChangeDirectory(s.clone())),
@@ -54,10 +60,7 @@ impl std::str::FromStr for Command {
                 "" => Ok(Self::CursorMoveDown(1)),
                 arg => match arg.trim().parse::<usize>() {
                     Ok(s) => Ok(Self::CursorMoveDown(s)),
-                    Err(e) => Err(DiziError::new(
-                        DiziErrorKind::ParseError,
-                        e.to_string(),
-                    )),
+                    Err(e) => Err(DiziError::new(DiziErrorKind::ParseError, e.to_string())),
                 },
             }
         } else if command == CMD_CURSOR_MOVE_UP {
@@ -65,18 +68,37 @@ impl std::str::FromStr for Command {
                 "" => Ok(Self::CursorMoveUp(1)),
                 arg => match arg.trim().parse::<usize>() {
                     Ok(s) => Ok(Self::CursorMoveUp(s)),
-                    Err(e) => Err(DiziError::new(
-                        DiziErrorKind::ParseError,
-                        e.to_string(),
-                    )),
+                    Err(e) => Err(DiziError::new(DiziErrorKind::ParseError, e.to_string())),
                 },
             }
-        } else if command == CMD_CLOSE {
-            Ok(Self::Close)
-        } else if command == CMD_QUIT {
-            Ok(Self::Quit)
         } else if command == CMD_OPEN_FILE {
             Ok(Self::OpenFile)
+        } else if command == API_PLAYLIST_GET {
+            Ok(Self::PlaylistGet)
+        } else if command == API_PLAYLIST_ADD {
+            Ok(Self::PlaylistAdd)
+        } else if command == API_PLAYER_GET {
+            Ok(Self::PlayerGet)
+        } else if command == API_PLAYER_PLAY {
+            Ok(Self::PlayerPlay)
+        } else if command == API_PLAYER_PAUSE {
+            Ok(Self::PlayerPause)
+        } else if command == API_PLAYER_TOGGLE_PLAY {
+            Ok(Self::PlayerTogglePlay)
+        } else if command == API_PLAYER_TOGGLE_SHUFFLE {
+            Ok(Self::PlayerToggleShuffle)
+        } else if command == API_PLAYER_TOGGLE_REPEAT {
+            Ok(Self::PlayerToggleRepeat)
+        } else if command == API_PLAYER_TOGGLE_NEXT {
+            Ok(Self::PlayerToggleNext)
+        } else if command == API_PLAYER_VOLUME_UP {
+            Ok(Self::PlayerVolumeUp(1))
+        } else if command == API_PLAYER_VOLUME_DOWN {
+            Ok(Self::PlayerVolumeDown(1))
+        } else if command == API_PLAYER_REWIND {
+            Ok(Self::PlayerRewind(time::Duration::new(1, 0)))
+        } else if command == API_PLAYER_FAST_FORWARD {
+            Ok(Self::PlayerFastForward(time::Duration::new(1, 0)))
         } else if command == CMD_RELOAD_DIRECTORY_LIST {
             Ok(Self::ReloadDirList)
         } else if command == CMD_SEARCH_STRING {

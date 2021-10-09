@@ -1,4 +1,3 @@
-
 use crate::context::{AppContext, QuitType};
 use dizi_commands::error::DiziResult;
 

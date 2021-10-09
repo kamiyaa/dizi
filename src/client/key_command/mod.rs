@@ -1,6 +1,6 @@
-pub mod keybind;
-pub mod constants;
 pub mod commands;
+pub mod constants;
+pub mod keybind;
 pub mod traits;
 
 mod impl_appcommand;

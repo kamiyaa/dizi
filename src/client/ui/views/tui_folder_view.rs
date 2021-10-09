@@ -6,9 +6,7 @@ use tui::text::Span;
 use tui::widgets::{Block, Borders, Paragraph, Widget, Wrap};
 
 use crate::context::AppContext;
-use crate::ui::widgets::{
-    TuiDirListDetailed, TuiFooter, TuiTopBar,
-};
+use crate::ui::widgets::{TuiDirListDetailed, TuiTopBar};
 
 const TAB_VIEW_WIDTH: u16 = 15;
 
@@ -109,6 +107,20 @@ impl<'a> Widget for TuiFolderView<'a> {
                 width: area.width,
                 height: 1,
             };
+        }
+
+        if let Some(msg) = self.context.message_queue_ref().current_message() {
+            let rect = Rect {
+                x: 0,
+                y: area.height - 1,
+                width: area.width,
+                height: 1,
+            };
+
+            let text = Span::styled(msg.content.as_str(), msg.style);
+            Paragraph::new(text)
+                .wrap(Wrap { trim: true })
+                .render(rect, buf);
         }
 
         let topbar_width = area.width;

@@ -1,16 +1,11 @@
-use dizi_commands::error::DiziResult;
 use crate::commands::reload;
 use crate::context::AppContext;
+use dizi_commands::error::DiziResult;
 
 pub fn parent_directory_helper(context: &mut AppContext) -> std::io::Result<()> {
-    if let Some(parent) = context
-        .cwd()
-        .parent()
-        .map(|p| p.to_path_buf())
-    {
+    if let Some(parent) = context.cwd().parent().map(|p| p.to_path_buf()) {
         std::env::set_current_dir(&parent)?;
-        context
-            .set_cwd(parent.as_path());
+        context.set_cwd(parent.as_path());
     }
     Ok(())
 }

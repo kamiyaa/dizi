@@ -1,6 +1,6 @@
 use tui::style::Style;
 
-use crate::fs::{FileType, DirEntry, LinkType};
+use crate::fs::{DirEntry, FileType, LinkType};
 use crate::util::unix;
 
 use crate::THEME_T;

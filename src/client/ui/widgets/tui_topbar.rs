@@ -36,13 +36,8 @@ impl<'a> Widget for TuiTopBar<'a> {
         }
 
         let text = match ellipses {
-            Some(s) => Spans::from(vec![
-                s,
-                Span::styled(curr_path_str, path_style),
-            ]),
-            None => Spans::from(vec![
-                Span::styled(curr_path_str, path_style),
-            ]),
+            Some(s) => Spans::from(vec![s, Span::styled(curr_path_str, path_style)]),
+            None => Spans::from(vec![Span::styled(curr_path_str, path_style)]),
         };
 
         Paragraph::new(text).render(area, buf);

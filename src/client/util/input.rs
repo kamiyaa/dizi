@@ -11,7 +11,7 @@ use crate::context::AppContext;
 use crate::event::AppEvent;
 use crate::fs::DirList;
 use crate::history::DirectoryHistory;
-use crate::key_command::{AppExecute, CommandKeybind, Command};
+use crate::key_command::{AppExecute, Command, CommandKeybind};
 use crate::ui;
 use crate::ui::views::TuiCommandMenu;
 use crate::util::format;

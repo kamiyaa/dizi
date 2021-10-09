@@ -1,10 +1,7 @@
-use rodio::{Decoder, OutputStream, OutputStreamHandle};
-use rodio::source;
-
-use dizi_commands::error::DiziResult;
 use crate::audio::Player;
+use dizi_commands::error::DiziResult;
 
-#[derive(Clone)]
+#[derive(Debug)]
 pub struct PlayerContext {
     player: Player,
 }
@@ -12,9 +9,7 @@ pub struct PlayerContext {
 impl PlayerContext {
     pub fn new() -> DiziResult<Self> {
         let player = Player::new();
-        Ok(Self {
-            player,
-        })
+        Ok(Self { player })
     }
 
     pub fn player_ref(&self) -> &Player {

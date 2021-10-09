@@ -1,7 +1,7 @@
 use serde_derive::Deserialize;
 
 use crate::util::sort_option::SortOption;
-use crate::util::sort_type::{SortTypes, SortType};
+use crate::util::sort_type::{SortType, SortTypes};
 
 const fn default_true() -> bool {
     true

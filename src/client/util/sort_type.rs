@@ -37,12 +37,7 @@ impl SortType {
             SortType::Ext => "ext",
         }
     }
-    pub fn cmp(
-        &self,
-        f1: &DirEntry,
-        f2: &DirEntry,
-        sort_option: &SortOption,
-    ) -> cmp::Ordering {
+    pub fn cmp(&self, f1: &DirEntry, f2: &DirEntry, sort_option: &SortOption) -> cmp::Ordering {
         match &self {
             SortType::Natural => natural_sort(f1, f2, sort_option),
             SortType::Lexical => lexical_sort(f1, f2, sort_option),
@@ -70,12 +65,7 @@ impl SortTypes {
         self.list.pop_back();
     }
 
-    pub fn cmp(
-        &self,
-        f1: &DirEntry,
-        f2: &DirEntry,
-        sort_option: &SortOption,
-    ) -> cmp::Ordering {
+    pub fn cmp(&self, f1: &DirEntry, f2: &DirEntry, sort_option: &SortOption) -> cmp::Ordering {
         for st in &self.list {
             let res = st.cmp(f1, f2, sort_option);
             if res != cmp::Ordering::Equal {
@@ -103,10 +93,7 @@ impl std::default::Default for SortTypes {
 }
 
 fn mtime_sort(file1: &DirEntry, file2: &DirEntry) -> cmp::Ordering {
-    fn compare(
-        file1: &DirEntry,
-        file2: &DirEntry,
-    ) -> Result<cmp::Ordering, std::io::Error> {
+    fn compare(file1: &DirEntry, file2: &DirEntry) -> Result<cmp::Ordering, std::io::Error> {
         let f1_meta: fs::Metadata = std::fs::metadata(file1.file_path())?;
         let f2_meta: fs::Metadata = std::fs::metadata(file2.file_path())?;
 
@@ -127,11 +114,7 @@ fn ext_sort(file1: &DirEntry, file2: &DirEntry) -> cmp::Ordering {
     alphanumeric_sort::compare_str(&f1_ext, &f2_ext)
 }
 
-fn lexical_sort(
-    f1: &DirEntry,
-    f2: &DirEntry,
-    sort_option: &SortOption,
-) -> cmp::Ordering {
+fn lexical_sort(f1: &DirEntry, f2: &DirEntry, sort_option: &SortOption) -> cmp::Ordering {
     let f1_name = f1.file_name();
     let f2_name = f2.file_name();
     if sort_option.case_sensitive {
@@ -143,11 +126,7 @@ fn lexical_sort(
     }
 }
 
-fn natural_sort(
-    f1: &DirEntry,
-    f2: &DirEntry,
-    sort_option: &SortOption,
-) -> cmp::Ordering {
+fn natural_sort(f1: &DirEntry, f2: &DirEntry, sort_option: &SortOption) -> cmp::Ordering {
     let f1_name = f1.file_name();
     let f2_name = f2.file_name();
     if sort_option.case_sensitive {

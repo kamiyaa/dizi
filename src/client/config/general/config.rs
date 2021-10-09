@@ -37,9 +37,7 @@ pub struct AppConfig {
 
 impl AppConfig {
     pub fn new(client: ClientConfig) -> Self {
-        Self {
-            _client: client,
-        }
+        Self { _client: client }
     }
 
     pub fn client_ref(&self) -> &ClientConfig {
