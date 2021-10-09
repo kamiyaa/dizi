@@ -1,4 +1,4 @@
-use dizi_commands::error::DiziResult;
+use dizi_lib::error::DiziResult;
 
 use crate::commands::player;
 use crate::context::AppContext;

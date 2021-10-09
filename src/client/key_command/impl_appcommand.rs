@@ -1,4 +1,4 @@
-use dizi_commands::constants::*;
+use dizi_lib::constants::*;
 
 use super::constants::*;
 use super::{AppCommand, Command};

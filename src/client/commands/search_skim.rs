@@ -5,7 +5,7 @@ use std::thread;
 
 use skim::prelude::*;
 
-use dizi_commands::error::{DiziError, DiziErrorKind, DiziResult};
+use dizi_lib::error::{DiziError, DiziErrorKind, DiziResult};
 
 use crate::commands::cursor_move;
 use crate::context::AppContext;

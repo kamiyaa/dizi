@@ -1,6 +1,6 @@
 use globset::Glob;
 
-use dizi_commands::error::{DiziError, DiziErrorKind, DiziResult};
+use dizi_lib::error::{DiziError, DiziErrorKind, DiziResult};
 
 use crate::context::AppContext;
 use crate::util::select::SelectOption;

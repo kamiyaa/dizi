@@ -617,8 +617,9 @@ version = "0.1.0"
 dependencies = [
  "alphanumeric-sort",
  "chrono",
+ "crossbeam",
  "dirs-next",
- "dizi_commands",
+ "dizi_lib",
  "globset",
  "lazy_static",
  "libc",
@@ -642,7 +643,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "dizi_commands"
+name = "dizi_lib"
 version = "0.1.0"
 dependencies = [
  "globset",

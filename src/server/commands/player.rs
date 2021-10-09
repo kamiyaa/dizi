@@ -1,6 +1,6 @@
 use std::path::Path;
 
-use dizi_commands::error::DiziResult;
+use dizi_lib::error::DiziResult;
 
 use crate::context::AppContext;
 
@@ -31,7 +31,10 @@ pub fn player_volume_increase(context: &mut AppContext, amount: usize) -> DiziRe
     } else {
         volume + amount
     };
-    context.player_context_mut().player_mut().set_volume(volume)?;
+    context
+        .player_context_mut()
+        .player_mut()
+        .set_volume(volume)?;
     eprintln!("volume is now: {}", volume);
     Ok(())
 }
@@ -46,7 +49,10 @@ pub fn player_volume_decrease(context: &mut AppContext, amount: usize) -> DiziRe
     } else {
         volume - amount
     };
-    context.player_context_mut().player_mut().set_volume(volume)?;
+    context
+        .player_context_mut()
+        .player_mut()
+        .set_volume(volume)?;
     eprintln!("volume is now: {}", volume);
     Ok(())
 }

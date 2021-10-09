@@ -4,8 +4,8 @@ use std::time;
 use dirs_next::home_dir;
 use shellexpand::tilde_with_context;
 
-use dizi_commands::constants::*;
-use dizi_commands::error::{DiziError, DiziErrorKind};
+use dizi_lib::constants::*;
+use dizi_lib::error::{DiziError, DiziErrorKind};
 
 use crate::util::select::SelectOption;
 use crate::util::sort_type::SortType;
@@ -30,7 +30,7 @@ impl std::str::FromStr for Command {
 
         if command == CMD_CLOSE {
             Ok(Self::Close)
-        } else if command == CMD_QUIT {
+        } else if command == API_SERVER_QUIT {
             Ok(Self::Quit)
         } else if command == CMD_CHANGE_DIRECTORY {
             match arg {

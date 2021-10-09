@@ -13,11 +13,11 @@ pub enum DiziErrorKind {
     ClipboardError,
 
     Glob,
-
     InvalidParameters,
 
     DecoderError,
-    PlayError,
+    NoDevice,
+    UnrecognizedFormat,
     StreamError(rodio::StreamError),
 
     UnrecognizedArgument,
@@ -44,7 +44,10 @@ impl std::convert::From<std::env::VarError> for DiziErrorKind {
 
 impl std::convert::From<rodio::PlayError> for DiziErrorKind {
     fn from(err: rodio::PlayError) -> Self {
-        Self::PlayError
+        match err {
+            rodio::PlayError::DecoderError(_) => Self::DecoderError,
+            rodio::PlayError::NoDevice => Self::NoDevice,
+        }
     }
 }
 
@@ -56,6 +59,6 @@ impl std::convert::From<rodio::StreamError> for DiziErrorKind {
 
 impl std::convert::From<rodio::decoder::DecoderError> for DiziErrorKind {
     fn from(err: rodio::decoder::DecoderError) -> Self {
-        Self::DecoderError
+        Self::UnrecognizedFormat
     }
 }

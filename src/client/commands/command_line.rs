@@ -1,6 +1,6 @@
 use std::str::FromStr;
 
-use dizi_commands::error::DiziResult;
+use dizi_lib::error::DiziResult;
 
 use crate::config::AppKeyMapping;
 use crate::context::AppContext;

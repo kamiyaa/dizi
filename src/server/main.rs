@@ -1,9 +1,10 @@
 mod audio;
+mod client;
 mod command;
 mod commands;
 mod config;
 mod context;
-// mod handlers;
+mod events;
 mod server;
 
 use std::io;
@@ -12,7 +13,7 @@ use std::path::PathBuf;
 use lazy_static::lazy_static;
 use structopt::StructOpt;
 
-use dizi_commands::error::DiziResult;
+use dizi_lib::error::DiziResult;
 
 use crate::config::{AppConfig, ConfigStructure};
 

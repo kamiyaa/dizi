@@ -1,15 +1,22 @@
 use std::io::Write;
 use std::path;
 
-use dizi_commands::error::DiziResult;
-use dizi_commands::player::*;
+use dizi_lib::error::DiziResult;
+use dizi_lib::player::*;
 
 use crate::context::AppContext;
 
-pub fn player_play(
-    context: &mut AppContext,
-    path: path::PathBuf,
-) -> DiziResult<()> {
+pub fn player_get(context: &mut AppContext, path: path::PathBuf) -> DiziResult<()> {
+    let request = PlayerGet::new();
+
+    let json = serde_json::to_string(&request).unwrap();
+
+    context.stream.write(json.as_bytes())?;
+    context.flush_stream()?;
+    Ok(())
+}
+
+pub fn player_play(context: &mut AppContext, path: path::PathBuf) -> DiziResult<()> {
     let request = PlayerPlay::new(path);
 
     let json = serde_json::to_string(&request).unwrap();
@@ -48,4 +55,3 @@ pub fn player_volume_decrease(context: &mut AppContext, amount: usize) -> DiziRe
     context.flush_stream()?;
     Ok(())
 }
-

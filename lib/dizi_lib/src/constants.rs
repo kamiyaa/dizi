@@ -1,5 +1,4 @@
-
-pub const API_QUIT: &str                    = "/quit";
+pub const API_SERVER_QUIT: &str             = "/server/quit";
 
 pub const API_PLAYLIST_GET: &str            = "/playlist/get";
 pub const API_PLAYLIST_ADD: &str            = "/playlist/add";

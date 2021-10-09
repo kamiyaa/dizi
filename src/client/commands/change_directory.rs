@@ -1,7 +1,7 @@
 use std::io;
 use std::path;
 
-use dizi_commands::error::DiziResult;
+use dizi_lib::error::DiziResult;
 
 use crate::context::AppContext;
 use crate::history::DirectoryHistory;

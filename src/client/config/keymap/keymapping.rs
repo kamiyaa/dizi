@@ -3,9 +3,9 @@ use serde_derive::Deserialize;
 use std::collections::{hash_map::Entry, HashMap};
 use std::str::FromStr;
 
+use termion::event::Event;
 #[cfg(feature = "mouse")]
 use termion::event::MouseEvent;
-use termion::event::Event;
 
 use crate::config::{parse_to_config_file, ConfigStructure, Flattenable};
 use crate::key_command::{Command, CommandKeybind};

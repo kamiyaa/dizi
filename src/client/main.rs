@@ -13,8 +13,10 @@ mod util;
 use std::os::unix::net::UnixStream;
 use std::path::PathBuf;
 use std::process;
+use std::thread;
+use std::time;
 
-use dizi_commands::error::DiziResult;
+use dizi_lib::error::DiziResult;
 use lazy_static::lazy_static;
 use structopt::StructOpt;
 
@@ -79,10 +81,13 @@ fn run_app(args: Args) -> DiziResult<()> {
     let config = AppConfig::get_config(CONFIG_FILE);
     let keymap = AppKeyMapping::get_config(KEYMAP_FILE);
 
-    eprintln!("{:#?}", keymap);
-
     if let Err(_) = UnixStream::connect(&config.client_ref().socket) {
-        process::Command::new("dizi-server").spawn();
+        process::Command::new("dizi-server")
+            .stdout(process::Stdio::null())
+            .stderr(process::Stdio::null())
+            .spawn()?;
+        let ten_millis = time::Duration::from_millis(300);
+        thread::sleep(ten_millis);
     }
     let stream = UnixStream::connect(&config.client_ref().socket)?;
 

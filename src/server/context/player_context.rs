@@ -1,5 +1,6 @@
+use dizi_lib::error::DiziResult;
+
 use crate::audio::Player;
-use dizi_commands::error::DiziResult;
 
 #[derive(Debug)]
 pub struct PlayerContext {
