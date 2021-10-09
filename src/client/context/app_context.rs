@@ -4,6 +4,8 @@ use std::os::unix::net::UnixStream;
 use std::path::{Path, PathBuf};
 use std::sync::mpsc;
 
+use dizi_lib::utils;
+
 use crate::config;
 use crate::context::MessageQueue;
 use crate::event::{AppEvent, Events};
@@ -57,8 +59,7 @@ impl AppContext {
     }
 
     pub fn flush_stream(&mut self) -> io::Result<()> {
-        const NEWLINE: &[u8] = &['\n' as u8];
-        self.stream.write(NEWLINE)?;
+        utils::flush(&mut self.stream)?;
         Ok(())
     }
 

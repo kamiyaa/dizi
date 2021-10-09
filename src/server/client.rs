@@ -1,9 +1,11 @@
-use std::io::{BufRead, BufReader};
+use std::io::{BufRead, BufReader, Write};
 use std::os::unix::net::{UnixListener, UnixStream};
 use std::sync::mpsc;
 use std::thread;
 
 use dizi_lib::error::DiziResult;
+use dizi_lib::response;
+use dizi_lib::utils;
 
 use crate::client_command::run_command;
 use crate::events::{ClientEvent, ClientEventSender, ServerEvent, ServerEventReceiver};
@@ -49,7 +51,9 @@ pub fn handle_client(
 
     while let Ok(event) = event_rx.recv() {
         match event {
-            ClientMessage::Server(event) => process_server_event(&mut stream, event),
+            ClientMessage::Server(event) => {
+                let _ = process_server_event(&mut stream, event);
+            }
             ClientMessage::Client(line) => {
                 let _ = run_command(&server_req, &line);
             }
@@ -66,12 +70,30 @@ pub fn listen_for_clients(listener: UnixListener, event_tx: ClientEventSender) -
     Ok(())
 }
 
-pub fn process_server_event(stream: &mut UnixStream, event: ServerEvent) {
+pub fn process_server_event(stream: &mut UnixStream, event: ServerEvent) -> DiziResult<()> {
     match event {
         ServerEvent::Quit => {}
-        ServerEvent::PlayerPlay(Song) => {}
-        ServerEvent::PlayerPause => {}
-        ServerEvent::PlayerResume => {}
+        ServerEvent::PlayerPlay(song) => {
+            let response = response::PlayerPlay::new(song.file_path().to_path_buf());
+            let json = serde_json::to_string(&response).unwrap();
+
+            stream.write(json.as_bytes())?;
+            utils::flush(stream)?;
+        }
+        ServerEvent::PlayerPause => {
+            let response = response::PlayerPause::new();
+            let json = serde_json::to_string(&response).unwrap();
+
+            stream.write(json.as_bytes())?;
+            utils::flush(stream)?;
+        }
+        ServerEvent::PlayerResume => {
+            let response = response::PlayerResume::new();
+            let json = serde_json::to_string(&response).unwrap();
+
+            stream.write(json.as_bytes())?;
+            utils::flush(stream)?;
+        }
         ServerEvent::PlayerRepeatOn => {}
         ServerEvent::PlayerRepeatOff => {}
         ServerEvent::PlayerShuffleOn => {}
@@ -79,4 +101,5 @@ pub fn process_server_event(stream: &mut UnixStream, event: ServerEvent) {
         ServerEvent::PlayerVolumeUpdate(usize) => {}
         ServerEvent::PlayerDurationLeft(usize) => {}
     }
+    Ok(())
 }
