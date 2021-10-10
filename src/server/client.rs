@@ -70,36 +70,56 @@ pub fn listen_for_clients(listener: UnixListener, event_tx: ClientEventSender) -
     Ok(())
 }
 
+macro_rules! server_process_stub {
+    ($stream:ident, $enum_variant:ident) => {
+        let response = response::$enum_variant::new();
+        let json = serde_json::to_string(&response).unwrap();
+
+        $stream.write(json.as_bytes())?;
+        utils::flush($stream)?;
+    };
+}
+
 pub fn process_server_event(stream: &mut UnixStream, event: ServerEvent) -> DiziResult<()> {
+    eprintln!("event from server: {:?}", event);
     match event {
         ServerEvent::Quit => {}
         ServerEvent::PlayerPlay(song) => {
-            let response = response::PlayerPlay::new(song.file_path().to_path_buf());
+            let response = response::PlayerPlay::new(song);
             let json = serde_json::to_string(&response).unwrap();
 
             stream.write(json.as_bytes())?;
             utils::flush(stream)?;
         }
-        ServerEvent::PlayerPause => {
-            let response = response::PlayerPause::new();
+        ServerEvent::PlayerVolumeUpdate(volume) => {
+            let response = response::PlayerVolumeUpdate::new(volume);
             let json = serde_json::to_string(&response).unwrap();
 
             stream.write(json.as_bytes())?;
             utils::flush(stream)?;
+        }
+        ServerEvent::PlayerDurationLeft(usize) => {}
+        ServerEvent::PlayerPause => {
+            server_process_stub!(stream, PlayerPause);
         }
         ServerEvent::PlayerResume => {
-            let response = response::PlayerResume::new();
-            let json = serde_json::to_string(&response).unwrap();
-
-            stream.write(json.as_bytes())?;
-            utils::flush(stream)?;
+            server_process_stub!(stream, PlayerResume);
         }
-        ServerEvent::PlayerRepeatOn => {}
-        ServerEvent::PlayerRepeatOff => {}
-        ServerEvent::PlayerShuffleOn => {}
-        ServerEvent::PlayerShuffleOff => {}
-        ServerEvent::PlayerVolumeUpdate(usize) => {}
-        ServerEvent::PlayerDurationLeft(usize) => {}
+        ServerEvent::PlayerRepeatOn => {
+            server_process_stub!(stream, PlayerRepeatOn);
+        }
+        ServerEvent::PlayerRepeatOff => {
+            server_process_stub!(stream, PlayerRepeatOff);
+        }
+        ServerEvent::PlayerShuffleOn => {
+            server_process_stub!(stream, PlayerShuffleOn);
+        }
+        ServerEvent::PlayerShuffleOff => {
+            server_process_stub!(stream, PlayerShuffleOff);
+        }
+        s => {
+            eprintln!("Not Implemented! {:?}", s);
+        }
     }
     Ok(())
 }

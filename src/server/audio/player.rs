@@ -7,7 +7,7 @@ use dizi_lib::song::Song;
 
 use crate::audio::{player_stream_thread, PlayerRequest, PlayerResponse, Playlist};
 
-#[derive(Copy, Clone, Debug)]
+#[derive(Copy, Clone, Debug, PartialEq)]
 pub enum PlayerStatus {
     Playing,
     Paused,
@@ -138,9 +138,6 @@ impl Player {
     }
 
     pub fn is_paused(&self) -> bool {
-        match self.player_stream_res().recv().map(|r| r.unwrap()) {
-            Ok(PlayerResponse::IsPaused(u)) => u,
-            _ => true,
-        }
+        self.status != PlayerStatus::Playing
     }
 }

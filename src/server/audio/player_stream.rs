@@ -151,7 +151,6 @@ pub fn player_stream_thread(
                         .player_res()
                         .send(Ok(PlayerResponse::Len(len)));
                 }
-
                 s => {
                     eprintln!("Not implemented '{:?}'", s);
                 }

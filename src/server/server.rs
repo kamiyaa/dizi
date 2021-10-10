@@ -23,13 +23,35 @@ pub fn setup_socket(config: &AppConfig) -> DiziResult<UnixListener> {
 
 pub fn serve(config: AppConfig) -> DiziResult<()> {
     let mut events = Events::new();
-    let mut context = AppContext::new(config)?;
+    let mut context = AppContext::new(config);
 
     let listener = setup_socket(context.config_ref())?;
     {
+        // thread for listening to new client connections
         let client_tx2 = events.client_tx.clone();
         thread::spawn(|| client::listen_for_clients(listener, client_tx2));
     }
+
+    /*
+        {
+            // thread for listening to new client connections
+            let client_tx2 = events.client_tx.clone();
+            let player = context.player_context_ref().player_clone();
+            thread::spawn(move || {
+                let duration = std::time::Duration::from_millis(1000);
+                loop {
+                    thread::sleep(duration);
+                    if player.lock().unwrap().is_paused() {
+                        continue;
+                    }
+                    while !player.lock().unwrap().is_paused() {
+                        thread::sleep(duration);
+                    }
+                    client_tx2.send(ClientEvent::PlayerNextSong);
+                }
+            });
+        }
+    */
 
     loop {
         let event = match events.next() {

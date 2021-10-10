@@ -11,6 +11,10 @@ pub fn run_command(
     event: ClientEvent,
 ) -> DiziResult<()> {
     match event {
+        ClientEvent::PlayerGetLen => {
+            let len = player_get_len(context)?;
+            events.broadcast_event(ServerEvent::PlayerDurationLeft(len));
+        }
         ClientEvent::PlayerPlay(song) => {
             player_play(context, song.file_path())?;
             events.broadcast_event(ServerEvent::PlayerPlay(song));

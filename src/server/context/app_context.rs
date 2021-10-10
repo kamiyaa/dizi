@@ -16,16 +16,18 @@ pub enum QuitType {
 
 #[derive(Debug)]
 pub struct AppContext {
+    quit: QuitType,
     config: config::AppConfig,
     player_context: PlayerContext,
 }
 
 impl AppContext {
-    pub fn new(config: config::AppConfig) -> DiziResult<Self> {
-        Ok(Self {
+    pub fn new(config: config::AppConfig) -> Self {
+        Self {
+            quit: QuitType::DoNot,
             config,
-            player_context: PlayerContext::new()?,
-        })
+            player_context: PlayerContext::new(),
+        }
     }
 
     pub fn config_ref(&self) -> &config::AppConfig {

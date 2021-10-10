@@ -18,6 +18,7 @@ pub enum ClientEvent {
     PlayerNextSong,
     PlayerPrevSong,
     PlayerGetVolume,
+    PlayerGetLen,
     PlayerVolumeUp(usize),
     PlayerVolumeDown(usize),
     PlayerTogglePlay,

@@ -15,7 +15,5 @@ pub const RESP_PLAYER_REPEAT_ON: &str        = "/player/repeat/on";
 pub const RESP_PLAYER_REPEAT_OFF: &str       = "/player/repeat/off";
 pub const RESP_PLAYER_NEXT_ON: &str          = "/player/next/on";
 pub const RESP_PLAYER_NEXT_OFF: &str         = "/player/next/off";
-pub const RESP_PLAYER_TOGGLE_REPEAT: &str    = "/player/toggle/repeat";
-pub const RESP_PLAYER_TOGGLE_NEXT: &str      = "/player/toggle/next";
 
 pub const RESP_PLAYER_VOLUME_UPDATE: &str    = "/player/volume/update";

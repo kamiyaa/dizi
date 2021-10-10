@@ -1,21 +1,65 @@
+use std::fs::File;
 use std::io;
+use std::io::BufReader;
 use std::path::{Path, PathBuf};
+use std::time;
+
+use rodio::decoder::Decoder;
+use rodio::source::Source;
 
 use serde_derive::{Deserialize, Serialize};
+
+use crate::error::DiziResult;
+
+#[derive(Clone, Debug, Serialize, Deserialize)]
+pub struct AudioMetadata {
+    channels: u16,
+    sample_rate: u32,
+    total_duration: Option<time::Duration>,
+}
+
+impl AudioMetadata {
+    pub fn new(channels: u16, sample_rate: u32, total_duration: Option<time::Duration>) -> Self {
+        Self {
+            channels, sample_rate, total_duration
+        }
+    }
+
+    pub fn from_source<T: Source<Item = i16>>(source: &T) -> Self {
+        let channels = source.channels();
+        let sample_rate = source.sample_rate();
+        let total_duration = source.total_duration();
+
+        Self::new(channels, sample_rate, total_duration)
+    }
+}
+
+#[derive(Clone, Debug, Serialize, Deserialize)]
+pub struct MusicMetadata {}
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct Song {
     #[serde(rename = "path")]
     _path: PathBuf,
-    #[serde(rename = "metadata", default)]
-    _metadata: String,
+    #[serde(rename = "audio_metadata")]
+    _audio_metadata: AudioMetadata,
+    #[serde(rename = "music_metadata")]
+    _music_metadata: MusicMetadata,
 }
 
 impl Song {
-    pub fn new(p: &Path) -> io::Result<Self> {
+    pub fn new(path: &Path) -> DiziResult<Self> {
+        let file = File::open(path)?;
+        let buffer = BufReader::new(file);
+        let source = Decoder::new(buffer)?;
+
+        let audio_metadata = AudioMetadata::from_source(&source);
+        let music_metadata = MusicMetadata {};
+
         Ok(Self {
-            _path: p.to_path_buf(),
-            _metadata: "".to_string(),
+            _path: path.to_path_buf(),
+            _audio_metadata: audio_metadata,
+            _music_metadata: music_metadata,
         })
     }
 
@@ -23,7 +67,11 @@ impl Song {
         self._path.as_path()
     }
 
-    pub fn metadata(&self) -> &String {
-        &self._metadata
+    pub fn audio_metadata(&self) -> &AudioMetadata {
+        &self._audio_metadata
+    }
+
+    pub fn music_metadata(&self) -> &MusicMetadata {
+        &self._music_metadata
     }
 }
