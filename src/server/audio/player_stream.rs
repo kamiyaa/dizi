@@ -154,8 +154,8 @@ pub fn player_stream(
 ) -> DiziResult<()> {
     let mut player_stream = PlayerStream::new(player_res_tx, player_req_rx, event_tx);
 
-    let jack_device = jack_default_output_device();
-    let (stream, stream_handle) = OutputStream::try_from_device(&jack_device)?;
+    let audio_device = get_default_output_device(config_t.server_ref().audio_system);
+    let (stream, stream_handle) = OutputStream::try_from_device(&audio_device)?;
 
     let (queue_tx, queue_rx) = rodio::queue::queue(true);
     let _ = stream_handle.play_raw(queue_rx);
@@ -188,7 +188,8 @@ pub fn player_stream(
     Ok(())
 }
 
-pub fn jack_default_output_device() -> cpal::Device {
+pub fn get_default_output_device(host_id: cpal::HostId) -> cpal::Device {
+    eprintln!("Available audio systems:");
     for host in cpal::available_hosts() {
         eprintln!("host: {:?}", host);
     }
@@ -196,7 +197,7 @@ pub fn jack_default_output_device() -> cpal::Device {
     let host = cpal::host_from_id(
         cpal::available_hosts()
             .into_iter()
-            .find(|id| *id == cpal::HostId::Jack)
+            .find(|id| *id == host_id)
             .unwrap(),
     )
     .unwrap_or_else(|_| cpal::default_host());

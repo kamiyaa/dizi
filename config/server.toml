@@ -1,4 +1,4 @@
 [server]
 socket = "/tmp/dizi-server-socket"
 
-host = "jack"
+audio_system = "jack"

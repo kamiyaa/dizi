@@ -1,3 +1,5 @@
-pub mod default;
+pub mod general;
+pub mod server;
 
-pub use self::default::AppConfig;
+pub use self::general::AppConfig;
+pub use self::server::ServerConfig;
