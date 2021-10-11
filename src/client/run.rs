@@ -63,10 +63,18 @@ pub fn run(
                     }
                     Some(CommandKeybind::SimpleKeybind(command)) => {
                         if let Err(e) = command.execute(context, backend, &keymap_t) {
-                            eprintln!("{:?}", e);
+                            context.message_queue_mut().push_error(e.to_string());
                         }
                     }
-                    Some(CommandKeybind::CompositeKeybind(m)) => {}
+                    Some(CommandKeybind::CompositeKeybind(m)) => {
+                        let cmd = input::get_input_while_composite(backend, context, m);
+
+                        if let Some(command) = cmd {
+                            if let Err(e) = command.execute(context, backend, &keymap_t) {
+                                context.message_queue_mut().push_error(e.to_string());
+                            }
+                        }
+                    }
                 }
                 context.flush_event();
                 preview_default::load_preview(context, backend);
