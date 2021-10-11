@@ -35,11 +35,19 @@ whenever mocp is playing music, other audio/video apps stop working and vice ver
 
 ## TODOs
 
+### Server-side
  - [x] play/pause support
  - [x] volume support
  - [ ] playlist support
- - [ ] show music progress
- - [ ] shuffle, repeat, next
+   - [ ] shuffle
+   - [ ] repeat
+   - [ ] next
+ - [x] show music progress
+ - [ ] configurable audio system
+   - [x] ALSA support
+   - [x] JACK support (current default)
+   - [ ] Pipewire support
+
+### Client-side
  - [ ] theming support
- - [ ] Pipewire to play audio
  - [ ] custom layout support
