@@ -17,6 +17,7 @@ path = "src/client/main.rs"
 [dependencies]
 alphanumeric-sort = "^1"
 chrono = "^0"
+cpal = { features = [ "jack" ], version = "^0" }
 crossbeam = "^0"
 dirs-next = "^2"
 dizi_lib = { path = "lib/dizi_lib", version = "^0" }

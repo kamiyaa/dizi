@@ -22,39 +22,17 @@ pub fn setup_socket(config: &AppConfig) -> DiziResult<UnixListener> {
 }
 
 pub fn serve(config: AppConfig) -> DiziResult<()> {
-    let mut events = Events::new();
     let mut context = AppContext::new(config);
 
     let listener = setup_socket(context.config_ref())?;
     {
         // thread for listening to new client connections
-        let client_tx2 = events.client_tx.clone();
+        let client_tx2 = context.events.client_tx.clone();
         thread::spawn(|| client::listen_for_clients(listener, client_tx2));
     }
 
-    /*
-        {
-            // thread for listening to new client connections
-            let client_tx2 = events.client_tx.clone();
-            let player = context.player_context_ref().player_clone();
-            thread::spawn(move || {
-                let duration = std::time::Duration::from_millis(1000);
-                loop {
-                    thread::sleep(duration);
-                    if player.lock().unwrap().is_paused() {
-                        continue;
-                    }
-                    while !player.lock().unwrap().is_paused() {
-                        thread::sleep(duration);
-                    }
-                    client_tx2.send(ClientEvent::PlayerNextSong);
-                }
-            });
-        }
-    */
-
     loop {
-        let event = match events.next() {
+        let event = match context.events.next() {
             Ok(event) => event,
             Err(_) => return Ok(()),
         };
@@ -64,14 +42,14 @@ pub fn serve(config: AppConfig) -> DiziResult<()> {
                 break;
             }
             ClientEvent::NewClient(stream) => {
-                let client_tx2 = events.client_tx.clone();
+                let client_tx2 = context.events.client_tx.clone();
                 let (server_tx, server_rx) = mpsc::channel();
 
                 thread::spawn(|| client::handle_client(stream, client_tx2, server_rx));
-                events.server_listeners.push(server_tx);
+                context.events.server_listeners.push(server_tx);
             }
             event => {
-                let _ = run_command(&mut context, &mut events, event);
+                let _ = run_command(&mut context, event);
             }
         }
     }

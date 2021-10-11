@@ -98,7 +98,13 @@ pub fn process_server_event(stream: &mut UnixStream, event: ServerEvent) -> Dizi
             stream.write(json.as_bytes())?;
             utils::flush(stream)?;
         }
-        ServerEvent::PlayerDurationLeft(usize) => {}
+        ServerEvent::PlayerProgressUpdate(duration) => {
+            let response = response::PlayerProgressUpdate::new(duration);
+            let json = serde_json::to_string(&response).unwrap();
+
+            stream.write(json.as_bytes())?;
+            utils::flush(stream)?;
+        }
         ServerEvent::PlayerPause => {
             server_process_stub!(stream, PlayerPause);
         }

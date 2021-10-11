@@ -1,4 +1,5 @@
 use std::path::PathBuf;
+use std::time;
 
 use serde_derive::{Deserialize, Serialize};
 
@@ -19,6 +20,7 @@ dizi_json_stub!(PlayerNextOff, RESP_PLAYER_NEXT_OFF);
 
 dizi_json!(PlayerPlay, RESP_PLAYER_PLAY);
 dizi_json!(PlayerVolumeUpdate, RESP_PLAYER_VOLUME_UPDATE);
+dizi_json!(PlayerProgressUpdate, RESP_PLAYER_PROGRESS_UPDATE);
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
 pub struct PlayerPlay {
@@ -44,6 +46,20 @@ impl PlayerVolumeUpdate {
         Self {
             command: Self::path().to_string(),
             volume,
+        }
+    }
+}
+
+#[derive(Clone, Debug, Deserialize, Serialize)]
+pub struct PlayerProgressUpdate {
+    pub command: String,
+    pub duration: time::Duration,
+}
+impl PlayerProgressUpdate {
+    pub fn new(duration: time::Duration) -> Self {
+        Self {
+            command: Self::path().to_string(),
+            duration,
         }
     }
 }

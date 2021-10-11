@@ -3,6 +3,7 @@ use std::sync::mpsc;
 use dizi_lib::error::DiziResult;
 
 use crate::config;
+use crate::events::Events;
 
 use super::PlayerContext;
 
@@ -16,6 +17,7 @@ pub enum QuitType {
 
 #[derive(Debug)]
 pub struct AppContext {
+    pub events: Events,
     quit: QuitType,
     config: config::AppConfig,
     player_context: PlayerContext,
@@ -23,10 +25,14 @@ pub struct AppContext {
 
 impl AppContext {
     pub fn new(config: config::AppConfig) -> Self {
+        let events = Events::new();
+        let event_tx2 = events.client_tx.clone();
+        let player_context = PlayerContext::new(&config, event_tx2);
         Self {
+            events,
             quit: QuitType::DoNot,
             config,
-            player_context: PlayerContext::new(),
+            player_context,
         }
     }
 

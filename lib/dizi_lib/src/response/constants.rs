@@ -17,3 +17,4 @@ pub const RESP_PLAYER_NEXT_ON: &str          = "/player/next/on";
 pub const RESP_PLAYER_NEXT_OFF: &str         = "/player/next/off";
 
 pub const RESP_PLAYER_VOLUME_UPDATE: &str    = "/player/volume/update";
+pub const RESP_PLAYER_PROGRESS_UPDATE: &str  = "/player/progress/update";

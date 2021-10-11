@@ -2,6 +2,8 @@ use dizi_lib::error::DiziResult;
 use std::sync::{Arc, Mutex};
 
 use crate::audio::Player;
+use crate::config;
+use crate::events::ClientEventSender;
 
 #[derive(Debug)]
 pub struct PlayerContext {
@@ -9,8 +11,8 @@ pub struct PlayerContext {
 }
 
 impl PlayerContext {
-    pub fn new() -> Self {
-        let player = Player::new();
+    pub fn new(config_t: &config::AppConfig, event: ClientEventSender) -> Self {
+        let player = Player::new(config_t, event);
         Self {
             _player: Arc::new(Mutex::new(player)),
         }

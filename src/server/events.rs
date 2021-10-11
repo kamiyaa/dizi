@@ -1,5 +1,6 @@
 use std::os::unix::net::UnixStream;
 use std::sync::mpsc;
+use std::time;
 
 use dizi_lib::song::Song;
 
@@ -18,13 +19,16 @@ pub enum ClientEvent {
     PlayerNextSong,
     PlayerPrevSong,
     PlayerGetVolume,
-    PlayerGetLen,
+
     PlayerVolumeUp(usize),
     PlayerVolumeDown(usize),
+
     PlayerTogglePlay,
     PlayerToggleNext,
     PlayerToggleRepeat,
     PlayerToggleShuffle,
+
+    PlayerProgressUpdate(time::Duration),
 }
 
 #[derive(Clone, Debug)]
@@ -40,8 +44,9 @@ pub enum ServerEvent {
     PlayerRepeatOff,
     PlayerShuffleOn,
     PlayerShuffleOff,
+
     PlayerVolumeUpdate(usize),
-    PlayerDurationLeft(usize),
+    PlayerProgressUpdate(time::Duration),
 }
 
 pub type ClientEventSender = mpsc::Sender<ClientEvent>;
@@ -52,6 +57,8 @@ pub type ServerEventReceiver = mpsc::Receiver<ServerEvent>;
 
 /// A small event handler that wrap termion input and tick events. Each event
 /// type is handled in its own thread and returned to a common `Receiver`
+
+#[derive(Debug)]
 pub struct Events {
     pub client_tx: ClientEventSender,
     pub client_rx: ClientEventReceiver,

@@ -1,2 +1,4 @@
 [server]
-socket = "/tmp/kamiyaa/dizi-server-socket"
+socket = "/tmp/dizi-server-socket"
+
+host = "jack"
