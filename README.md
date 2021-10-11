@@ -43,7 +43,7 @@ whenever mocp is playing music, other audio/video apps stop working and vice ver
    - [ ] repeat
    - [ ] next
  - [x] show music progress
- - [ ] configurable audio system
+ - [x] configurable audio system
    - [x] ALSA support
    - [x] JACK support (current default)
    - [ ] Pipewire support
