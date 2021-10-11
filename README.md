@@ -49,5 +49,13 @@ whenever mocp is playing music, other audio/video apps stop working and vice ver
    - [ ] Pipewire support
 
 ### Client-side
+ - [x] show hidden files
+ - [x] searching
+   - [x] glob search
+   - [x] case-insensitive search
+   - [x] skim search (fzf)
+ - [ ] show player progression
+ - [ ] show playlist
+ - [ ] show audio metadata
  - [ ] theming support
  - [ ] custom layout support
