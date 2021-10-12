@@ -26,7 +26,7 @@ pub struct AppContext {
 impl AppContext {
     pub fn new(config: config::AppConfig) -> Self {
         let events = Events::new();
-        let event_tx2 = events.client_tx.clone();
+        let event_tx2 = events.server_event_sender().clone();
         let player_context = PlayerContext::new(&config, event_tx2);
         Self {
             events,

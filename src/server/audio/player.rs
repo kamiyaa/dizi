@@ -7,7 +7,7 @@ use dizi_lib::song::Song;
 
 use crate::audio::{player_stream, PlayerRequest, Playlist};
 use crate::config;
-use crate::events::ClientEventSender;
+use crate::events::ServerEventSender;
 
 #[derive(Copy, Clone, Debug, PartialEq)]
 pub enum PlayerStatus {
@@ -27,7 +27,7 @@ pub struct Player {
     repeat: bool,
     next: bool,
 
-    event_tx: ClientEventSender,
+    event_tx: ServerEventSender,
 
     // event_tx: mpsc::Sender<PlayerResponse>,
     playlist: Playlist,
@@ -37,7 +37,7 @@ pub struct Player {
 }
 
 impl Player {
-    pub fn new(config_t: &config::AppConfig, event_tx: ClientEventSender) -> Self {
+    pub fn new(config_t: &config::AppConfig, event_tx: ServerEventSender) -> Self {
         let (player_req_tx, player_req_rx) = mpsc::channel();
         let (player_res_tx, player_res_rx) = mpsc::channel();
 

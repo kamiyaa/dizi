@@ -3,9 +3,9 @@ use dizi_lib::request::constants::*;
 use dizi_lib::request::player;
 
 use crate::client_commands::*;
-use crate::events::ClientEventSender;
+use crate::events::ClientRequestSender;
 
-pub fn run_command(server_req: &ClientEventSender, s: &str) -> DiziResult<()> {
+pub fn run_command(server_req: &ClientRequestSender, s: &str) -> DiziResult<()> {
     let json_res: Result<serde_json::Map<String, serde_json::Value>, serde_json::Error> =
         serde_json::from_str(s);
 

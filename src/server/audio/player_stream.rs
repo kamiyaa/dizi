@@ -15,7 +15,7 @@ use dizi_lib::error::DiziResult;
 use dizi_lib::song::Song;
 
 use crate::config;
-use crate::events::{ClientEvent, ClientEventSender};
+use crate::events::{ServerEvent, ServerEventSender};
 
 #[derive(Clone, Debug)]
 pub enum PlayerRequest {
@@ -36,7 +36,7 @@ pub type SourceThread = thread::JoinHandle<DiziResult<mpsc::Receiver<()>>>;
 pub struct PlayerStream {
     pub player_res_tx: mpsc::Sender<DiziResult<()>>,
     pub player_req_rx: mpsc::Receiver<PlayerRequest>,
-    pub event_tx: ClientEventSender,
+    pub event_tx: ServerEventSender,
     pub source_tx: Option<mpsc::Sender<PlayerRequest>>,
     pub receiver: Option<mpsc::Receiver<()>>,
 }
@@ -45,7 +45,7 @@ impl PlayerStream {
     pub fn new(
         player_res_tx: mpsc::Sender<DiziResult<()>>,
         player_req_rx: mpsc::Receiver<PlayerRequest>,
-        event_tx: ClientEventSender,
+        event_tx: ServerEventSender,
     ) -> Self {
         Self {
             player_res_tx,
@@ -92,7 +92,7 @@ impl PlayerStream {
         &mut self,
         queue_tx: &queue::SourcesQueueInput<f32>,
         path: &Path,
-    ) -> DiziResult<()> {
+    ) -> DiziResult<mpsc::Receiver<()>> {
         self.stop();
 
         const POLL_RATE: Duration = Duration::from_millis(200);
@@ -108,26 +108,32 @@ impl PlayerStream {
         let (source_tx, source_rx): (mpsc::Sender<PlayerRequest>, mpsc::Receiver<PlayerRequest>) =
             mpsc::channel();
 
+        let mut paused = false;
+
         let source = Decoder::new(buffer)?
             .stoppable()
             .amplify(1.0)
             .pausable(false)
             .periodic_access(POLL_RATE, move |source| {
-                update_tracker += POLL_RATE;
-                if update_tracker >= UPDATE_RATE {
-                    duration_played += update_tracker;
-                    update_tracker = Duration::from_secs(0);
-                    eprintln!("Played {:?}", duration_played);
-                    event_tx2.send(ClientEvent::PlayerProgressUpdate(duration_played));
+                if paused == false {
+                    update_tracker += POLL_RATE;
+                    if update_tracker >= UPDATE_RATE {
+                        duration_played += update_tracker;
+                        update_tracker = Duration::from_secs(0);
+                        eprintln!("Played {:?}", duration_played);
+                        event_tx2.send(ServerEvent::PlayerProgressUpdate(duration_played));
+                    }
                 }
 
                 if let Ok(msg) = source_rx.try_recv() {
                     match msg {
                         PlayerRequest::Pause => {
                             source.set_paused(true);
+                            paused = true;
                         }
                         PlayerRequest::Resume => {
                             source.set_paused(false);
+                            paused = false;
                         }
                         PlayerRequest::SetVolume(volume) => {
                             source.inner_mut().set_factor(volume);
@@ -141,8 +147,8 @@ impl PlayerStream {
             })
             .convert_samples();
         self.source_tx = Some(source_tx);
-        queue_tx.append_with_signal(source);
-        Ok(())
+        let finish_signal = queue_tx.append_with_signal(source);
+        Ok(finish_signal)
     }
 }
 
@@ -150,7 +156,7 @@ pub fn player_stream(
     config_t: config::AppConfig,
     player_res_tx: mpsc::Sender<DiziResult<()>>,
     player_req_rx: mpsc::Receiver<PlayerRequest>,
-    event_tx: ClientEventSender,
+    event_tx: ServerEventSender,
 ) -> DiziResult<()> {
     let mut player_stream = PlayerStream::new(player_res_tx, player_req_rx, event_tx);
 
@@ -164,7 +170,7 @@ pub fn player_stream(
         match msg {
             PlayerRequest::Play(song) => {
                 match player_stream.play(&queue_tx, song.file_path()) {
-                    Ok(()) => player_stream.player_res().send(Ok(())),
+                    Ok(receiver) => player_stream.player_res().send(Ok(())),
                     Err(e) => player_stream.player_res().send(Err(e)),
                 };
             }
