@@ -1,8 +1,8 @@
 use std::path::Path;
 
 use dizi_lib::error::DiziResult;
+use dizi_lib::player::PlayerStatus;
 
-use crate::audio::PlayerStatus;
 use crate::context::AppContext;
 
 pub fn player_play(context: &mut AppContext, path: &Path) -> DiziResult<()> {

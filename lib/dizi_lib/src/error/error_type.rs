@@ -1,3 +1,4 @@
+use std::convert::From;
 use std::io;
 
 use super::DiziErrorKind;
@@ -24,7 +25,7 @@ impl std::fmt::Display for DiziError {
     }
 }
 
-impl std::convert::From<io::Error> for DiziError {
+impl From<io::Error> for DiziError {
     fn from(err: io::Error) -> Self {
         Self {
             _kind: DiziErrorKind::from(err.kind()),
@@ -33,7 +34,7 @@ impl std::convert::From<io::Error> for DiziError {
     }
 }
 
-impl std::convert::From<globset::Error> for DiziError {
+impl From<globset::Error> for DiziError {
     fn from(err: globset::Error) -> Self {
         Self {
             _kind: DiziErrorKind::from(err.kind()),
@@ -42,7 +43,7 @@ impl std::convert::From<globset::Error> for DiziError {
     }
 }
 
-impl std::convert::From<std::env::VarError> for DiziError {
+impl From<std::env::VarError> for DiziError {
     fn from(err: std::env::VarError) -> Self {
         Self {
             _kind: DiziErrorKind::from(err),
@@ -51,7 +52,7 @@ impl std::convert::From<std::env::VarError> for DiziError {
     }
 }
 
-impl std::convert::From<rodio::PlayError> for DiziError {
+impl From<rodio::PlayError> for DiziError {
     fn from(err: rodio::PlayError) -> Self {
         let err_str = err.to_string();
         Self {
@@ -61,7 +62,7 @@ impl std::convert::From<rodio::PlayError> for DiziError {
     }
 }
 
-impl std::convert::From<rodio::StreamError> for DiziError {
+impl From<rodio::StreamError> for DiziError {
     fn from(err: rodio::StreamError) -> Self {
         Self {
             _kind: DiziErrorKind::from(err),
@@ -70,7 +71,7 @@ impl std::convert::From<rodio::StreamError> for DiziError {
     }
 }
 
-impl std::convert::From<rodio::decoder::DecoderError> for DiziError {
+impl From<rodio::decoder::DecoderError> for DiziError {
     fn from(err: rodio::decoder::DecoderError) -> Self {
         Self {
             _kind: DiziErrorKind::from(err),
@@ -79,7 +80,7 @@ impl std::convert::From<rodio::decoder::DecoderError> for DiziError {
     }
 }
 
-impl<T> std::convert::From<std::sync::mpsc::SendError<T>> for DiziError {
+impl<T> From<std::sync::mpsc::SendError<T>> for DiziError {
     fn from(err: std::sync::mpsc::SendError<T>) -> Self {
         Self {
             _kind: DiziErrorKind::SendError,
@@ -88,7 +89,7 @@ impl<T> std::convert::From<std::sync::mpsc::SendError<T>> for DiziError {
     }
 }
 
-impl<T> std::convert::From<crossbeam::channel::SendError<T>> for DiziError {
+impl<T> From<crossbeam::channel::SendError<T>> for DiziError {
     fn from(err: crossbeam::channel::SendError<T>) -> Self {
         Self {
             _kind: DiziErrorKind::SendError,
@@ -96,3 +97,13 @@ impl<T> std::convert::From<crossbeam::channel::SendError<T>> for DiziError {
         }
     }
 }
+
+impl From<serde_json::Error> for DiziError {
+    fn from(err: serde_json::Error) -> Self {
+        Self {
+            _kind: DiziErrorKind::from(err),
+            _cause: "Failed to parse JSON".to_string(),
+        }
+    }
+}
+

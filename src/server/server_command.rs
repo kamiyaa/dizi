@@ -1,13 +1,15 @@
 use dizi_lib::error::DiziResult;
+use dizi_lib::player::PlayerStatus;
+use dizi_lib::song::Song;
 
-use crate::audio::PlayerStatus;
 use crate::context::AppContext;
 use crate::events::{ClientRequest, Events, ServerBroadcastEvent};
 use crate::server_commands::*;
 
 pub fn run_command(context: &mut AppContext, event: ClientRequest) -> DiziResult<()> {
     match event {
-        ClientRequest::PlayerPlay(song) => {
+        ClientRequest::PlayerPlay(path) => {
+            let song = Song::new(path.as_path())?;
             player_play(context, song.file_path())?;
             context
                 .events

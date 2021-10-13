@@ -1,3 +1,4 @@
+use std::convert::From;
 use std::io;
 
 #[derive(Debug)]
@@ -10,6 +11,7 @@ pub enum DiziErrorKind {
 
     // parse error
     ParseError,
+    SerdeJson(serde_json::Error),
     ClipboardError,
 
     Glob,
@@ -26,25 +28,25 @@ pub enum DiziErrorKind {
     UnrecognizedCommand,
 }
 
-impl std::convert::From<io::ErrorKind> for DiziErrorKind {
+impl From<io::ErrorKind> for DiziErrorKind {
     fn from(err: io::ErrorKind) -> Self {
         Self::IoError(err)
     }
 }
 
-impl std::convert::From<&globset::ErrorKind> for DiziErrorKind {
+impl From<&globset::ErrorKind> for DiziErrorKind {
     fn from(_: &globset::ErrorKind) -> Self {
         Self::Glob
     }
 }
 
-impl std::convert::From<std::env::VarError> for DiziErrorKind {
+impl From<std::env::VarError> for DiziErrorKind {
     fn from(_: std::env::VarError) -> Self {
         Self::EnvVarNotPresent
     }
 }
 
-impl std::convert::From<rodio::PlayError> for DiziErrorKind {
+impl From<rodio::PlayError> for DiziErrorKind {
     fn from(err: rodio::PlayError) -> Self {
         match err {
             rodio::PlayError::DecoderError(_) => Self::DecoderError,
@@ -53,14 +55,20 @@ impl std::convert::From<rodio::PlayError> for DiziErrorKind {
     }
 }
 
-impl std::convert::From<rodio::StreamError> for DiziErrorKind {
+impl From<rodio::StreamError> for DiziErrorKind {
     fn from(err: rodio::StreamError) -> Self {
         Self::StreamError(err)
     }
 }
 
-impl std::convert::From<rodio::decoder::DecoderError> for DiziErrorKind {
+impl From<rodio::decoder::DecoderError> for DiziErrorKind {
     fn from(err: rodio::decoder::DecoderError) -> Self {
         Self::UnrecognizedFormat
+    }
+}
+
+impl From<serde_json::Error> for DiziErrorKind {
+    fn from(err: serde_json::Error) -> Self {
+        Self::SerdeJson(err)
     }
 }

@@ -13,16 +13,31 @@ use crate::error::DiziResult;
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct AudioMetadata {
-    channels: u16,
-    sample_rate: u32,
-    total_duration: Option<time::Duration>,
+    #[serde(rename = "channels")]
+    _channels: u16,
+    #[serde(rename = "sample_rate")]
+    _sample_rate: u32,
+    #[serde(rename = "total_duration")]
+    _total_duration: Option<time::Duration>,
 }
 
 impl AudioMetadata {
     pub fn new(channels: u16, sample_rate: u32, total_duration: Option<time::Duration>) -> Self {
         Self {
-            channels, sample_rate, total_duration
+            _channels: channels,
+            _sample_rate: sample_rate,
+            _total_duration: total_duration
         }
+    }
+
+    pub fn channels(&self) -> u16 {
+        self._channels
+    }
+    pub fn sample_rate(&self) -> u32 {
+        self._sample_rate
+    }
+    pub fn total_duration(&self) -> Option<time::Duration> {
+        self._total_duration
     }
 
     pub fn from_source<T: Source<Item = i16>>(source: &T) -> Self {

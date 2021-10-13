@@ -3,18 +3,13 @@ use std::sync::mpsc;
 use std::thread;
 
 use dizi_lib::error::DiziResult;
+use dizi_lib::player::PlayerStatus;
+use dizi_lib::playlist::Playlist;
 use dizi_lib::song::Song;
 
-use crate::audio::{player_stream, PlayerRequest, Playlist};
+use crate::audio::{player_stream, PlayerRequest};
 use crate::config;
 use crate::events::ServerEventSender;
-
-#[derive(Copy, Clone, Debug, PartialEq)]
-pub enum PlayerStatus {
-    Playing,
-    Paused,
-    Stopped,
-}
 
 #[derive(Debug)]
 pub struct Player {

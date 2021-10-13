@@ -11,14 +11,14 @@ use super::PlayerContext;
 pub enum QuitType {
     DoNot,
     Normal,
-    Force,
     ToCurrentDirectory,
+    Server,
 }
 
 #[derive(Debug)]
 pub struct AppContext {
     pub events: Events,
-    quit: QuitType,
+    pub quit: QuitType,
     config: config::AppConfig,
     player_context: PlayerContext,
 }

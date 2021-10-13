@@ -1,4 +1,5 @@
 use std::os::unix::net::UnixStream;
+use std::path::PathBuf;
 use std::sync::mpsc;
 use std::thread;
 use std::time;
@@ -16,7 +17,7 @@ pub enum ClientRequest {
     Quit,
 
     // player requests
-    PlayerPlay(Song),
+    PlayerPlay(PathBuf),
     PlayerPause,
     PlayerResume,
     PlayerNextSong,

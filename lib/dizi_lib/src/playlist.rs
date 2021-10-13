@@ -1,7 +1,7 @@
 use std::collections::HashSet;
 use std::path::PathBuf;
 
-use dizi_lib::song::Song;
+use crate::song::Song;
 
 #[derive(Clone, Debug)]
 pub struct Playlist {

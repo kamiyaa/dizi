@@ -46,7 +46,6 @@ pub fn run(
         };
 
         match event {
-            AppEvent::Server(message) => input::process_server_event(context, message.as_str()),
             AppEvent::Termion(Event::Mouse(event)) => {
                 context.flush_event();
             }
@@ -76,8 +75,11 @@ pub fn run(
                         }
                     }
                 }
-                context.flush_event();
                 preview_default::load_preview(context, backend);
+                context.flush_event();
+            }
+            AppEvent::Server(message) => {
+                input::process_server_event(context, message.as_str());
             }
             event => input::process_noninteractive(event, context),
         }

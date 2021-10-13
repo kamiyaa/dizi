@@ -7,7 +7,7 @@ use std::sync::mpsc;
 use dizi_lib::utils;
 
 use crate::config;
-use crate::context::MessageQueue;
+use crate::context::{MessageQueue, ServerState};
 use crate::event::{AppEvent, Events};
 use crate::fs::DirList;
 use crate::history::History;
@@ -36,6 +36,8 @@ pub struct AppContext {
     search_context: Option<SearchPattern>,
     // message queue for displaying messages
     message_queue: MessageQueue,
+    // server state
+    server_state: ServerState,
 }
 
 impl AppContext {
@@ -44,13 +46,14 @@ impl AppContext {
 
         Self {
             quit: QuitType::DoNot,
+            config,
             stream,
             events,
             _cwd: cwd,
             history: History::new(),
             search_context: None,
             message_queue: MessageQueue::new(),
-            config,
+            server_state: ServerState::new(),
         }
     }
 
@@ -86,6 +89,13 @@ impl AppContext {
     }
     pub fn message_queue_mut(&mut self) -> &mut MessageQueue {
         &mut self.message_queue
+    }
+
+    pub fn server_state_ref(&self) -> &ServerState {
+        &self.server_state
+    }
+    pub fn server_state_mut(&mut self) -> &mut ServerState {
+        &mut self.server_state
     }
 
     pub fn get_search_context(&self) -> Option<&SearchPattern> {

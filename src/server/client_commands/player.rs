@@ -6,8 +6,7 @@ use dizi_lib::song::Song;
 use crate::events::{ClientRequest, ClientRequestSender};
 
 pub fn player_play(server_req: &ClientRequestSender, path: &Path) -> DiziResult<()> {
-    let song = Song::new(path)?;
-    server_req.send(ClientRequest::PlayerPlay(song))?;
+    server_req.send(ClientRequest::PlayerPlay(path.to_path_buf()))?;
     Ok(())
 }
 
