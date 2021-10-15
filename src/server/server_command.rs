@@ -29,9 +29,11 @@ pub fn run_command(context: &mut AppContext, event: ClientRequest) -> DiziResult
         }
         ClientRequest::PlayerPlayNext => {
             player_play_next(context)?;
+            // TODO: Broadcast new song
         }
         ClientRequest::PlayerPlayPrevious => {
             player_play_previous(context)?;
+            // TODO: Broadcast new song
         }
         ClientRequest::PlayerGetVolume => {
             eprintln!(

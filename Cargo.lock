@@ -587,7 +587,6 @@ dependencies = [
  "crossbeam",
  "dirs-next",
  "dizi_lib",
- "ffmpeg-decoder",
  "globset",
  "lazy_static",
  "libc",

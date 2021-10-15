@@ -91,28 +91,6 @@ pub fn process_server_event(
 ) -> DiziResult<()> {
     eprintln!("event from server: {:?}", event);
     match event {
-        ServerBroadcastEvent::Quit => {}
-        ServerBroadcastEvent::PlayerFilePlay(song) => {
-            let response = response::PlayerPlay::new(song);
-            let json = serde_json::to_string(&response)?;
-
-            stream.write(json.as_bytes())?;
-            utils::flush(stream)?;
-        }
-        ServerBroadcastEvent::PlayerVolumeUpdate(volume) => {
-            let response = response::PlayerVolumeUpdate::new(volume);
-            let json = serde_json::to_string(&response)?;
-
-            stream.write(json.as_bytes())?;
-            utils::flush(stream)?;
-        }
-        ServerBroadcastEvent::PlayerProgressUpdate(duration) => {
-            let response = response::PlayerProgressUpdate::new(duration);
-            let json = serde_json::to_string(&response)?;
-
-            stream.write(json.as_bytes())?;
-            utils::flush(stream)?;
-        }
         ServerBroadcastEvent::PlayerPause => {
             server_process_stub!(stream, PlayerPause);
         }
@@ -136,6 +114,28 @@ pub fn process_server_event(
         }
         ServerBroadcastEvent::PlayerNext(false) => {
             server_process_stub!(stream, PlayerNextOff);
+        }
+        ServerBroadcastEvent::Quit => {}
+        ServerBroadcastEvent::PlayerFilePlay(song) => {
+            let response = response::PlayerPlay::new(song);
+            let json = serde_json::to_string(&response)?;
+
+            stream.write(json.as_bytes())?;
+            utils::flush(stream)?;
+        }
+        ServerBroadcastEvent::PlayerVolumeUpdate(volume) => {
+            let response = response::PlayerVolumeUpdate::new(volume);
+            let json = serde_json::to_string(&response)?;
+
+            stream.write(json.as_bytes())?;
+            utils::flush(stream)?;
+        }
+        ServerBroadcastEvent::PlayerProgressUpdate(duration) => {
+            let response = response::PlayerProgressUpdate::new(duration);
+            let json = serde_json::to_string(&response)?;
+
+            stream.write(json.as_bytes())?;
+            utils::flush(stream)?;
         }
         s => {
             eprintln!("Not Implemented! {:?}", s);
