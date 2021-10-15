@@ -42,7 +42,9 @@ impl AppCommand for Command {
             Self::PlaylistRemove => API_PLAYLIST_REMOVE,
 
             Self::PlayerGet => API_PLAYER_GET,
-            Self::PlayerPlay => API_PLAYER_PLAY,
+            Self::PlayerPlayNext => API_PLAYER_PLAY_NEXT,
+            Self::PlayerPlayPrevious => API_PLAYER_PLAY_NEXT,
+
             Self::PlayerPause => API_PLAYER_PAUSE,
             Self::PlayerTogglePlay => API_PLAYER_TOGGLE_PLAY,
             Self::PlayerToggleShuffle => API_PLAYER_TOGGLE_SHUFFLE,

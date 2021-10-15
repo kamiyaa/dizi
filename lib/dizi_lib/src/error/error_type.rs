@@ -107,3 +107,12 @@ impl From<serde_json::Error> for DiziError {
     }
 }
 
+#[cfg(feature = "ffmpeg")]
+impl From<ffmpeg_decoder::Error> for DiziError {
+    fn from(err: ffmpeg_decoder::Error) -> Self {
+        Self {
+            _kind: DiziErrorKind::from(err),
+            _cause: "Unsupported audio format".to_string(),
+        }
+    }
+}

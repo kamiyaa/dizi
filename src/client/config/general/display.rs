@@ -1,4 +1,7 @@
+use std::path;
+
 use serde_derive::Deserialize;
+use serde_json::Value;
 
 use tui::layout::Constraint;
 
@@ -21,6 +24,9 @@ pub struct RawDisplayOption {
 
     #[serde(default)]
     column_ratio: Option<[usize; 3]>,
+
+    #[serde(default)]
+    layout: String,
 
     #[serde(default, rename = "sort")]
     sort_options: SortRawOption,
@@ -46,11 +52,26 @@ impl Flattenable<DisplayOption> for RawDisplayOption {
             Constraint::Ratio(0, total),
         ];
 
+        /*
+        let file = {
+            let tilde_cow = shellexpand::tilde_with_context(self.layout, dirs_next::home_dir);
+            let tilde_path = path::PathBuf::from(tilde_cow.as_ref());
+            File::Open(tilde_path)
+        };
+
+        let json = serde_json::from_str();
+        let layout =
+
+        */
+
+        //        let layout = "".to_string();
+
         DisplayOption {
             column_ratio,
             _show_hidden: self.show_hidden,
             _show_borders: self.show_borders,
             _sort_options: self.sort_options.into(),
+            //            layout,
             default_layout,
             no_preview_layout,
         }
@@ -63,6 +84,7 @@ impl std::default::Default for RawDisplayOption {
             show_hidden: false,
             show_borders: true,
             column_ratio: None,
+            layout: "".to_string(),
             sort_options: SortRawOption::default(),
         }
     }

@@ -1,3 +1,4 @@
+use std::convert::From;
 use std::os::unix::net::UnixStream;
 use std::path::PathBuf;
 use std::sync::mpsc;
@@ -5,8 +6,6 @@ use std::thread;
 use std::time;
 
 use dizi_lib::song::Song;
-
-use crate::context::AppContext;
 
 #[derive(Debug)]
 pub enum ClientRequest {
@@ -17,7 +16,11 @@ pub enum ClientRequest {
     Quit,
 
     // player requests
-    PlayerPlay(PathBuf),
+    PlayerFilePlay(PathBuf),
+
+    PlayerPlayNext,
+    PlayerPlayPrevious,
+
     PlayerPause,
     PlayerResume,
     PlayerNextSong,
@@ -31,6 +34,14 @@ pub enum ClientRequest {
     PlayerToggleNext,
     PlayerToggleRepeat,
     PlayerToggleShuffle,
+
+    PlaylistOpen(PathBuf),
+    PlaylistPlay(usize),
+
+    PlaylistAppend(PathBuf),
+    PlaylistRemove(usize),
+    PlaylistMoveUp(usize),
+    PlaylistMoveDown(usize),
 }
 
 #[derive(Clone, Debug)]
@@ -51,16 +62,19 @@ pub enum ServerBroadcastEvent {
     Quit,
 
     // player status updates
-    PlayerPlay(Song),
+    PlayerFilePlay(Song),
+
     PlayerPause,
     PlayerResume,
-    PlayerRepeatOn,
-    PlayerRepeatOff,
-    PlayerShuffleOn,
-    PlayerShuffleOff,
+
+    PlayerRepeat(bool),
+    PlayerShuffle(bool),
+    PlayerNext(bool),
 
     PlayerVolumeUpdate(usize),
     PlayerProgressUpdate(time::Duration),
+
+    PlaylistPlay(usize),
 }
 
 pub type AppEventSender = mpsc::Sender<AppEvent>;

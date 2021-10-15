@@ -6,28 +6,30 @@ use dizi_lib::request::player::*;
 
 use crate::context::AppContext;
 
-pub fn player_get(context: &mut AppContext, path: path::PathBuf) -> DiziResult<()> {
-    let request = PlayerGet::new();
+macro_rules! simple_server_request {
+    ($function_name: ident, $struct_name: ident) => {
+        pub fn $function_name(context: &mut AppContext) -> DiziResult<()> {
+            let request = $struct_name::new();
 
-    let json = serde_json::to_string(&request).unwrap();
+            let json = serde_json::to_string(&request).unwrap();
 
-    context.stream.write(json.as_bytes())?;
-    context.flush_stream()?;
-    Ok(())
+            context.stream.write(json.as_bytes())?;
+            context.flush_stream()?;
+            Ok(())
+        }
+    };
 }
+
+simple_server_request!(player_get, PlayerGet);
+simple_server_request!(player_toggle_play, PlayerTogglePlay);
+simple_server_request!(player_toggle_shuffle, PlayerToggleShuffle);
+simple_server_request!(player_toggle_repeat, PlayerToggleRepeat);
+simple_server_request!(player_toggle_next, PlayerToggleNext);
+simple_server_request!(player_play_next, PlayerPlayNext);
+simple_server_request!(player_play_previous, PlayerPlayPrevious);
 
 pub fn player_play(context: &mut AppContext, path: path::PathBuf) -> DiziResult<()> {
-    let request = PlayerPlay::new(path);
-
-    let json = serde_json::to_string(&request).unwrap();
-
-    context.stream.write(json.as_bytes())?;
-    context.flush_stream()?;
-    Ok(())
-}
-
-pub fn player_toggle_play(context: &mut AppContext) -> DiziResult<()> {
-    let request = PlayerTogglePlay::new();
+    let request = PlayerFilePlay::new(path);
 
     let json = serde_json::to_string(&request).unwrap();
 

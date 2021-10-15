@@ -43,7 +43,6 @@ pub enum Command {
     PlaylistRemove,
 
     PlayerGet,
-    PlayerPlay,
     PlayerPause,
     PlayerTogglePlay,
     PlayerToggleShuffle,
@@ -52,6 +51,9 @@ pub enum Command {
 
     PlayerVolumeUp(usize),
     PlayerVolumeDown(usize),
+
+    PlayerPlayNext,
+    PlayerPlayPrevious,
 
     PlayerRewind(time::Duration),
     PlayerFastForward(time::Duration),

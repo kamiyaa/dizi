@@ -41,3 +41,6 @@ tui = "^0"
 unicode-width = "^0"
 unicode-segmentation = "^1"
 xdg = "^2"
+
+[features]
+default = []

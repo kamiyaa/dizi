@@ -22,7 +22,7 @@ pub fn handle_client(
     mut stream: UnixStream,
     client_request_tx: ClientRequestSender,
     server_event_rx: ServerBroadcastEventReceiver,
-) {
+) -> DiziResult<()> {
     let (event_tx, event_rx) = mpsc::channel();
 
     // listen for server events
@@ -56,13 +56,14 @@ pub fn handle_client(
     while let Ok(event) = event_rx.recv() {
         match event {
             ClientMessage::Server(event) => {
-                let _ = process_server_event(&mut stream, event);
+                process_server_event(&mut stream, event)?;
             }
             ClientMessage::Client(line) => {
-                let _ = run_command(&client_request_tx, &line);
+                run_command(&client_request_tx, &line)?;
             }
         }
     }
+    Ok(())
 }
 
 pub fn listen_for_clients(listener: UnixListener, event_tx: ClientRequestSender) -> DiziResult<()> {
@@ -91,23 +92,23 @@ pub fn process_server_event(
     eprintln!("event from server: {:?}", event);
     match event {
         ServerBroadcastEvent::Quit => {}
-        ServerBroadcastEvent::PlayerPlay(song) => {
+        ServerBroadcastEvent::PlayerFilePlay(song) => {
             let response = response::PlayerPlay::new(song);
-            let json = serde_json::to_string(&response).unwrap();
+            let json = serde_json::to_string(&response)?;
 
             stream.write(json.as_bytes())?;
             utils::flush(stream)?;
         }
         ServerBroadcastEvent::PlayerVolumeUpdate(volume) => {
             let response = response::PlayerVolumeUpdate::new(volume);
-            let json = serde_json::to_string(&response).unwrap();
+            let json = serde_json::to_string(&response)?;
 
             stream.write(json.as_bytes())?;
             utils::flush(stream)?;
         }
         ServerBroadcastEvent::PlayerProgressUpdate(duration) => {
             let response = response::PlayerProgressUpdate::new(duration);
-            let json = serde_json::to_string(&response).unwrap();
+            let json = serde_json::to_string(&response)?;
 
             stream.write(json.as_bytes())?;
             utils::flush(stream)?;
@@ -118,17 +119,23 @@ pub fn process_server_event(
         ServerBroadcastEvent::PlayerResume => {
             server_process_stub!(stream, PlayerResume);
         }
-        ServerBroadcastEvent::PlayerRepeatOn => {
+        ServerBroadcastEvent::PlayerRepeat(true) => {
             server_process_stub!(stream, PlayerRepeatOn);
         }
-        ServerBroadcastEvent::PlayerRepeatOff => {
+        ServerBroadcastEvent::PlayerRepeat(false) => {
             server_process_stub!(stream, PlayerRepeatOff);
         }
-        ServerBroadcastEvent::PlayerShuffleOn => {
+        ServerBroadcastEvent::PlayerShuffle(true) => {
             server_process_stub!(stream, PlayerShuffleOn);
         }
-        ServerBroadcastEvent::PlayerShuffleOff => {
+        ServerBroadcastEvent::PlayerShuffle(false) => {
             server_process_stub!(stream, PlayerShuffleOff);
+        }
+        ServerBroadcastEvent::PlayerNext(true) => {
+            server_process_stub!(stream, PlayerNextOn);
+        }
+        ServerBroadcastEvent::PlayerNext(false) => {
+            server_process_stub!(stream, PlayerNextOff);
         }
         s => {
             eprintln!("Not Implemented! {:?}", s);

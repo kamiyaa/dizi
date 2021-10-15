@@ -15,6 +15,14 @@ use crate::HOME_DIR;
 use super::constants::*;
 use super::Command;
 
+macro_rules! simple_command_conversion_case {
+    ($command: ident, $command_match: ident, $enum_name: expr) => {
+        if $command == $command_match {
+            return Ok($enum_name);
+        }
+    };
+}
+
 impl std::str::FromStr for Command {
     type Err = DiziError;
 
@@ -28,11 +36,43 @@ impl std::str::FromStr for Command {
             None => (s, ""),
         };
 
-        if command == CMD_CLOSE {
-            Ok(Self::Close)
-        } else if command == API_SERVER_QUIT {
-            Ok(Self::Quit)
-        } else if command == CMD_CHANGE_DIRECTORY {
+        simple_command_conversion_case!(command, API_SERVER_QUIT, Self::Quit);
+        simple_command_conversion_case!(command, CMD_CLOSE, Self::Close);
+        simple_command_conversion_case!(command, CMD_CURSOR_MOVE_HOME, Self::CursorMoveHome);
+        simple_command_conversion_case!(command, CMD_CURSOR_MOVE_END, Self::CursorMoveEnd);
+        simple_command_conversion_case!(command, CMD_CURSOR_MOVE_PAGEUP, Self::CursorMovePageUp);
+        simple_command_conversion_case!(
+            command,
+            CMD_CURSOR_MOVE_PAGEDOWN,
+            Self::CursorMovePageDown
+        );
+        simple_command_conversion_case!(command, CMD_OPEN_FILE, Self::OpenFile);
+
+        simple_command_conversion_case!(command, API_PLAYLIST_GET, Self::PlaylistGet);
+        simple_command_conversion_case!(command, API_PLAYLIST_ADD, Self::PlaylistAdd);
+
+        simple_command_conversion_case!(command, API_PLAYER_GET, Self::PlayerGet);
+        simple_command_conversion_case!(command, API_PLAYER_PAUSE, Self::PlayerPause);
+        simple_command_conversion_case!(command, API_PLAYER_TOGGLE_PLAY, Self::PlayerTogglePlay);
+        simple_command_conversion_case!(
+            command,
+            API_PLAYER_TOGGLE_SHUFFLE,
+            Self::PlayerToggleShuffle
+        );
+        simple_command_conversion_case!(
+            command,
+            API_PLAYER_TOGGLE_REPEAT,
+            Self::PlayerToggleRepeat
+        );
+        simple_command_conversion_case!(command, API_PLAYER_TOGGLE_NEXT, Self::PlayerToggleNext);
+
+        simple_command_conversion_case!(command, CMD_SEARCH_SKIM, Self::SearchSkim);
+        simple_command_conversion_case!(command, CMD_SEARCH_NEXT, Self::SearchNext);
+        simple_command_conversion_case!(command, CMD_SEARCH_PREV, Self::SearchPrev);
+
+        simple_command_conversion_case!(command, CMD_TOGGLE_HIDDEN, Self::ToggleHiddenFiles);
+
+        if command == CMD_CHANGE_DIRECTORY {
             match arg {
                 "" => match HOME_DIR.as_ref() {
                     Some(s) => Ok(Self::ChangeDirectory(s.clone())),
@@ -47,14 +87,6 @@ impl std::str::FromStr for Command {
                     Self::ChangeDirectory(path::PathBuf::from(path_accepts_tilde.as_ref()))
                 }),
             }
-        } else if command == CMD_CURSOR_MOVE_HOME {
-            Ok(Self::CursorMoveHome)
-        } else if command == CMD_CURSOR_MOVE_END {
-            Ok(Self::CursorMoveEnd)
-        } else if command == CMD_CURSOR_MOVE_PAGEUP {
-            Ok(Self::CursorMovePageUp)
-        } else if command == CMD_CURSOR_MOVE_PAGEDOWN {
-            Ok(Self::CursorMovePageDown)
         } else if command == CMD_CURSOR_MOVE_DOWN {
             match arg {
                 "" => Ok(Self::CursorMoveDown(1)),
@@ -71,26 +103,6 @@ impl std::str::FromStr for Command {
                     Err(e) => Err(DiziError::new(DiziErrorKind::ParseError, e.to_string())),
                 },
             }
-        } else if command == CMD_OPEN_FILE {
-            Ok(Self::OpenFile)
-        } else if command == API_PLAYLIST_GET {
-            Ok(Self::PlaylistGet)
-        } else if command == API_PLAYLIST_ADD {
-            Ok(Self::PlaylistAdd)
-        } else if command == API_PLAYER_GET {
-            Ok(Self::PlayerGet)
-        } else if command == API_PLAYER_PLAY {
-            Ok(Self::PlayerPlay)
-        } else if command == API_PLAYER_PAUSE {
-            Ok(Self::PlayerPause)
-        } else if command == API_PLAYER_TOGGLE_PLAY {
-            Ok(Self::PlayerTogglePlay)
-        } else if command == API_PLAYER_TOGGLE_SHUFFLE {
-            Ok(Self::PlayerToggleShuffle)
-        } else if command == API_PLAYER_TOGGLE_REPEAT {
-            Ok(Self::PlayerToggleRepeat)
-        } else if command == API_PLAYER_TOGGLE_NEXT {
-            Ok(Self::PlayerToggleNext)
         } else if command == API_PLAYER_VOLUME_UP {
             match arg {
                 "" => Ok(Self::PlayerVolumeUp(1)),
@@ -129,12 +141,6 @@ impl std::str::FromStr for Command {
                 )),
                 arg => Ok(Self::SearchGlob(arg.to_string())),
             }
-        } else if command == CMD_SEARCH_SKIM {
-            Ok(Self::SearchSkim)
-        } else if command == CMD_SEARCH_NEXT {
-            Ok(Self::SearchNext)
-        } else if command == CMD_SEARCH_PREV {
-            Ok(Self::SearchPrev)
         } else if command == CMD_SELECT_FILES {
             let mut options = SelectOption::default();
             let mut pattern = "";
@@ -169,8 +175,6 @@ impl std::str::FromStr for Command {
                     )),
                 },
             }
-        } else if command == CMD_TOGGLE_HIDDEN {
-            Ok(Self::ToggleHiddenFiles)
         } else {
             Err(DiziError::new(
                 DiziErrorKind::UnrecognizedCommand,

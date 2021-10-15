@@ -1,4 +1,12 @@
 [server]
 socket = "/tmp/dizi-server-socket"
 
-audio_system = "jack"
+[server.player]
+# supports alsa, jack
+audio_system = "alsa"
+
+shuffle = false
+repeat = true
+next = true
+# on_song_change = ""
+

@@ -58,23 +58,12 @@ impl AppExecute for Command {
             Self::PlayerVolumeUp(i) => player::player_volume_increase(context, *i),
             Self::PlayerVolumeDown(i) => player::player_volume_decrease(context, *i),
 
-            /*
-                        Self::PlayerToggleShuffle => {
+            Self::PlayerToggleShuffle => player::player_toggle_shuffle(context),
+            Self::PlayerToggleRepeat => player::player_toggle_repeat(context),
+            Self::PlayerToggleNext => player::player_toggle_next(context),
 
-                        }
-                        Self::PlayerToggleRepeat => {
-
-                        }
-                        Self::PlayerToggleNext => {
-
-                        }
-                        Self::PlayerRewind => {
-
-                        }
-                        Self::PlayerFastForward => {
-
-                        }
-            */
+            Self::PlayerPlayNext => player::player_play_next(context),
+            Self::PlayerPlayPrevious => player::player_play_previous(context),
             s => {
                 eprintln!("Error: '{:?}' not implemented", s);
                 Ok(())

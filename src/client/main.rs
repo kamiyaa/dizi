@@ -83,6 +83,7 @@ fn run_app(args: Args) -> DiziResult<()> {
 
     if let Err(_) = UnixStream::connect(&config.client_ref().socket) {
         println!("Server is not running");
+        return Ok(()); // don't start server, still need to iron things out
         println!("Starting server...");
         process::Command::new("dizi-server")
             .stdout(process::Stdio::null())

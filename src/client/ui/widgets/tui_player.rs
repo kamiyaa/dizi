@@ -23,6 +23,10 @@ impl<'a> TuiPlayer<'a> {
 
 impl<'a> Widget for TuiPlayer<'a> {
     fn render(self, area: Rect, buf: &mut Buffer) {
+        if area.height <= 4 {
+            return;
+        }
+
         let player_status_style = Style::default()
             .fg(Color::Green)
             .add_modifier(Modifier::BOLD);
@@ -32,12 +36,15 @@ impl<'a> Widget for TuiPlayer<'a> {
             PlayerStatus::Stopped => "Stopped",
             PlayerStatus::Paused => "Paused",
         };
-        let dur_played = self.player.get_duration_played();
+        let duration_played_str = {
+            let duration = self.player.get_duration_played();
 
-        let dur_seconds = dur_played.as_secs();
-        let dur_minutes = dur_seconds / 60;
-        let dur_hours = dur_seconds / 3600;
-        let duration_played_str = format!("{:02}:{:02}:{:02}", dur_hours, dur_minutes, dur_seconds);
+            let total_secs = duration.as_secs();
+            let minutes = total_secs / 60;
+            let hours = total_secs / 3600;
+            let seconds = total_secs - hours * 3600 - minutes * 60;
+            format!("{:02}:{:02}:{:02}", hours, minutes, seconds)
+        };
 
         let song = self.player.get_song();
         let total_duration_str = match song {
@@ -47,23 +54,24 @@ impl<'a> Widget for TuiPlayer<'a> {
                     .total_duration()
                     .unwrap_or(time::Duration::from_secs(0));
                 let total_secs = duration.as_secs();
-                let total_mins = total_secs / 60;
-                let total_hrs = total_secs / 3600;
-                format!("{:02}:{:02}:{:02}", total_hrs, total_mins, total_secs)
+                let minutes = total_secs / 60;
+                let hours = total_secs / 3600;
+                let seconds = total_secs - hours * 3600 - minutes * 60;
+                format!("{:02}:{:02}:{:02}", hours, minutes, seconds)
             }
             None => {
                 format!("{:02}:{:02}:{:02}", 0, 0, 0)
             }
         };
 
-        let text = Spans::from(vec![
-            Span::styled(player_status, player_status_style),
-            Span::styled("\n", player_status_style),
-            Span::styled(duration_played_str, player_status_style),
-            Span::styled(" / ", player_status_style),
-            Span::styled(total_duration_str, player_status_style),
-        ]);
-
-        Paragraph::new(text).render(area, buf);
+        buf.set_string(area.x, area.y, player_status, player_status_style);
+        buf.set_string(area.x, area.y + 1, duration_played_str, player_status_style);
+        buf.set_string(area.x, area.y + 2, total_duration_str, player_status_style);
+        buf.set_string(
+            area.x,
+            area.y + 3,
+            format!("Volume: {}%", self.player.get_volume()),
+            player_status_style,
+        );
     }
 }

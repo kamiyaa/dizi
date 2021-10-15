@@ -1,7 +1,3 @@
-use std::sync::mpsc;
-
-use dizi_lib::error::DiziResult;
-
 use crate::config;
 use crate::events::Events;
 

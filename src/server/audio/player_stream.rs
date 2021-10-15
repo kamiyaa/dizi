@@ -5,7 +5,7 @@ use std::sync::mpsc;
 use std::thread;
 use std::time::Duration;
 
-use cpal::traits::{DeviceTrait, HostTrait};
+use cpal::traits::HostTrait;
 
 use rodio::queue;
 use rodio::source::{Amplify, Pausable, PeriodicAccess, Source, Stoppable};
@@ -170,7 +170,14 @@ pub fn player_stream(
         match msg {
             PlayerRequest::Play(song) => {
                 match player_stream.play(&queue_tx, song.file_path()) {
-                    Ok(receiver) => player_stream.player_res().send(Ok(())),
+                    Ok(receiver) => {
+                        let event_tx2 = player_stream.event_tx.clone();
+                        let _ = thread::spawn(move || {
+                            receiver.recv();
+                            event_tx2.send(ServerEvent::PlayerDone);
+                        });
+                        player_stream.player_res().send(Ok(()))
+                    }
                     Err(e) => player_stream.player_res().send(Err(e)),
                 };
             }

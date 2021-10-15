@@ -9,8 +9,9 @@ use dizi_lib::error::DiziResult;
 use crate::client;
 use crate::config::default::AppConfig;
 use crate::context::AppContext;
-use crate::events::{AppEvent, ClientRequest, Events, ServerBroadcastEvent, ServerEvent};
+use crate::events::{AppEvent, ClientRequest, ServerBroadcastEvent, ServerEvent};
 use crate::server_command::run_command;
+use crate::server_commands::player_play;
 
 pub fn setup_socket(config: &AppConfig) -> DiziResult<UnixListener> {
     let socket = Path::new(config.server_ref().socket.as_path());
@@ -70,8 +71,22 @@ pub fn process_server_event(context: &mut AppContext, event: ServerEvent) {
                 .broadcast_event(ServerBroadcastEvent::PlayerProgressUpdate(t));
         }
         ServerEvent::PlayerDone => {
-            // TODO: Play next song
-            eprintln!("End of playlist!");
+            process_done_song(context);
         }
+    }
+}
+
+pub fn process_done_song(context: &mut AppContext) {
+    let player = context.player_context_mut().player_mut();
+    if !player.next_enabled() {
+        let song = player.current_song_ref().map(|s| s.clone());
+        if let Some(song) = song {
+            player_play(context, song.file_path());
+            context
+                .events
+                .broadcast_event(ServerBroadcastEvent::PlayerFilePlay(song));
+        }
+    } else {
+        eprintln!("End of playlist!");
     }
 }

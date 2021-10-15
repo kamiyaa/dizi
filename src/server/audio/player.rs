@@ -16,6 +16,7 @@ pub struct Player {
     current_song: Option<Song>,
 
     status: PlayerStatus,
+
     volume: f32,
 
     shuffle: bool,
@@ -46,10 +47,10 @@ impl Player {
             current_song: None,
 
             status: PlayerStatus::Stopped,
-            volume: 1.0,
+            volume: 0.5,
 
             shuffle: false,
-            repeat: true,
+            repeat: false,
             next: true,
 
             event_tx,
@@ -64,7 +65,6 @@ impl Player {
     fn player_stream_req(&self) -> &mpsc::Sender<PlayerRequest> {
         &self.player_req_tx
     }
-
     fn player_stream_res(&self) -> &mpsc::Receiver<DiziResult<()>> {
         &self.player_res_rx
     }
@@ -90,6 +90,10 @@ impl Player {
                 eprintln!("Failed to receive msg from player stream");
             }
         }
+        Ok(())
+    }
+
+    pub fn play_next(&mut self) -> DiziResult<()> {
         Ok(())
     }
 
@@ -127,6 +131,26 @@ impl Player {
         }
     }
 
+    pub fn shuffle_enabled(&self) -> bool {
+        self.shuffle
+    }
+    pub fn next_enabled(&self) -> bool {
+        self.repeat
+    }
+    pub fn repeat_enabled(&self) -> bool {
+        self.next
+    }
+
+    pub fn set_shuffle(&mut self, shuffle: bool) {
+        self.shuffle = shuffle;
+    }
+    pub fn set_next(&mut self, next: bool) {
+        self.next = next;
+    }
+    pub fn set_repeat(&mut self, repeat: bool) {
+        self.repeat = repeat;
+    }
+
     pub fn get_volume(&self) -> f32 {
         self.volume
     }
@@ -142,5 +166,9 @@ impl Player {
             }
             Err(_) => Ok(()),
         }
+    }
+
+    pub fn current_song_ref(&self) -> Option<&Song> {
+        self.current_song.as_ref()
     }
 }

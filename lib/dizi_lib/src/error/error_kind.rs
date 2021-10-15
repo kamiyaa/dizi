@@ -72,3 +72,10 @@ impl From<serde_json::Error> for DiziErrorKind {
         Self::SerdeJson(err)
     }
 }
+
+#[cfg(feature = "ffmpeg")]
+impl From<ffmpeg_decoder::Error> for DiziErrorKind {
+    fn from(_: ffmpeg_decoder::Error) -> Self {
+        Self::DecoderError
+    }
+}

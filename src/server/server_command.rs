@@ -3,17 +3,17 @@ use dizi_lib::player::PlayerStatus;
 use dizi_lib::song::Song;
 
 use crate::context::AppContext;
-use crate::events::{ClientRequest, Events, ServerBroadcastEvent};
+use crate::events::{ClientRequest, ServerBroadcastEvent};
 use crate::server_commands::*;
 
 pub fn run_command(context: &mut AppContext, event: ClientRequest) -> DiziResult<()> {
     match event {
-        ClientRequest::PlayerPlay(path) => {
+        ClientRequest::PlayerFilePlay(path) => {
             let song = Song::new(path.as_path())?;
             player_play(context, song.file_path())?;
             context
                 .events
-                .broadcast_event(ServerBroadcastEvent::PlayerPlay(song));
+                .broadcast_event(ServerBroadcastEvent::PlayerFilePlay(song));
         }
         ClientRequest::PlayerPause => {
             player_pause(context)?;
@@ -27,17 +27,11 @@ pub fn run_command(context: &mut AppContext, event: ClientRequest) -> DiziResult
                 .events
                 .broadcast_event(ServerBroadcastEvent::PlayerResume);
         }
-        ClientRequest::PlayerNextSong => {
-            eprintln!(
-                "Error: '{:?}' not implemented",
-                ClientRequest::PlayerNextSong
-            );
+        ClientRequest::PlayerPlayNext => {
+            player_play_next(context)?;
         }
-        ClientRequest::PlayerPrevSong => {
-            eprintln!(
-                "Error: '{:?}' not implemented",
-                ClientRequest::PlayerPrevSong
-            );
+        ClientRequest::PlayerPlayPrevious => {
+            player_play_previous(context)?;
         }
         ClientRequest::PlayerGetVolume => {
             eprintln!(
@@ -77,9 +71,30 @@ pub fn run_command(context: &mut AppContext, event: ClientRequest) -> DiziResult
                 }
             }
         }
-        ClientRequest::PlayerToggleNext => {}
-        ClientRequest::PlayerToggleRepeat => {}
-        ClientRequest::PlayerToggleShuffle => {}
+        ClientRequest::PlayerToggleNext => {
+            let next = !context.player_context_ref().player_ref().next_enabled();
+            context.player_context_mut().player_mut().set_next(next);
+            context
+                .events
+                .broadcast_event(ServerBroadcastEvent::PlayerNext(next));
+        }
+        ClientRequest::PlayerToggleRepeat => {
+            let repeat = !context.player_context_ref().player_ref().repeat_enabled();
+            context.player_context_mut().player_mut().set_repeat(repeat);
+            context
+                .events
+                .broadcast_event(ServerBroadcastEvent::PlayerRepeat(repeat));
+        }
+        ClientRequest::PlayerToggleShuffle => {
+            let shuffle = !context.player_context_ref().player_ref().shuffle_enabled();
+            context
+                .player_context_mut()
+                .player_mut()
+                .set_shuffle(shuffle);
+            context
+                .events
+                .broadcast_event(ServerBroadcastEvent::PlayerShuffle(shuffle));
+        }
         s => {
             eprintln!("Error: '{:?}' not implemented", s);
         }
