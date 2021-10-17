@@ -57,7 +57,9 @@ impl AppExecute for Command {
             Self::OpenFile => open_file::open(context),
             Self::Request(request) => execute_request(context, &request),
             s => {
-                context.message_queue_mut().push_error("impl_appexecute.execute: Not implemented".to_string());
+                context
+                    .message_queue_mut()
+                    .push_error("impl_appexecute.execute: Not implemented".to_string());
                 Ok(())
             }
         }

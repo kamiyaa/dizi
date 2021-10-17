@@ -67,7 +67,10 @@ pub fn handle_client(
     Ok(())
 }
 
-pub fn forward_client_request(client_request_tx: &ClientRequestSender, line: &str) -> DiziResult<()> {
+pub fn forward_client_request(
+    client_request_tx: &ClientRequestSender,
+    line: &str,
+) -> DiziResult<()> {
     let request: ClientRequest = serde_json::from_str(line)?;
     client_request_tx.send(request)?;
     Ok(())
