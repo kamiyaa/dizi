@@ -38,9 +38,13 @@ whenever mocp is playing music, other audio/video apps stop working and vice ver
 ### Server-side
  - [x] play/pause support
  - [x] volume support
+ - [x] directory playing
+   - [x] shuffle
+   - [x] repeat
+   - [x] next
  - [ ] playlist support
    - [ ] shuffle
-   - [x] repeat
+   - [ ] repeat
    - [ ] next
  - [x] show music progress
  - [x] configurable audio system
