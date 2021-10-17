@@ -1,9 +1,11 @@
 use dizi_lib::error::DiziResult;
+use dizi_lib::request::client::ClientRequest;
 
 use crate::commands::*;
 use crate::config::AppKeyMapping;
 use crate::context::AppContext;
 use crate::ui::TuiBackend;
+use crate::util::request::send_client_request;
 
 use super::{AppExecute, Command};
 
@@ -33,7 +35,7 @@ impl AppExecute for Command {
             Self::ParentDirectory => parent_directory::parent_directory(context),
 
             Self::Close => quit::close(context),
-            Self::Quit => quit::quit_server(context),
+            Self::Quit => quit::server_quit(context),
 
             Self::ReloadDirList => reload::reload_dirlist(context),
 
@@ -53,21 +55,24 @@ impl AppExecute for Command {
             Self::SortReverse => sort::toggle_reverse(context),
 
             Self::OpenFile => open_file::open(context),
-            Self::PlayerTogglePlay => player::player_toggle_play(context),
-
-            Self::PlayerVolumeUp(i) => player::player_volume_increase(context, *i),
-            Self::PlayerVolumeDown(i) => player::player_volume_decrease(context, *i),
-
-            Self::PlayerToggleShuffle => player::player_toggle_shuffle(context),
-            Self::PlayerToggleRepeat => player::player_toggle_repeat(context),
-            Self::PlayerToggleNext => player::player_toggle_next(context),
-
-            Self::PlayerPlayNext => player::player_play_next(context),
-            Self::PlayerPlayPrevious => player::player_play_previous(context),
+            Self::Request(request) => execute_request(context, &request),
             s => {
-                eprintln!("Error: '{:?}' not implemented", s);
+                context.message_queue_mut().push_error("impl_appexecute.execute: Not implemented".to_string());
                 Ok(())
             }
+        }
+    }
+}
+
+pub fn execute_request(context: &mut AppContext, request: &ClientRequest) -> DiziResult<()> {
+    match request {
+        ClientRequest::ServerQuit => {
+            quit::server_quit(context)?;
+            Ok(())
+        }
+        request => {
+            send_client_request(context, &request)?;
+            Ok(())
         }
     }
 }

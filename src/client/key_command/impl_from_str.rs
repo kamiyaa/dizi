@@ -5,7 +5,7 @@ use dirs_next::home_dir;
 use shellexpand::tilde_with_context;
 
 use dizi_lib::error::{DiziError, DiziErrorKind};
-use dizi_lib::request::constants::*;
+use dizi_lib::request::client::ClientRequest;
 
 use crate::util::select::SelectOption;
 use crate::util::sort_type::SortType;
@@ -36,7 +36,13 @@ impl std::str::FromStr for Command {
             None => (s, ""),
         };
 
-        simple_command_conversion_case!(command, API_SERVER_QUIT, Self::Quit);
+        if command.starts_with("/") {
+            match ClientRequest::parse_str(command, arg) {
+                Ok(s) => return Ok(Self::Request(s)),
+                Err(e) => return Err(e),
+            }
+        }
+
         simple_command_conversion_case!(command, CMD_CLOSE, Self::Close);
         simple_command_conversion_case!(command, CMD_CURSOR_MOVE_HOME, Self::CursorMoveHome);
         simple_command_conversion_case!(command, CMD_CURSOR_MOVE_END, Self::CursorMoveEnd);
@@ -47,24 +53,6 @@ impl std::str::FromStr for Command {
             Self::CursorMovePageDown
         );
         simple_command_conversion_case!(command, CMD_OPEN_FILE, Self::OpenFile);
-
-        simple_command_conversion_case!(command, API_PLAYLIST_GET, Self::PlaylistGet);
-        simple_command_conversion_case!(command, API_PLAYLIST_ADD, Self::PlaylistAdd);
-
-        simple_command_conversion_case!(command, API_PLAYER_GET, Self::PlayerGet);
-        simple_command_conversion_case!(command, API_PLAYER_PAUSE, Self::PlayerPause);
-        simple_command_conversion_case!(command, API_PLAYER_TOGGLE_PLAY, Self::PlayerTogglePlay);
-        simple_command_conversion_case!(
-            command,
-            API_PLAYER_TOGGLE_SHUFFLE,
-            Self::PlayerToggleShuffle
-        );
-        simple_command_conversion_case!(
-            command,
-            API_PLAYER_TOGGLE_REPEAT,
-            Self::PlayerToggleRepeat
-        );
-        simple_command_conversion_case!(command, API_PLAYER_TOGGLE_NEXT, Self::PlayerToggleNext);
 
         simple_command_conversion_case!(command, CMD_SEARCH_SKIM, Self::SearchSkim);
         simple_command_conversion_case!(command, CMD_SEARCH_NEXT, Self::SearchNext);
@@ -103,26 +91,6 @@ impl std::str::FromStr for Command {
                     Err(e) => Err(DiziError::new(DiziErrorKind::ParseError, e.to_string())),
                 },
             }
-        } else if command == API_PLAYER_VOLUME_UP {
-            match arg {
-                "" => Ok(Self::PlayerVolumeUp(1)),
-                arg => match arg.trim().parse::<usize>() {
-                    Ok(s) => Ok(Self::PlayerVolumeUp(s)),
-                    Err(e) => Err(DiziError::new(DiziErrorKind::ParseError, e.to_string())),
-                },
-            }
-        } else if command == API_PLAYER_VOLUME_DOWN {
-            match arg {
-                "" => Ok(Self::PlayerVolumeDown(1)),
-                arg => match arg.trim().parse::<usize>() {
-                    Ok(s) => Ok(Self::PlayerVolumeDown(s)),
-                    Err(e) => Err(DiziError::new(DiziErrorKind::ParseError, e.to_string())),
-                },
-            }
-        } else if command == API_PLAYER_REWIND {
-            Ok(Self::PlayerRewind(time::Duration::new(1, 0)))
-        } else if command == API_PLAYER_FAST_FORWARD {
-            Ok(Self::PlayerFastForward(time::Duration::new(1, 0)))
         } else if command == CMD_RELOAD_DIRECTORY_LIST {
             Ok(Self::ReloadDirList)
         } else if command == CMD_SEARCH_STRING {

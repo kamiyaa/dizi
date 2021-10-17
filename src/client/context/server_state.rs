@@ -1,14 +1,8 @@
-use std::io;
-use std::io::Write;
-use std::os::unix::net::UnixStream;
-use std::path::{Path, PathBuf};
-use std::sync::mpsc;
 use std::time;
 
 use dizi_lib::player::PlayerStatus;
 use dizi_lib::playlist::Playlist;
 use dizi_lib::song::Song;
-use dizi_lib::utils;
 
 #[derive(Clone, Debug)]
 pub struct Player {

@@ -1,5 +1,3 @@
-use dizi_lib::request::constants::*;
-
 use super::constants::*;
 use super::{AppCommand, Command};
 
@@ -37,25 +35,7 @@ impl AppCommand for Command {
 
             Self::ToggleHiddenFiles => CMD_TOGGLE_HIDDEN,
 
-            Self::PlaylistGet => API_PLAYLIST_GET,
-            Self::PlaylistAdd => API_PLAYLIST_ADD,
-            Self::PlaylistRemove => API_PLAYLIST_REMOVE,
-
-            Self::PlayerGet => API_PLAYER_GET,
-            Self::PlayerPlayNext => API_PLAYER_PLAY_NEXT,
-            Self::PlayerPlayPrevious => API_PLAYER_PLAY_NEXT,
-
-            Self::PlayerPause => API_PLAYER_PAUSE,
-            Self::PlayerTogglePlay => API_PLAYER_TOGGLE_PLAY,
-            Self::PlayerToggleShuffle => API_PLAYER_TOGGLE_SHUFFLE,
-            Self::PlayerToggleRepeat => API_PLAYER_TOGGLE_REPEAT,
-            Self::PlayerToggleNext => API_PLAYER_TOGGLE_NEXT,
-
-            Self::PlayerVolumeUp(_) => API_PLAYER_VOLUME_UP,
-            Self::PlayerVolumeDown(_) => API_PLAYER_VOLUME_DOWN,
-
-            Self::PlayerRewind(_) => API_PLAYER_REWIND,
-            Self::PlayerFastForward(_) => API_PLAYER_FAST_FORWARD,
+            Self::Request(request) => "",
         }
     }
 }

@@ -5,47 +5,15 @@ use std::sync::mpsc;
 use std::thread;
 use std::time;
 
+use dizi_lib::request::client::ClientRequest;
+use dizi_lib::response::server::ServerBroadcastEvent;
 use dizi_lib::song::Song;
 
 #[derive(Debug)]
-pub enum ClientRequest {
+pub enum ServerEvent {
     // new client
     NewClient(UnixStream),
 
-    // quit server
-    Quit,
-
-    // player requests
-    PlayerFilePlay(PathBuf),
-
-    PlayerPlayNext,
-    PlayerPlayPrevious,
-
-    PlayerPause,
-    PlayerResume,
-    PlayerNextSong,
-    PlayerPrevSong,
-    PlayerGetVolume,
-
-    PlayerVolumeUp(usize),
-    PlayerVolumeDown(usize),
-
-    PlayerTogglePlay,
-    PlayerToggleNext,
-    PlayerToggleRepeat,
-    PlayerToggleShuffle,
-
-    PlaylistOpen(PathBuf),
-    PlaylistPlay(usize),
-
-    PlaylistAppend(PathBuf),
-    PlaylistRemove(usize),
-    PlaylistMoveUp(usize),
-    PlaylistMoveDown(usize),
-}
-
-#[derive(Clone, Debug)]
-pub enum ServerEvent {
     PlayerProgressUpdate(time::Duration),
     PlayerDone,
 }
@@ -54,27 +22,6 @@ pub enum ServerEvent {
 pub enum AppEvent {
     Server(ServerEvent),
     Client(ClientRequest),
-}
-
-#[derive(Clone, Debug)]
-pub enum ServerBroadcastEvent {
-    // server is shutting down
-    Quit,
-
-    // player status updates
-    PlayerFilePlay(Song),
-
-    PlayerPause,
-    PlayerResume,
-
-    PlayerRepeat(bool),
-    PlayerShuffle(bool),
-    PlayerNext(bool),
-
-    PlayerVolumeUpdate(usize),
-    PlayerProgressUpdate(time::Duration),
-
-    PlaylistPlay(usize),
 }
 
 pub type AppEventSender = mpsc::Sender<AppEvent>;

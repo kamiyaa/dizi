@@ -1,8 +1,26 @@
+use std::time;
+
 use serde_derive::{Deserialize, Serialize};
 
-use crate::macros::dizi_json_stub;
-use crate::traits::DiziJsonCommand;
+use crate::song::Song;
 
-use super::constants::*;
+#[derive(Clone, Debug, Deserialize, Serialize)]
+pub enum ServerBroadcastEvent {
+    // server is shutting down
+    ServerQuit,
 
-dizi_json_stub!(ServerQuit, RESP_SERVER_QUIT);
+    // player status updates
+    PlayerFilePlay { song: Song },
+
+    PlayerPause,
+    PlayerResume,
+
+    PlayerRepeat { on: bool },
+    PlayerShuffle { on: bool },
+    PlayerNext { on: bool },
+
+    PlayerVolumeUpdate { volume: usize },
+    PlayerProgressUpdate { elapsed: time::Duration },
+
+    PlaylistPlay { index: usize },
+}

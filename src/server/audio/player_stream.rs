@@ -2,6 +2,7 @@ use std::fs::File;
 use std::io::BufReader;
 use std::path::Path;
 use std::sync::mpsc;
+use std::sync::{Arc, Mutex};
 use std::thread;
 use std::time::Duration;
 
@@ -18,12 +19,20 @@ use crate::config;
 use crate::events::{ServerEvent, ServerEventSender};
 
 #[derive(Clone, Debug)]
+pub enum PlayerStreamEvent {
+    Request(PlayerRequest),
+    DonePlaying,
+}
+
+#[derive(Clone, Debug)]
 pub enum PlayerRequest {
     Play(Song),
     Pause,
     Resume,
     Stop,
     SetVolume(f32),
+    AddListener(ServerEventSender),
+    ClearListeners,
 }
 
 pub type RodioSource = Decoder<BufReader<File>>;
@@ -36,7 +45,6 @@ pub type SourceThread = thread::JoinHandle<DiziResult<mpsc::Receiver<()>>>;
 pub struct PlayerStream {
     pub player_res_tx: mpsc::Sender<DiziResult<()>>,
     pub player_req_rx: mpsc::Receiver<PlayerRequest>,
-    pub event_tx: ServerEventSender,
     pub source_tx: Option<mpsc::Sender<PlayerRequest>>,
     pub receiver: Option<mpsc::Receiver<()>>,
 }
@@ -45,12 +53,10 @@ impl PlayerStream {
     pub fn new(
         player_res_tx: mpsc::Sender<DiziResult<()>>,
         player_req_rx: mpsc::Receiver<PlayerRequest>,
-        event_tx: ServerEventSender,
     ) -> Self {
         Self {
             player_res_tx,
             player_req_rx,
-            event_tx,
             source_tx: None,
             receiver: None,
         }
@@ -90,6 +96,7 @@ impl PlayerStream {
 
     pub fn play(
         &mut self,
+        event_tx: ServerEventSender,
         queue_tx: &queue::SourcesQueueInput<f32>,
         path: &Path,
     ) -> DiziResult<mpsc::Receiver<()>> {
@@ -104,12 +111,10 @@ impl PlayerStream {
         let file = File::open(path)?;
         let buffer = BufReader::new(file);
 
-        let event_tx2 = self.event_tx.clone();
         let (source_tx, source_rx): (mpsc::Sender<PlayerRequest>, mpsc::Receiver<PlayerRequest>) =
             mpsc::channel();
 
         let mut paused = false;
-
         let source = Decoder::new(buffer)?
             .stoppable()
             .amplify(1.0)
@@ -121,7 +126,7 @@ impl PlayerStream {
                         duration_played += update_tracker;
                         update_tracker = Duration::from_secs(0);
                         eprintln!("Played {:?}", duration_played);
-                        event_tx2.send(ServerEvent::PlayerProgressUpdate(duration_played));
+                        event_tx.send(ServerEvent::PlayerProgressUpdate(duration_played));
                     }
                 }
 
@@ -158,7 +163,7 @@ pub fn player_stream(
     player_req_rx: mpsc::Receiver<PlayerRequest>,
     event_tx: ServerEventSender,
 ) -> DiziResult<()> {
-    let mut player_stream = PlayerStream::new(player_res_tx, player_req_rx, event_tx);
+    let mut player_stream = PlayerStream::new(player_res_tx, player_req_rx);
 
     let audio_device = get_default_output_device(config_t.server_ref().audio_system);
     let (stream, stream_handle) = OutputStream::try_from_device(&audio_device)?;
@@ -166,32 +171,53 @@ pub fn player_stream(
     let (queue_tx, queue_rx) = rodio::queue::queue(true);
     let _ = stream_handle.play_raw(queue_rx);
 
+    let mut stream_listeners: Arc<Mutex<Vec<ServerEventSender>>> = Arc::new(Mutex::new(vec![]));
+    let mut done_listener: Option<thread::JoinHandle<()>> = None;
+
     while let Ok(msg) = player_stream.player_req().recv() {
         match msg {
             PlayerRequest::Play(song) => {
-                match player_stream.play(&queue_tx, song.file_path()) {
+                // Before playing new song, make sure to clear any listeners waiting for previous
+                // song to finish. This prevents a loop where new song triggers the end of previous
+                // song which triggers a new song, and repeat.
+                stream_listeners.lock().unwrap().clear();
+                match player_stream.play(event_tx.clone(), &queue_tx, song.file_path()) {
                     Ok(receiver) => {
-                        let event_tx2 = player_stream.event_tx.clone();
-                        let _ = thread::spawn(move || {
+                        // wait for previous listener (if any) to finish sending messages to listeners
+                        // before repopulating listeners list for new song
+                        let prev_listener = done_listener.take();
+                        if let Some(prev_listener) = prev_listener {
+                            prev_listener.join();
+                        }
+                        // spawn new listening thread for new song
+                        let stream_listeners2 = stream_listeners.clone();
+                        let listener = thread::spawn(move || {
                             receiver.recv();
-                            event_tx2.send(ServerEvent::PlayerDone);
+                            let stream_listeners2 = stream_listeners2.lock().unwrap();
+                            for stream_listener in stream_listeners2.iter() {
+                                (*stream_listener).send(ServerEvent::PlayerDone);
+                            }
                         });
-                        player_stream.player_res().send(Ok(()))
+                        done_listener = Some(listener);
+
+                        // add server events to listeners
+                        stream_listeners.lock().unwrap().push(event_tx.clone());
+                        player_stream.player_res().send(Ok(()))?;
                     }
-                    Err(e) => player_stream.player_res().send(Err(e)),
+                    Err(e) => player_stream.player_res().send(Err(e))?,
                 };
             }
             PlayerRequest::Pause => {
                 player_stream.pause();
-                player_stream.player_res().send(Ok(()));
+                player_stream.player_res().send(Ok(()))?;
             }
             PlayerRequest::Resume => {
                 player_stream.resume();
-                player_stream.player_res().send(Ok(()));
+                player_stream.player_res().send(Ok(()))?;
             }
             PlayerRequest::SetVolume(volume) => {
                 player_stream.set_volume(volume);
-                player_stream.player_res().send(Ok(()));
+                player_stream.player_res().send(Ok(()))?;
             }
             s => {
                 eprintln!("Not implemented '{:?}'", s);

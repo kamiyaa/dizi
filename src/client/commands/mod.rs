@@ -3,7 +3,6 @@ pub mod command_line;
 pub mod cursor_move;
 pub mod open_file;
 pub mod parent_directory;
-pub mod player;
 pub mod quit;
 pub mod reload;
 pub mod search;

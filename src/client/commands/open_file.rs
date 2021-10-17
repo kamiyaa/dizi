@@ -1,7 +1,8 @@
 use dizi_lib::error::DiziResult;
+use dizi_lib::request::client::ClientRequest;
 
-use crate::commands::player;
 use crate::context::AppContext;
+use crate::util::request::send_client_request;
 use crate::ui::TuiBackend;
 
 use super::change_directory;
@@ -12,7 +13,8 @@ pub fn open(context: &mut AppContext) -> DiziResult<()> {
             let path = entry.file_path().to_path_buf();
             change_directory::cd(path.as_path(), context)?;
         } else {
-            player::player_play(context, entry.file_path().to_path_buf())?;
+            let request = ClientRequest::PlayerFilePlay { path: entry.file_path().to_path_buf() };
+            send_client_request(context, &request)?;
         }
     }
     Ok(())

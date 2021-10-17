@@ -4,13 +4,11 @@ use std::sync::mpsc;
 use std::thread;
 
 use dizi_lib::error::DiziResult;
-use dizi_lib::response;
+use dizi_lib::request::client::ClientRequest;
+use dizi_lib::response::server::ServerBroadcastEvent;
 use dizi_lib::utils;
 
-use crate::client_command::run_command;
-use crate::events::{
-    ClientRequest, ClientRequestSender, ServerBroadcastEvent, ServerBroadcastEventReceiver,
-};
+use crate::events::{ClientRequestSender, ServerBroadcastEventReceiver};
 
 #[derive(Clone, Debug)]
 pub enum ClientMessage {
@@ -59,87 +57,30 @@ pub fn handle_client(
                 process_server_event(&mut stream, event)?;
             }
             ClientMessage::Client(line) => {
-                run_command(&client_request_tx, &line)?;
+                if line.is_empty() {
+                    continue;
+                }
+                forward_client_request(&client_request_tx, &line);
             }
         }
     }
     Ok(())
 }
 
-pub fn listen_for_clients(listener: UnixListener, event_tx: ClientRequestSender) -> DiziResult<()> {
-    for stream in listener.incoming() {
-        if let Ok(stream) = stream {
-            event_tx.send(ClientRequest::NewClient(stream));
-        }
-    }
+pub fn forward_client_request(client_request_tx: &ClientRequestSender, line: &str) -> DiziResult<()> {
+    let request: ClientRequest = serde_json::from_str(line)?;
+    client_request_tx.send(request)?;
     Ok(())
-}
-
-macro_rules! server_process_stub {
-    ($stream:ident, $enum_variant:ident) => {
-        let response = response::$enum_variant::new();
-        let json = serde_json::to_string(&response).unwrap();
-
-        $stream.write(json.as_bytes())?;
-        utils::flush($stream)?;
-    };
 }
 
 pub fn process_server_event(
     stream: &mut UnixStream,
     event: ServerBroadcastEvent,
 ) -> DiziResult<()> {
-    eprintln!("event from server: {:?}", event);
-    match event {
-        ServerBroadcastEvent::PlayerPause => {
-            server_process_stub!(stream, PlayerPause);
-        }
-        ServerBroadcastEvent::PlayerResume => {
-            server_process_stub!(stream, PlayerResume);
-        }
-        ServerBroadcastEvent::PlayerRepeat(true) => {
-            server_process_stub!(stream, PlayerRepeatOn);
-        }
-        ServerBroadcastEvent::PlayerRepeat(false) => {
-            server_process_stub!(stream, PlayerRepeatOff);
-        }
-        ServerBroadcastEvent::PlayerShuffle(true) => {
-            server_process_stub!(stream, PlayerShuffleOn);
-        }
-        ServerBroadcastEvent::PlayerShuffle(false) => {
-            server_process_stub!(stream, PlayerShuffleOff);
-        }
-        ServerBroadcastEvent::PlayerNext(true) => {
-            server_process_stub!(stream, PlayerNextOn);
-        }
-        ServerBroadcastEvent::PlayerNext(false) => {
-            server_process_stub!(stream, PlayerNextOff);
-        }
-        ServerBroadcastEvent::Quit => {}
-        ServerBroadcastEvent::PlayerFilePlay(song) => {
-            let response = response::PlayerPlay::new(song);
-            let json = serde_json::to_string(&response)?;
+    let response = event;
+    let json = serde_json::to_string(&response).unwrap();
 
-            stream.write(json.as_bytes())?;
-            utils::flush(stream)?;
-        }
-        ServerBroadcastEvent::PlayerVolumeUpdate(volume) => {
-            let response = response::PlayerVolumeUpdate::new(volume);
-            let json = serde_json::to_string(&response)?;
-
-            stream.write(json.as_bytes())?;
-            utils::flush(stream)?;
-        }
-        ServerBroadcastEvent::PlayerProgressUpdate(duration) => {
-            let response = response::PlayerProgressUpdate::new(duration);
-            let json = serde_json::to_string(&response)?;
-
-            stream.write(json.as_bytes())?;
-            utils::flush(stream)?;
-        }
-        s => {
-            eprintln!("Not Implemented! {:?}", s);
-        }
-    }
+    stream.write(json.as_bytes())?;
+    utils::flush(stream)?;
     Ok(())
 }

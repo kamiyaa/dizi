@@ -1,19 +1,24 @@
 use dizi_lib::error::DiziResult;
 use dizi_lib::player::PlayerStatus;
+use dizi_lib::request::client::ClientRequest;
+use dizi_lib::response::server::ServerBroadcastEvent;
 use dizi_lib::song::Song;
 
 use crate::context::AppContext;
-use crate::events::{ClientRequest, ServerBroadcastEvent};
 use crate::server_commands::*;
 
 pub fn run_command(context: &mut AppContext, event: ClientRequest) -> DiziResult<()> {
+    eprintln!("request: {:?}", event);
     match event {
-        ClientRequest::PlayerFilePlay(path) => {
+        ClientRequest::ServerQuit => {
+            quit::quit_server(context)?;
+        }
+        ClientRequest::PlayerFilePlay { path } => {
             let song = Song::new(path.as_path())?;
             player_play(context, song.file_path())?;
             context
                 .events
-                .broadcast_event(ServerBroadcastEvent::PlayerFilePlay(song));
+                .broadcast_event(ServerBroadcastEvent::PlayerFilePlay { song });
         }
         ClientRequest::PlayerPause => {
             player_pause(context)?;
@@ -41,17 +46,17 @@ pub fn run_command(context: &mut AppContext, event: ClientRequest) -> DiziResult
                 ClientRequest::PlayerGetVolume
             );
         }
-        ClientRequest::PlayerVolumeUp(amount) => {
+        ClientRequest::PlayerVolumeUp { amount } => {
             let volume = player_volume_increase(context, amount)?;
             context
                 .events
-                .broadcast_event(ServerBroadcastEvent::PlayerVolumeUpdate(volume));
+                .broadcast_event(ServerBroadcastEvent::PlayerVolumeUpdate { volume });
         }
-        ClientRequest::PlayerVolumeDown(amount) => {
+        ClientRequest::PlayerVolumeDown { amount } => {
             let volume = player_volume_decrease(context, amount)?;
             context
                 .events
-                .broadcast_event(ServerBroadcastEvent::PlayerVolumeUpdate(volume));
+                .broadcast_event(ServerBroadcastEvent::PlayerVolumeUpdate { volume });
         }
         ClientRequest::PlayerTogglePlay => {
             let status = player_toggle_play(context)?;
@@ -74,28 +79,25 @@ pub fn run_command(context: &mut AppContext, event: ClientRequest) -> DiziResult
             }
         }
         ClientRequest::PlayerToggleNext => {
-            let next = !context.player_context_ref().player_ref().next_enabled();
-            context.player_context_mut().player_mut().set_next(next);
+            let on = !context.player_context_ref().player_ref().next_enabled();
+            context.player_context_mut().player_mut().set_next(on);
             context
                 .events
-                .broadcast_event(ServerBroadcastEvent::PlayerNext(next));
+                .broadcast_event(ServerBroadcastEvent::PlayerNext { on });
         }
         ClientRequest::PlayerToggleRepeat => {
-            let repeat = !context.player_context_ref().player_ref().repeat_enabled();
-            context.player_context_mut().player_mut().set_repeat(repeat);
+            let on = !context.player_context_ref().player_ref().repeat_enabled();
+            context.player_context_mut().player_mut().set_repeat(on);
             context
                 .events
-                .broadcast_event(ServerBroadcastEvent::PlayerRepeat(repeat));
+                .broadcast_event(ServerBroadcastEvent::PlayerRepeat { on });
         }
         ClientRequest::PlayerToggleShuffle => {
-            let shuffle = !context.player_context_ref().player_ref().shuffle_enabled();
-            context
-                .player_context_mut()
-                .player_mut()
-                .set_shuffle(shuffle);
+            let on = !context.player_context_ref().player_ref().shuffle_enabled();
+            context.player_context_mut().player_mut().set_shuffle(on);
             context
                 .events
-                .broadcast_event(ServerBroadcastEvent::PlayerShuffle(shuffle));
+                .broadcast_event(ServerBroadcastEvent::PlayerShuffle { on });
         }
         s => {
             eprintln!("Error: '{:?}' not implemented", s);

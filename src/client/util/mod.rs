@@ -2,6 +2,7 @@ pub mod display_option;
 pub mod format;
 pub mod input;
 pub mod keyparse;
+pub mod request;
 pub mod search;
 pub mod select;
 pub mod sort_option;

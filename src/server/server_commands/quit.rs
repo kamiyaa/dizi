@@ -2,6 +2,9 @@ use std::path::Path;
 
 use dizi_lib::error::DiziResult;
 
-use crate::audio::PlayerStatus;
-use crate::context::AppContext;
+use crate::context::{AppContext, QuitType};
 
+pub fn quit_server(context: &mut AppContext) -> DiziResult<()> {
+    context.quit = QuitType::Server;
+    Ok(())
+}

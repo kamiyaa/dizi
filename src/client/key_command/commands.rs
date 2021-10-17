@@ -1,6 +1,8 @@
 use std::path;
 use std::time;
 
+use dizi_lib::request::client::ClientRequest;
+
 use crate::util::select::SelectOption;
 use crate::util::sort_type::SortType;
 
@@ -37,24 +39,5 @@ pub enum Command {
 
     ToggleHiddenFiles,
 
-    // player related
-    PlaylistGet,
-    PlaylistAdd,
-    PlaylistRemove,
-
-    PlayerGet,
-    PlayerPause,
-    PlayerTogglePlay,
-    PlayerToggleShuffle,
-    PlayerToggleRepeat,
-    PlayerToggleNext,
-
-    PlayerVolumeUp(usize),
-    PlayerVolumeDown(usize),
-
-    PlayerPlayNext,
-    PlayerPlayPrevious,
-
-    PlayerRewind(time::Duration),
-    PlayerFastForward(time::Duration),
+    Request(ClientRequest),
 }
