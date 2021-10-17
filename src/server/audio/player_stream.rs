@@ -19,12 +19,6 @@ use crate::config;
 use crate::events::{ServerEvent, ServerEventSender};
 
 #[derive(Clone, Debug)]
-pub enum PlayerStreamEvent {
-    Request(PlayerRequest),
-    DonePlaying,
-}
-
-#[derive(Clone, Debug)]
 pub enum PlayerRequest {
     Play(Song),
     Pause,
@@ -43,6 +37,7 @@ pub type RodioDecoder =
 pub type SourceThread = thread::JoinHandle<DiziResult<mpsc::Receiver<()>>>;
 
 pub struct PlayerStream {
+    pub event_tx: ServerEventSender,
     pub player_res_tx: mpsc::Sender<DiziResult<()>>,
     pub player_req_rx: mpsc::Receiver<PlayerRequest>,
     pub source_tx: Option<mpsc::Sender<PlayerRequest>>,
@@ -51,10 +46,12 @@ pub struct PlayerStream {
 
 impl PlayerStream {
     pub fn new(
+        event_tx: ServerEventSender,
         player_res_tx: mpsc::Sender<DiziResult<()>>,
         player_req_rx: mpsc::Receiver<PlayerRequest>,
     ) -> Self {
         Self {
+            event_tx,
             player_res_tx,
             player_req_rx,
             source_tx: None,
@@ -96,7 +93,6 @@ impl PlayerStream {
 
     pub fn play(
         &mut self,
-        event_tx: ServerEventSender,
         queue_tx: &queue::SourcesQueueInput<f32>,
         path: &Path,
     ) -> DiziResult<mpsc::Receiver<()>> {
@@ -111,6 +107,9 @@ impl PlayerStream {
         let file = File::open(path)?;
         let buffer = BufReader::new(file);
 
+        let event_tx = self.event_tx.clone();
+
+        // channel for controlling source
         let (source_tx, source_rx): (mpsc::Sender<PlayerRequest>, mpsc::Receiver<PlayerRequest>) =
             mpsc::channel();
 
@@ -163,7 +162,7 @@ pub fn player_stream(
     player_req_rx: mpsc::Receiver<PlayerRequest>,
     event_tx: ServerEventSender,
 ) -> DiziResult<()> {
-    let mut player_stream = PlayerStream::new(player_res_tx, player_req_rx);
+    let mut player_stream = PlayerStream::new(event_tx, player_res_tx, player_req_rx);
 
     let audio_device = get_default_output_device(config_t.server_ref().audio_system);
     let (stream, stream_handle) = OutputStream::try_from_device(&audio_device)?;
@@ -180,8 +179,11 @@ pub fn player_stream(
                 // Before playing new song, make sure to clear any listeners waiting for previous
                 // song to finish. This prevents a loop where new song triggers the end of previous
                 // song which triggers a new song, and repeat.
-                stream_listeners.lock().unwrap().clear();
-                match player_stream.play(event_tx.clone(), &queue_tx, song.file_path()) {
+                match stream_listeners.lock() {
+                    Ok(mut vec) => vec.clear(),
+                    _ => {}
+                }
+                match player_stream.play(&queue_tx, song.file_path()) {
                     Ok(receiver) => {
                         // wait for previous listener (if any) to finish sending messages to listeners
                         // before repopulating listeners list for new song
@@ -201,8 +203,16 @@ pub fn player_stream(
                         done_listener = Some(listener);
 
                         // add server events to listeners
-                        stream_listeners.lock().unwrap().push(event_tx.clone());
-                        player_stream.player_res().send(Ok(()))?;
+                        match stream_listeners.lock() {
+                            Ok(mut vec) => vec.push(player_stream.event_tx.clone()),
+                            _ => {}
+                        }
+                        match player_stream.player_res().send(Ok(())) {
+                            Ok(_) => {}
+                            Err(e) => {
+                                eprintln!("Sending message: {:?}", e);
+                            }
+                        }
                     }
                     Err(e) => player_stream.player_res().send(Err(e))?,
                 };

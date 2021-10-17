@@ -131,24 +131,24 @@ impl Player {
         }
     }
 
+    pub fn next_enabled(&self) -> bool {
+        self.next
+    }
+    pub fn repeat_enabled(&self) -> bool {
+        self.repeat
+    }
     pub fn shuffle_enabled(&self) -> bool {
         self.shuffle
     }
-    pub fn next_enabled(&self) -> bool {
-        self.repeat
-    }
-    pub fn repeat_enabled(&self) -> bool {
-        self.next
-    }
 
-    pub fn set_shuffle(&mut self, shuffle: bool) {
-        self.shuffle = shuffle;
-    }
     pub fn set_next(&mut self, next: bool) {
         self.next = next;
     }
     pub fn set_repeat(&mut self, repeat: bool) {
         self.repeat = repeat;
+    }
+    pub fn set_shuffle(&mut self, shuffle: bool) {
+        self.shuffle = shuffle;
     }
 
     pub fn get_volume(&self) -> f32 {

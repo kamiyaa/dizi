@@ -106,6 +106,8 @@ impl Events {
     }
 
     pub fn broadcast_event(&mut self, event: ServerBroadcastEvent) {
+        eprintln!("Server broadcast: {:?}", event);
+
         let mut queue = Vec::with_capacity(self.server_broadcast_listeners.len());
         for server_tx in self.server_broadcast_listeners.iter_mut() {
             if server_tx.send(event.clone()).is_ok() {

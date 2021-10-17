@@ -82,7 +82,7 @@ pub fn process_server_event(context: &mut AppContext, s: &str) -> DiziResult<()>
             context.server_state_mut().player_mut().set_repeat(on);
         }
         ServerBroadcastEvent::PlayerNext { on } => {
-            context.server_state_mut().player_mut().set_next(true);
+            context.server_state_mut().player_mut().set_next(on);
         }
         ServerBroadcastEvent::PlayerVolumeUpdate { volume } => {
             context.server_state_mut().player_mut().set_volume(volume);

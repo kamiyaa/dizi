@@ -79,25 +79,31 @@ pub fn run_command(context: &mut AppContext, event: ClientRequest) -> DiziResult
             }
         }
         ClientRequest::PlayerToggleNext => {
-            let on = !context.player_context_ref().player_ref().next_enabled();
-            context.player_context_mut().player_mut().set_next(on);
+            let enabled = context.player_context_ref().player_ref().next_enabled();
+            context.player_context_mut().player_mut().set_next(!enabled);
             context
                 .events
-                .broadcast_event(ServerBroadcastEvent::PlayerNext { on });
+                .broadcast_event(ServerBroadcastEvent::PlayerNext { on: !enabled });
         }
         ClientRequest::PlayerToggleRepeat => {
-            let on = !context.player_context_ref().player_ref().repeat_enabled();
-            context.player_context_mut().player_mut().set_repeat(on);
+            let enabled = context.player_context_ref().player_ref().repeat_enabled();
+            context
+                .player_context_mut()
+                .player_mut()
+                .set_repeat(!enabled);
             context
                 .events
-                .broadcast_event(ServerBroadcastEvent::PlayerRepeat { on });
+                .broadcast_event(ServerBroadcastEvent::PlayerRepeat { on: !enabled });
         }
         ClientRequest::PlayerToggleShuffle => {
-            let on = !context.player_context_ref().player_ref().shuffle_enabled();
-            context.player_context_mut().player_mut().set_shuffle(on);
+            let enabled = context.player_context_ref().player_ref().shuffle_enabled();
+            context
+                .player_context_mut()
+                .player_mut()
+                .set_shuffle(!enabled);
             context
                 .events
-                .broadcast_event(ServerBroadcastEvent::PlayerShuffle { on });
+                .broadcast_event(ServerBroadcastEvent::PlayerShuffle { on: !enabled });
         }
         s => {
             eprintln!("Error: '{:?}' not implemented", s);
