@@ -40,7 +40,7 @@ whenever mocp is playing music, other audio/video apps stop working and vice ver
  - [x] volume support
  - [ ] playlist support
    - [ ] shuffle
-   - [ ] repeat
+   - [x] repeat
    - [ ] next
  - [x] show music progress
  - [x] configurable audio system
