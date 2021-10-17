@@ -1,5 +1,7 @@
+use std::fs;
+use std::io;
 use std::collections::HashSet;
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 
 use crate::song::Song;
 
@@ -37,6 +39,13 @@ impl Playlist {
     pub fn contains(&self, s: &PathBuf) -> bool {
         self._set.contains(s)
     }
+
+    pub fn list_ref(&self) -> &Vec<Song> {
+        &self._list
+    }
+    pub fn list_mut(&mut self) -> &mut Vec<Song> {
+        &mut self._list
+    }
 }
 
 impl std::default::Default for Playlist {
@@ -48,3 +57,48 @@ impl std::default::Default for Playlist {
         }
     }
 }
+
+#[derive(Clone, Debug)]
+pub struct DirlistPlaylist {
+    _list: Vec<PathBuf>,
+    pub index: usize,
+}
+
+impl DirlistPlaylist {
+    pub fn new() -> Self {
+        Self::default()
+    }
+
+    pub fn from(path: &Path) -> io::Result<Self> {
+        let results: Vec<PathBuf> = fs::read_dir(path)?
+            .filter_map(|entry| entry.ok())
+            .map(|entry| entry.path())
+            .filter(|p| p.is_file())
+            .collect();
+        Ok(Self {
+            _list: results,
+            index: 0,
+        })
+    }
+
+    pub fn len(&self) -> usize {
+        self._list.len()
+    }
+
+    pub fn list_ref(&self) -> &Vec<PathBuf> {
+        &self._list
+    }
+    pub fn list_mut(&mut self) -> &mut Vec<PathBuf> {
+        &mut self._list
+    }
+}
+
+impl std::default::Default for DirlistPlaylist {
+    fn default() -> Self {
+        Self {
+            _list: Vec::new(),
+            index: 0,
+        }
+    }
+}
+

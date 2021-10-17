@@ -4,3 +4,9 @@ pub enum PlayerStatus {
     Paused,
     Stopped,
 }
+
+#[derive(Copy, Clone, Debug, PartialEq)]
+pub enum PlaylistStatus {
+    DirectoryListing,
+    PlaylistFile,
+}

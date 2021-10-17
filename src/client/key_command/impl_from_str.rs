@@ -57,7 +57,6 @@ impl std::str::FromStr for Command {
         simple_command_conversion_case!(command, CMD_SEARCH_SKIM, Self::SearchSkim);
         simple_command_conversion_case!(command, CMD_SEARCH_NEXT, Self::SearchNext);
         simple_command_conversion_case!(command, CMD_SEARCH_PREV, Self::SearchPrev);
-
         simple_command_conversion_case!(command, CMD_TOGGLE_HIDDEN, Self::ToggleHiddenFiles);
 
         if command == CMD_CHANGE_DIRECTORY {

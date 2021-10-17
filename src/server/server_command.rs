@@ -34,11 +34,23 @@ pub fn run_command(context: &mut AppContext, event: ClientRequest) -> DiziResult
         }
         ClientRequest::PlayerPlayNext => {
             player_play_next(context)?;
-            // TODO: Broadcast new song
+
+            if let Some(song) = context.player_context_ref().player_ref().current_song_ref() {
+                let song = song.clone();
+                context
+                    .events
+                    .broadcast_event(ServerBroadcastEvent::PlayerFilePlay { song });
+            }
         }
         ClientRequest::PlayerPlayPrevious => {
             player_play_previous(context)?;
-            // TODO: Broadcast new song
+
+            if let Some(song) = context.player_context_ref().player_ref().current_song_ref() {
+                let song = song.clone();
+                context
+                    .events
+                    .broadcast_event(ServerBroadcastEvent::PlayerFilePlay { song });
+            }
         }
         ClientRequest::PlayerGetVolume => {
             eprintln!(

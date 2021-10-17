@@ -2,11 +2,12 @@ use std::path::Path;
 
 use dizi_lib::error::DiziResult;
 use dizi_lib::player::PlayerStatus;
+use dizi_lib::song::Song;
 
 use crate::context::AppContext;
 
 pub fn player_play(context: &mut AppContext, path: &Path) -> DiziResult<()> {
-    context.player_context_mut().player_mut().play(path)
+    context.player_context_mut().player_mut().play_file(path)
 }
 
 pub fn player_pause(context: &mut AppContext) -> DiziResult<()> {
@@ -67,9 +68,11 @@ pub fn player_volume_decrease(context: &mut AppContext, amount: usize) -> DiziRe
 }
 
 pub fn player_play_next(context: &mut AppContext) -> DiziResult<()> {
+    context.player_context_mut().player_mut().play_next()?;
     Ok(())
 }
 
 pub fn player_play_previous(context: &mut AppContext) -> DiziResult<()> {
+    context.player_context_mut().player_mut().play_previous()?;
     Ok(())
 }

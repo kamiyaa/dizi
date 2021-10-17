@@ -13,7 +13,7 @@ use crate::config::default::AppConfig;
 use crate::context::{AppContext, QuitType};
 use crate::events::{AppEvent, ServerEvent, ServerEventSender};
 use crate::server_command::run_command;
-use crate::server_commands::player_play;
+use crate::server_commands::{player_play, player_play_next};
 
 pub fn setup_socket(config: &AppConfig) -> DiziResult<UnixListener> {
     let socket = Path::new(config.server_ref().socket.as_path());
@@ -83,17 +83,34 @@ pub fn listen_for_clients(listener: UnixListener, event_tx: ServerEventSender) -
 }
 
 pub fn process_done_song(context: &mut AppContext) {
-    let player = context.player_context_mut().player_mut();
-    if !player.next_enabled() {
-        eprintln!("Replaying song!");
-        let song = player.current_song_ref().map(|s| s.clone());
-        if let Some(song) = song {
-            player_play(context, song.file_path());
+    let next_enabled = context.player_context_ref().player_ref().next_enabled();
+    let repeat_enabled = context.player_context_ref().player_ref().repeat_enabled();
+    let shuffle_enabled = context.player_context_ref().player_ref().shuffle_enabled();
+
+    if !next_enabled {
+        if repeat_enabled {
+            eprintln!("Replaying song!");
+            let song = context
+                .player_context_mut()
+                .player_mut()
+                .current_song_ref()
+                .map(|s| s.clone());
+            if let Some(song) = song {
+                player_play(context, song.file_path());
+                context
+                    .events
+                    .broadcast_event(ServerBroadcastEvent::PlayerFilePlay { song });
+            }
+        } else {
+            eprintln!("Done playing song!");
+        }
+    } else {
+        player_play_next(context);
+        if let Some(song) = context.player_context_ref().player_ref().current_song_ref() {
+            let song = song.clone();
             context
                 .events
                 .broadcast_event(ServerBroadcastEvent::PlayerFilePlay { song });
         }
-    } else {
-        eprintln!("TODO: go to next song in playlist!");
     }
 }
