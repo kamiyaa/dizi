@@ -56,42 +56,54 @@ pub fn process_server_event(context: &mut AppContext, s: &str) -> DiziResult<()>
         ServerBroadcastEvent::ServerQuit => {
             context.quit = QuitType::Server;
         }
+        ServerBroadcastEvent::PlayerState { state } => {
+            context.server_state_mut().set_player_state(state);
+        }
         ServerBroadcastEvent::PlayerFilePlay { song } => {
-            context.server_state_mut().player_mut().set_song(Some(song));
             context
                 .server_state_mut()
-                .player_mut()
+                .player_state_mut()
+                .set_song(Some(song));
+            context
+                .server_state_mut()
+                .player_state_mut()
                 .set_player_status(PlayerStatus::Playing);
         }
         ServerBroadcastEvent::PlayerPause => {
             context
                 .server_state_mut()
-                .player_mut()
+                .player_state_mut()
                 .set_player_status(PlayerStatus::Paused);
         }
         ServerBroadcastEvent::PlayerResume => {
             context
                 .server_state_mut()
-                .player_mut()
+                .player_state_mut()
                 .set_player_status(PlayerStatus::Playing);
         }
         ServerBroadcastEvent::PlayerShuffle { on } => {
-            context.server_state_mut().player_mut().set_shuffle(on);
+            context
+                .server_state_mut()
+                .player_state_mut()
+                .set_shuffle(on);
         }
         ServerBroadcastEvent::PlayerRepeat { on } => {
-            context.server_state_mut().player_mut().set_repeat(on);
+            context.server_state_mut().player_state_mut().set_repeat(on);
         }
         ServerBroadcastEvent::PlayerNext { on } => {
-            context.server_state_mut().player_mut().set_next(on);
+            context.server_state_mut().player_state_mut().set_next(on);
         }
         ServerBroadcastEvent::PlayerVolumeUpdate { volume } => {
-            context.server_state_mut().player_mut().set_volume(volume);
+            context
+                .server_state_mut()
+                .player_state_mut()
+                .set_volume(volume);
         }
         ServerBroadcastEvent::PlayerProgressUpdate { elapsed } => {
             context
                 .server_state_mut()
-                .player_mut()
-                .set_duration_played(elapsed);
+                .player_state_mut()
+                .set_elapsed(elapsed);
         }
         s => {
             context

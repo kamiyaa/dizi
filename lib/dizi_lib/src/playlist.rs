@@ -3,11 +3,15 @@ use std::io;
 use std::collections::HashSet;
 use std::path::{Path, PathBuf};
 
+use serde_derive::{Deserialize, Serialize};
+
 use crate::song::Song;
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Deserialize, Serialize)]
 pub struct Playlist {
+    #[serde(skip_serializing)]
     _set: HashSet<PathBuf>,
+    #[serde(rename = "list")]
     _list: Vec<Song>,
     pub index: usize,
 }

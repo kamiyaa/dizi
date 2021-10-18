@@ -1,12 +1,14 @@
 use std::path::Path;
 use std::sync::mpsc;
 use std::thread;
+use std::time;
 
 use rand::seq::SliceRandom;
 use rand::thread_rng;
+use serde_derive::{Deserialize, Serialize};
 
 use dizi_lib::error::DiziResult;
-use dizi_lib::player::{PlayerStatus, PlaylistStatus};
+use dizi_lib::player::{PlayerState, PlayerStatus, PlaylistStatus};
 use dizi_lib::playlist::{DirlistPlaylist, Playlist};
 use dizi_lib::song::Song;
 
@@ -17,9 +19,10 @@ use crate::events::ServerEventSender;
 #[derive(Debug)]
 pub struct Player {
     current_song: Option<Song>,
+    elapsed: time::Duration,
 
     status: PlayerStatus,
-    playlist_status: PlaylistStatus,
+    _playlist_status: PlaylistStatus,
 
     volume: f32,
 
@@ -27,14 +30,16 @@ pub struct Player {
     repeat: bool,
     next: bool,
 
+    playlist: Playlist,
+
+    dirlist_playlist: DirlistPlaylist,
+
     event_tx: ServerEventSender,
 
-    // event_tx: mpsc::Sender<PlayerResponse>,
-    dirlist_playlist: DirlistPlaylist,
-    playlist: Playlist,
     player_handle: thread::JoinHandle<DiziResult<()>>,
     player_req_tx: mpsc::Sender<PlayerRequest>,
     player_res_rx: mpsc::Receiver<DiziResult<()>>,
+    // event_tx: mpsc::Sender<PlayerResponse>,
 }
 
 impl Player {
@@ -50,9 +55,10 @@ impl Player {
 
         Self {
             current_song: None,
+            elapsed: time::Duration::from_secs(0),
 
             status: PlayerStatus::Stopped,
-            playlist_status: PlaylistStatus::PlaylistFile,
+            _playlist_status: PlaylistStatus::PlaylistFile,
             volume: 0.5,
 
             shuffle: false,
@@ -66,6 +72,35 @@ impl Player {
             player_handle,
             player_req_tx,
             player_res_rx,
+        }
+    }
+
+    pub fn clone_player_state(&self) -> PlayerState {
+        let song = self.current_song_ref().map(|s| s.clone());
+        let elapsed = self.get_elapsed();
+        let status = self.play_status();
+        let playlist_status = self.playlist_status();
+        let volume: usize = (self.get_volume() * 100.0) as usize;
+        let shuffle = self.shuffle_enabled();
+        let next = self.next_enabled();
+        let repeat = self.repeat_enabled();
+
+        let playlist = self.playlist_ref().clone();
+
+        PlayerState {
+            song,
+            elapsed,
+
+            status,
+            playlist_status,
+
+            volume,
+
+            next,
+            repeat,
+            shuffle,
+
+            playlist,
         }
     }
 
@@ -108,7 +143,7 @@ impl Player {
         self.status = PlayerStatus::Playing;
         self.current_song = Some(song);
         self.dirlist_playlist = dirlist_playlist;
-        self.playlist_status = PlaylistStatus::DirectoryListing;
+        self._playlist_status = PlaylistStatus::DirectoryListing;
 
         eprintln!("playlist len: {}", self.dirlist_playlist.len());
 
@@ -127,7 +162,7 @@ impl Player {
     }
 
     pub fn play_next(&mut self) -> DiziResult<()> {
-        match self.playlist_status {
+        match self._playlist_status {
             PlaylistStatus::DirectoryListing => {
                 self.play_next_dirlist()?;
             }
@@ -155,7 +190,7 @@ impl Player {
     }
 
     pub fn play_previous(&mut self) -> DiziResult<()> {
-        match self.playlist_status {
+        match self.playlist_status() {
             PlaylistStatus::DirectoryListing => {
                 self.play_previous_dirlist()?;
             }
@@ -212,6 +247,12 @@ impl Player {
             _ => Ok(PlayerStatus::Stopped),
         }
     }
+    pub fn play_status(&self) -> PlayerStatus {
+        self.status
+    }
+    pub fn playlist_status(&self) -> PlaylistStatus {
+        self._playlist_status
+    }
 
     pub fn get_volume(&self) -> f32 {
         self.volume
@@ -234,10 +275,6 @@ impl Player {
         self.shuffle
     }
 
-    pub fn play_status(&self) -> PlayerStatus {
-        self.status
-    }
-
     pub fn set_next(&mut self, next: bool) {
         self.next = next;
     }
@@ -250,6 +287,13 @@ impl Player {
             self.playlist.list_mut().shuffle(&mut thread_rng());
             self.dirlist_playlist.list_mut().shuffle(&mut thread_rng());
         }
+    }
+
+    pub fn get_elapsed(&self) -> time::Duration {
+        self.elapsed
+    }
+    pub fn set_elapsed(&mut self, elapsed: time::Duration) {
+        self.elapsed = elapsed;
     }
 
     pub fn current_song_ref(&self) -> Option<&Song> {

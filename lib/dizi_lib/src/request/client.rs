@@ -12,8 +12,8 @@ pub enum ClientRequest {
     ServerQuit,
 
     // player requests
-    #[serde(rename = "/player/get")]
-    PlayerGet,
+    #[serde(rename = "/player/state")]
+    PlayerState,
     #[serde(rename = "/player/play/file")]
     PlayerFilePlay { path: PathBuf },
 
@@ -71,7 +71,7 @@ impl ClientRequest {
     pub fn api_path(&self) -> &'static str {
         match &*self {
             Self::ServerQuit => "/server/quit",
-            Self::PlayerGet => "/player/get",
+            Self::PlayerState => "/player/state",
             Self::PlayerFilePlay { .. } => "/player/play/file",
             Self::PlayerPlayNext => "/player/play/next",
             Self::PlayerPlayPrevious => "/player/play/previous",
@@ -99,7 +99,7 @@ impl ClientRequest {
     pub fn parse_str(s: &str, args: &str) -> DiziResult<Self> {
         match s {
             "/server/quit" => Ok(Self::ServerQuit),
-            "/player/get" => Ok(Self::PlayerGet),
+            "/player/state" => Ok(Self::PlayerState),
             "/player/play/file" => Ok(Self::PlayerFilePlay { path: PathBuf::new() }),
 
             "/player/play/next" => Ok(Self::PlayerPlayNext),

@@ -94,7 +94,8 @@ impl<'a> Widget for TuiView<'a> {
         };
 
         TuiFolderView::new(self.context).render(layout_rect[1], buf);
-        TuiPlayer::new(self.context.server_state_ref().player_ref()).render(layout_rect[2], buf);
+        TuiPlayer::new(self.context.server_state_ref().player_state_ref())
+            .render(layout_rect[2], buf);
 
         if let Some(msg) = self.context.message_queue_ref().current_message() {
             let rect = Rect {

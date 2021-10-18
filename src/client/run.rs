@@ -4,6 +4,7 @@ use std::thread;
 use termion::event::Event;
 
 use dizi_lib::error::DiziResult;
+use dizi_lib::request::client::ClientRequest;
 
 use crate::config::AppKeyMapping;
 use crate::context::{AppContext, QuitType};
@@ -13,6 +14,7 @@ use crate::preview::preview_default;
 use crate::ui::views::TuiView;
 use crate::ui::TuiBackend;
 use crate::util::input;
+use crate::util::request::send_client_request;
 use crate::util::to_string::ToString;
 
 pub fn run(
@@ -33,6 +35,11 @@ pub fn run(
                 event_tx.send(AppEvent::Server(line));
             }
         });
+    }
+
+    {
+        let request = ClientRequest::PlayerState;
+        send_client_request(context, &request)?;
     }
 
     while context.quit == QuitType::DoNot {

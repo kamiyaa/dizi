@@ -63,6 +63,10 @@ pub fn process_server_event(context: &mut AppContext, event: ServerEvent) {
         }
         ServerEvent::PlayerProgressUpdate(elapsed) => {
             context
+                .player_context_mut()
+                .player_mut()
+                .set_elapsed(elapsed);
+            context
                 .events
                 .broadcast_event(ServerBroadcastEvent::PlayerProgressUpdate { elapsed });
         }

@@ -2,6 +2,7 @@ use std::time;
 
 use serde_derive::{Deserialize, Serialize};
 
+use crate::player::PlayerState;
 use crate::song::Song;
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
@@ -10,6 +11,8 @@ pub enum ServerBroadcastEvent {
     ServerQuit,
 
     // player status updates
+    PlayerState { state: PlayerState },
+
     PlayerFilePlay { song: Song },
 
     PlayerPause,

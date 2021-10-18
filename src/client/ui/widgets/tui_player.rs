@@ -7,16 +7,14 @@ use tui::style::{Color, Modifier, Style};
 use tui::text::{Span, Spans};
 use tui::widgets::{Paragraph, Widget};
 
-use dizi_lib::player::PlayerStatus;
-
-use crate::context::Player;
+use dizi_lib::player::{PlayerState, PlayerStatus};
 
 pub struct TuiPlayer<'a> {
-    player: &'a Player,
+    player: &'a PlayerState,
 }
 
 impl<'a> TuiPlayer<'a> {
-    pub fn new(player: &'a Player) -> Self {
+    pub fn new(player: &'a PlayerState) -> Self {
         Self { player }
     }
 }
@@ -37,7 +35,7 @@ impl<'a> Widget for TuiPlayer<'a> {
             PlayerStatus::Paused => "Paused",
         };
         let duration_played_str = {
-            let duration = self.player.get_duration_played();
+            let duration = self.player.get_elapsed();
 
             let total_secs = duration.as_secs();
             let minutes = total_secs / 60;
@@ -81,19 +79,19 @@ impl<'a> Widget for TuiPlayer<'a> {
         let on_style = Style::default().fg(Color::Yellow);
         let off_style = Style::default().fg(Color::Black);
 
-        if self.player.get_next() {
+        if self.player.next_enabled() {
             buf.set_string(area.x, area.y + 4, next_str, on_style);
         } else {
             buf.set_string(area.x, area.y + 4, next_str, off_style);
         }
 
-        if self.player.get_repeat() {
+        if self.player.repeat_enabled() {
             buf.set_string(area.x, area.y + 5, repeat_str, on_style);
         } else {
             buf.set_string(area.x, area.y + 5, repeat_str, off_style);
         }
 
-        if self.player.get_shuffle() {
+        if self.player.shuffle_enabled() {
             buf.set_string(area.x, area.y + 6, shuffle_str, on_style);
         } else {
             buf.set_string(area.x, area.y + 6, shuffle_str, off_style);

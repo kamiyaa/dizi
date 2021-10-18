@@ -13,6 +13,15 @@ pub fn run_command(context: &mut AppContext, event: ClientRequest) -> DiziResult
         ClientRequest::ServerQuit => {
             quit::quit_server(context)?;
         }
+        ClientRequest::PlayerState => {
+            let state = context
+                .player_context_ref()
+                .player_ref()
+                .clone_player_state();
+            context
+                .events
+                .broadcast_event(ServerBroadcastEvent::PlayerState { state });
+        }
         ClientRequest::PlayerFilePlay { path } => {
             let song = Song::new(path.as_path())?;
             player_play(context, song.file_path())?;
