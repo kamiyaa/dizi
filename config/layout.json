@@ -1,0 +1,24 @@
+{
+    type: composite,
+    direction: horizontal,
+    panels: [
+        {
+            type: file_browser,
+            ratio: 1,
+        },
+        {
+            type: composite,
+            direction: vertical,
+            panels: [
+                {
+                    type: music_player,
+                    ratio: 1,
+                },
+                {
+                    type: playlist,
+                    ratio: 1,
+                }
+            ]
+        }
+    ],
+}

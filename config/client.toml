@@ -6,9 +6,8 @@ home_dir = "~/music"
 [client.display]
 show_borders = true
 show_hidden = false
+layout = "~/.config/layout.json"
 
 [client.display.sort]
 reverse = false
 sort_method = "natural"
-
-[client.display.layout]

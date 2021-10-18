@@ -1,8 +1,8 @@
 mapcommand = [
 	{ keys = [ "q" ],		command = "close" },
-	{ keys = [ "Q" ],		command = "quit" },
+	{ keys = [ "Q" ],		command = "/server/quit" },
 
-	{ keys = [ "R" ],		command = "reload_dirlist" },
+	{ keys = [ "r" ],		command = "reload_dirlist" },
 	{ keys = [ "z", "h" ],		command = "toggle_hidden" },
 
 	# arrow keys
@@ -18,7 +18,15 @@ mapcommand = [
 
 	{ keys = [ "c", "d" ],		command = ":cd " },
 
-	{ keys = [ " " ],		command = "select --toggle=true" },
+	{ keys = [ " " ],		command = "/player/toggle/play" },
+	{ keys = [ "0" ],		command = "/player/volume/increase 1" },
+	{ keys = [ "9" ],		command = "/player/volume/decrease 1" },
+	{ keys = [ "S" ],		command = "/player/toggle/shuffle" },
+	{ keys = [ "R" ],		command = "/player/toggle/repeat" },
+	{ keys = [ "N" ],		command = "/player/toggle/next" },
+	{ keys = [ "n" ],		command = "/player/play/next" },
+	{ keys = [ "p" ],		command = "/player/play/previous" },
+
 	{ keys = [ "t" ],		command = "select --all=true --toggle=true" },
 
 	{ keys = [ ":" ],		command = ":" },
@@ -26,7 +34,7 @@ mapcommand = [
 
 	{ keys = [ "/" ],		command = ":search " },
 	{ keys = [ "\\" ],		command = ":search_glob " },
-	{ keys = [ "S" ],		command = "search_skim" },
+	{ keys = [ "C" ],		command = "search_skim" },
 
 	{ keys = [ "n" ],		command = "search_next" },
 	{ keys = [ "N" ],		command = "search_prev" },
