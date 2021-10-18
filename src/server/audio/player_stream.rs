@@ -123,7 +123,6 @@ impl PlayerStream {
                     if update_tracker >= UPDATE_RATE {
                         duration_played += update_tracker;
                         update_tracker = Duration::from_secs(0);
-                        eprintln!("Played {:?}", duration_played);
                         event_tx.send(ServerEvent::PlayerProgressUpdate(duration_played));
                     }
                 }
