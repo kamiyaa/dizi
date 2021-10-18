@@ -13,6 +13,18 @@ pub fn run_command(context: &mut AppContext, event: ClientRequest) -> DiziResult
         ClientRequest::ServerQuit => {
             quit::quit_server(context)?;
         }
+        ClientRequest::Leave { uuid } => {
+            let index = context
+                .events
+                .server_broadcast_listeners
+                .iter()
+                .enumerate()
+                .find(|(i, (listener_uuid, _))| listener_uuid == &uuid)
+                .map(|(i, ..)| i);
+            if let Some(index) = index {
+                context.events.server_broadcast_listeners.remove(index);
+            }
+        }
         ClientRequest::PlayerState => {
             let state = context
                 .player_context_ref()

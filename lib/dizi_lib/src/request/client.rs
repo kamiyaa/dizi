@@ -7,6 +7,9 @@ use crate::error::{DiziError, DiziErrorKind, DiziResult};
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
 pub enum ClientRequest {
+    // quit
+    #[serde(rename = "/client/leave")]
+    Leave { uuid: String },
     // quit server
     #[serde(rename = "/server/quit")]
     ServerQuit,
@@ -70,6 +73,7 @@ pub enum ClientRequest {
 impl ClientRequest {
     pub fn api_path(&self) -> &'static str {
         match &*self {
+            Self::Leave { .. } => "/client/leave",
             Self::ServerQuit => "/server/quit",
             Self::PlayerState => "/player/state",
             Self::PlayerFilePlay { .. } => "/player/play/file",
@@ -98,7 +102,10 @@ impl ClientRequest {
 
     pub fn parse_str(s: &str, args: &str) -> DiziResult<Self> {
         match s {
+            "/client/leave" => Ok(Self::Leave { uuid: "".to_string() } ),
+
             "/server/quit" => Ok(Self::ServerQuit),
+
             "/player/state" => Ok(Self::PlayerState),
             "/player/play/file" => Ok(Self::PlayerFilePlay { path: PathBuf::new() }),
 

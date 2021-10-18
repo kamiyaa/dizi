@@ -17,6 +17,7 @@ pub enum ClientMessage {
 }
 
 pub fn handle_client(
+    uuid: uuid::Uuid,
     mut stream: UnixStream,
     client_request_tx: ClientRequestSender,
     server_event_rx: ServerBroadcastEventReceiver,
@@ -46,6 +47,12 @@ pub fn handle_client(
                 return;
             }
         }
+
+        let response = ClientRequest::Leave {
+            uuid: uuid.to_string(),
+        };
+        let json = serde_json::to_string(&response).unwrap();
+        event_tx_clone.send(ClientMessage::Client(json));
     });
 
     // process events

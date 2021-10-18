@@ -4,6 +4,8 @@ use std::path::Path;
 use std::sync::mpsc;
 use std::thread;
 
+use uuid::Uuid;
+
 use dizi_lib::error::DiziResult;
 use dizi_lib::response::server::ServerBroadcastEvent;
 
@@ -58,8 +60,14 @@ pub fn process_server_event(context: &mut AppContext, event: ServerEvent) {
             let client_tx2 = context.events.client_request_sender().clone();
             let (server_tx, server_rx) = mpsc::channel();
 
-            thread::spawn(|| client::handle_client(stream, client_tx2, server_rx));
-            context.events.add_broadcast_listener(server_tx);
+            let client_uuid = Uuid::new_v4();
+            let uuid_string = client_uuid.to_string();
+            thread::spawn(move || {
+                client::handle_client(client_uuid, stream, client_tx2, server_rx)
+            });
+            context
+                .events
+                .add_broadcast_listener(uuid_string, server_tx);
         }
         ServerEvent::PlayerProgressUpdate(elapsed) => {
             context

@@ -41,6 +41,7 @@ toml = "^0"
 tui = "^0"
 unicode-width = "^0"
 unicode-segmentation = "^1"
+uuid = { features = [ "v4" ], version = "^0" }
 xdg = "^2"
 
 [features]

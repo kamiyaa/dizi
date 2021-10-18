@@ -47,7 +47,7 @@ pub struct Events {
     pub app_event_tx: AppEventSender,
     pub app_event_rx: AppEventReceiver,
 
-    pub server_broadcast_listeners: Vec<ServerBroadcastEventSender>,
+    pub server_broadcast_listeners: Vec<(String, ServerBroadcastEventSender)>,
 }
 
 impl Events {
@@ -98,8 +98,8 @@ impl Events {
         self.app_event_rx.recv()
     }
 
-    pub fn add_broadcast_listener(&mut self, server_tx: ServerBroadcastEventSender) {
-        self.server_broadcast_listeners.push(server_tx);
+    pub fn add_broadcast_listener(&mut self, uuid: String, server_tx: ServerBroadcastEventSender) {
+        self.server_broadcast_listeners.push((uuid, server_tx));
     }
 
     pub fn broadcast_event(&mut self, event: ServerBroadcastEvent) {
@@ -108,13 +108,8 @@ impl Events {
             event,
             self.server_broadcast_listeners.len()
         );
-
-        let mut queue = Vec::with_capacity(self.server_broadcast_listeners.len());
-        for server_tx in self.server_broadcast_listeners.iter_mut() {
-            if server_tx.send(event.clone()).is_ok() {
-                queue.push(server_tx.clone());
-            }
+        for (_, server_tx) in self.server_broadcast_listeners.iter() {
+            let _ = server_tx.send(event.clone());
         }
-        self.server_broadcast_listeners = queue;
     }
 }
