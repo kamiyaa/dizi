@@ -62,7 +62,22 @@ impl<'a> Widget for TuiPlayer<'a> {
             }
         };
 
-        buf.set_string(area.x, area.y, player_status, player_status_style);
+        let song_name = match song {
+            Some(song) => song
+                .file_path()
+                .file_name()
+                .unwrap()
+                .to_string_lossy()
+                .into_owned(),
+            None => "".to_string(),
+        };
+
+        buf.set_string(
+            area.x,
+            area.y,
+            format!("{} [{}]", player_status, song_name),
+            player_status_style,
+        );
         buf.set_string(area.x, area.y + 1, duration_played_str, player_status_style);
         buf.set_string(area.x, area.y + 2, total_duration_str, player_status_style);
         buf.set_string(
@@ -72,29 +87,38 @@ impl<'a> Widget for TuiPlayer<'a> {
             player_status_style,
         );
 
-        let next_str = "[NEXT]";
-        let repeat_str = "[REPEAT]";
-        let shuffle_str = "[SHUFFLE]";
-
         let on_style = Style::default().fg(Color::Yellow);
         let off_style = Style::default().fg(Color::Black);
 
-        if self.player.next_enabled() {
-            buf.set_string(area.x, area.y + 4, next_str, on_style);
+        let next_style = if self.player.next_enabled() {
+            on_style
         } else {
-            buf.set_string(area.x, area.y + 4, next_str, off_style);
-        }
+            off_style
+        };
 
-        if self.player.repeat_enabled() {
-            buf.set_string(area.x, area.y + 5, repeat_str, on_style);
+        let repeat_style = if self.player.repeat_enabled() {
+            on_style
         } else {
-            buf.set_string(area.x, area.y + 5, repeat_str, off_style);
-        }
+            off_style
+        };
 
-        if self.player.shuffle_enabled() {
-            buf.set_string(area.x, area.y + 6, shuffle_str, on_style);
+        let shuffle_style = if self.player.shuffle_enabled() {
+            on_style
         } else {
-            buf.set_string(area.x, area.y + 6, shuffle_str, off_style);
-        }
+            off_style
+        };
+
+        let text = Spans::from(vec![
+            Span::styled("[NEXT] ", next_style),
+            Span::styled("[REPEAT] ", repeat_style),
+            Span::styled("[SHUFFLE] ", shuffle_style),
+        ]);
+
+        let rect = Rect {
+            y: area.y + 4,
+            height: area.height - 4,
+            ..area
+        };
+        Paragraph::new(text).render(rect, buf);
     }
 }
