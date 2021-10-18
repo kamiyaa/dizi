@@ -9,6 +9,52 @@ use crate::song::Song;
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
 pub struct Playlist {
+    #[serde(rename = "list")]
+    _list: Vec<Song>,
+    pub index: usize,
+}
+
+impl Playlist {
+    pub fn new() -> Self {
+        Self::default()
+    }
+
+    pub fn playlist(&self) -> &[Song] {
+        self._list.as_slice()
+    }
+
+    pub fn append_song(&mut self, s: Song) {
+        self._list.push(s);
+    }
+
+    pub fn remove_song(&mut self, index: usize) -> Song {
+        let song = self._list.remove(index);
+        song
+    }
+
+    pub fn len(&self) -> usize {
+        self._list.len()
+    }
+
+    pub fn list_ref(&self) -> &Vec<Song> {
+        &self._list
+    }
+    pub fn list_mut(&mut self) -> &mut Vec<Song> {
+        &mut self._list
+    }
+}
+
+impl std::default::Default for Playlist {
+    fn default() -> Self {
+        Self {
+            _list: Vec::new(),
+            index: 0,
+        }
+    }
+}
+
+#[derive(Clone, Debug, Deserialize, Serialize)]
+pub struct HashPlaylist {
     #[serde(skip_serializing)]
     _set: HashSet<PathBuf>,
     #[serde(rename = "list")]
@@ -16,7 +62,7 @@ pub struct Playlist {
     pub index: usize,
 }
 
-impl Playlist {
+impl HashPlaylist {
     pub fn new() -> Self {
         Self::default()
     }
@@ -52,7 +98,7 @@ impl Playlist {
     }
 }
 
-impl std::default::Default for Playlist {
+impl std::default::Default for HashPlaylist {
     fn default() -> Self {
         Self {
             _set: HashSet::new(),

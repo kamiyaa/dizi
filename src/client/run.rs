@@ -35,9 +35,8 @@ pub fn run(
                 event_tx.send(AppEvent::Server(line));
             }
         });
-    }
 
-    {
+        // request for server state
         let request = ClientRequest::PlayerState;
         send_client_request(context, &request)?;
     }
@@ -84,7 +83,9 @@ pub fn run(
                 context.flush_event();
             }
             AppEvent::Server(message) => {
-                input::process_server_event(context, message.as_str());
+                if let Err(err) = input::process_server_event(context, message.as_str()) {
+                    context.message_queue_mut().push_error(err.to_string());
+                }
             }
             event => input::process_noninteractive(event, context),
         }

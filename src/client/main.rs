@@ -81,8 +81,6 @@ fn run_app(args: Args) -> DiziResult<()> {
     let config = AppConfig::get_config(CONFIG_FILE);
     let keymap = AppKeyMapping::get_config(KEYMAP_FILE);
 
-    eprintln!("{:#?}", keymap);
-
     if UnixStream::connect(&config.client_ref().socket).is_err() {
         println!("Server is not running");
         return Ok(()); // don't start server, still need to iron things out

@@ -78,8 +78,12 @@ impl<'a> Widget for TuiPlayer<'a> {
             format!("{} [{}]", player_status, song_name),
             player_status_style,
         );
-        buf.set_string(area.x, area.y + 1, duration_played_str, player_status_style);
-        buf.set_string(area.x, area.y + 2, total_duration_str, player_status_style);
+        buf.set_string(
+            area.x,
+            area.y + 2,
+            format!("{} / {}", duration_played_str, total_duration_str),
+            Style::default(),
+        );
         buf.set_string(
             area.x,
             area.y + 3,
