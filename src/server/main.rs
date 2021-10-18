@@ -3,7 +3,6 @@ mod client;
 mod config;
 mod context;
 mod events;
-mod macros;
 mod server;
 mod server_command;
 mod server_commands;

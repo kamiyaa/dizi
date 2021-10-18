@@ -6,8 +6,6 @@ use super::PlayerContext;
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub enum QuitType {
     DoNot,
-    Normal,
-    ToCurrentDirectory,
     Server,
 }
 

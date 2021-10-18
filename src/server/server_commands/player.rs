@@ -2,7 +2,6 @@ use std::path::Path;
 
 use dizi_lib::error::DiziResult;
 use dizi_lib::player::PlayerStatus;
-use dizi_lib::song::Song;
 
 use crate::context::AppContext;
 

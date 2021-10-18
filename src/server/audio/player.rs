@@ -79,7 +79,7 @@ impl Player {
     pub fn play_file(&mut self, path: &Path) -> DiziResult<()> {
         let song = Song::new(path)?;
 
-        let mut dirlist_playlist = match song.file_path().parent() {
+        let dirlist_playlist = match song.file_path().parent() {
             Some(parent) => {
                 // make the playlist and make sure the first song is the current song
                 let mut playlist = DirlistPlaylist::from(&parent)?;
@@ -117,12 +117,9 @@ impl Player {
 
     fn play(&mut self, song: &Song) -> DiziResult<()> {
         self.player_stream_req()
-            .send(PlayerRequest::Play(song.clone()));
-        let resp = self.player_stream_res().recv();
-        match resp {
-            Ok(msg) => msg,
-            Err(e) => Ok(()),
-        }
+            .send(PlayerRequest::Play(song.clone()))?;
+        let resp = self.player_stream_res().recv()?;
+        resp
     }
 
     pub fn play_playlist(&mut self, index: usize) -> DiziResult<()> {
@@ -187,23 +184,19 @@ impl Player {
     }
 
     pub fn pause(&mut self) -> DiziResult<()> {
-        self.player_stream_req().send(PlayerRequest::Pause);
+        self.player_stream_req().send(PlayerRequest::Pause)?;
 
-        let _ = self.player_stream_res().recv();
+        self.player_stream_res().recv()??;
         self.status = PlayerStatus::Paused;
         Ok(())
     }
 
     pub fn resume(&mut self) -> DiziResult<()> {
-        self.player_stream_req().send(PlayerRequest::Resume);
+        self.player_stream_req().send(PlayerRequest::Resume)?;
 
-        let _ = self.player_stream_res().recv();
+        self.player_stream_res().recv()??;
         self.status = PlayerStatus::Playing;
         Ok(())
-    }
-
-    pub fn play_status(&self) -> PlayerStatus {
-        self.status
     }
 
     pub fn toggle_play(&mut self) -> DiziResult<PlayerStatus> {
@@ -220,6 +213,17 @@ impl Player {
         }
     }
 
+    pub fn get_volume(&self) -> f32 {
+        self.volume
+    }
+    pub fn set_volume(&mut self, volume: f32) -> DiziResult<()> {
+        self.player_stream_req()
+            .send(PlayerRequest::SetVolume(volume))?;
+
+        self.player_stream_res().recv()??;
+        self.volume = volume;
+        Ok(())
+    }
     pub fn next_enabled(&self) -> bool {
         self.next
     }
@@ -228,6 +232,10 @@ impl Player {
     }
     pub fn shuffle_enabled(&self) -> bool {
         self.shuffle
+    }
+
+    pub fn play_status(&self) -> PlayerStatus {
+        self.status
     }
 
     pub fn set_next(&mut self, next: bool) {
@@ -241,22 +249,6 @@ impl Player {
         if self.shuffle_enabled() {
             self.playlist.list_mut().shuffle(&mut thread_rng());
             self.dirlist_playlist.list_mut().shuffle(&mut thread_rng());
-        }
-    }
-
-    pub fn get_volume(&self) -> f32 {
-        self.volume
-    }
-    pub fn set_volume(&mut self, volume: f32) -> DiziResult<()> {
-        self.player_stream_req()
-            .send(PlayerRequest::SetVolume(volume));
-
-        match self.player_stream_res().recv().map(|r| r.unwrap()) {
-            Ok(_) => {
-                self.volume = volume;
-                Ok(())
-            }
-            Err(_) => Ok(()),
         }
     }
 

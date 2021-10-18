@@ -1,5 +1,3 @@
-use std::io::Write;
-
 use dizi_lib::error::DiziResult;
 use dizi_lib::request::client::ClientRequest;
 

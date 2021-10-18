@@ -1,5 +1,4 @@
 use std::path;
-use std::time;
 
 use dizi_lib::request::client::ClientRequest;
 

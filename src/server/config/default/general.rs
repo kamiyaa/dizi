@@ -1,5 +1,3 @@
-use std::path;
-
 use serde_derive::Deserialize;
 
 use super::server::{RawServerConfig, ServerConfig};

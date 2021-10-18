@@ -1,13 +1,10 @@
-use std::convert::From;
 use std::os::unix::net::UnixStream;
-use std::path::PathBuf;
 use std::sync::mpsc;
 use std::thread;
 use std::time;
 
 use dizi_lib::request::client::ClientRequest;
 use dizi_lib::response::server::ServerBroadcastEvent;
-use dizi_lib::song::Song;
 
 #[derive(Debug)]
 pub enum ServerEvent {

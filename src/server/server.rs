@@ -5,7 +5,6 @@ use std::sync::mpsc;
 use std::thread;
 
 use dizi_lib::error::DiziResult;
-use dizi_lib::request::client::ClientRequest;
 use dizi_lib::response::server::ServerBroadcastEvent;
 
 use crate::client;
@@ -85,7 +84,6 @@ pub fn listen_for_clients(listener: UnixListener, event_tx: ServerEventSender) -
 pub fn process_done_song(context: &mut AppContext) {
     let next_enabled = context.player_context_ref().player_ref().next_enabled();
     let repeat_enabled = context.player_context_ref().player_ref().repeat_enabled();
-    let shuffle_enabled = context.player_context_ref().player_ref().shuffle_enabled();
 
     if !next_enabled {
         if repeat_enabled {

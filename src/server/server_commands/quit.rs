@@ -1,5 +1,3 @@
-use std::path::Path;
-
 use dizi_lib::error::DiziResult;
 
 use crate::context::{AppContext, QuitType};

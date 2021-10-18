@@ -10,7 +10,7 @@ use cpal::traits::HostTrait;
 
 use rodio::queue;
 use rodio::source::{Amplify, Pausable, PeriodicAccess, Source, Stoppable};
-use rodio::{Decoder, OutputStream, OutputStreamHandle, Sink};
+use rodio::{Decoder, OutputStream};
 
 use dizi_lib::error::DiziResult;
 use dizi_lib::song::Song;
@@ -25,16 +25,14 @@ pub enum PlayerRequest {
     Resume,
     Stop,
     SetVolume(f32),
-    AddListener(ServerEventSender),
-    ClearListeners,
+    //    AddListener(ServerEventSender),
+    //    ClearListeners,
 }
 
-pub type RodioSource = Decoder<BufReader<File>>;
-pub type RodioControllableSource = Pausable<Amplify<Stoppable<RodioSource>>>;
+type RodioSource = Decoder<BufReader<File>>;
+type RodioControllableSource = Pausable<Amplify<Stoppable<RodioSource>>>;
 pub type RodioDecoder =
-    PeriodicAccess<RodioControllableSource, FnMut(&mut RodioControllableSource)>;
-
-pub type SourceThread = thread::JoinHandle<DiziResult<mpsc::Receiver<()>>>;
+    PeriodicAccess<RodioControllableSource, dyn FnMut(&mut RodioControllableSource)>;
 
 pub struct PlayerStream {
     pub event_tx: ServerEventSender,
@@ -77,12 +75,13 @@ impl PlayerStream {
             source_tx.send(PlayerRequest::Resume);
         }
     }
+    // might be useless
     pub fn stop(&mut self) {
         let source_tx = self.source_tx.take();
         if let Some(source_tx) = source_tx {
             source_tx.send(PlayerRequest::Stop);
         }
-        let source_thread = self.receiver.take();
+        self.receiver.take();
     }
 
     pub fn set_volume(&self, volume: f32) {
@@ -165,12 +164,12 @@ pub fn player_stream(
     let mut player_stream = PlayerStream::new(event_tx, player_res_tx, player_req_rx);
 
     let audio_device = get_default_output_device(config_t.server_ref().audio_system);
-    let (stream, stream_handle) = OutputStream::try_from_device(&audio_device)?;
+    let (_stream, stream_handle) = OutputStream::try_from_device(&audio_device)?;
 
     let (queue_tx, queue_rx) = rodio::queue::queue(true);
     let _ = stream_handle.play_raw(queue_rx);
 
-    let mut stream_listeners: Arc<Mutex<Vec<ServerEventSender>>> = Arc::new(Mutex::new(vec![]));
+    let stream_listeners: Arc<Mutex<Vec<ServerEventSender>>> = Arc::new(Mutex::new(vec![]));
     let mut done_listener: Option<thread::JoinHandle<()>> = None;
 
     while let Ok(msg) = player_stream.player_req().recv() {

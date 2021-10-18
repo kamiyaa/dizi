@@ -52,6 +52,16 @@ impl From<std::env::VarError> for DiziError {
     }
 }
 
+impl From<std::sync::mpsc::RecvError> for DiziError {
+    fn from(_: std::sync::mpsc::RecvError) -> Self {
+        Self {
+            _kind: DiziErrorKind::ReceiveError,
+            _cause: "Failed to receive message".to_string(),
+        }
+    }
+}
+
+
 impl From<rodio::PlayError> for DiziError {
     fn from(err: rodio::PlayError) -> Self {
         let err_str = err.to_string();
@@ -81,16 +91,7 @@ impl From<rodio::decoder::DecoderError> for DiziError {
 }
 
 impl<T> From<std::sync::mpsc::SendError<T>> for DiziError {
-    fn from(err: std::sync::mpsc::SendError<T>) -> Self {
-        Self {
-            _kind: DiziErrorKind::SendError,
-            _cause: "Failed to send message".to_string(),
-        }
-    }
-}
-
-impl<T> From<crossbeam::channel::SendError<T>> for DiziError {
-    fn from(err: crossbeam::channel::SendError<T>) -> Self {
+    fn from(_: std::sync::mpsc::SendError<T>) -> Self {
         Self {
             _kind: DiziErrorKind::SendError,
             _cause: "Failed to send message".to_string(),
@@ -103,16 +104,6 @@ impl From<serde_json::Error> for DiziError {
         Self {
             _kind: DiziErrorKind::from(err),
             _cause: "Failed to parse JSON".to_string(),
-        }
-    }
-}
-
-#[cfg(feature = "ffmpeg")]
-impl From<ffmpeg_decoder::Error> for DiziError {
-    fn from(err: ffmpeg_decoder::Error) -> Self {
-        Self {
-            _kind: DiziErrorKind::from(err),
-            _cause: "Unsupported audio format".to_string(),
         }
     }
 }

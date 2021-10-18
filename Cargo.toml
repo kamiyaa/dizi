@@ -26,7 +26,7 @@ libc = "^0"
 lazy_static = "^1"
 pipewire = "^0"
 rand = "^0"
-rodio = "^0"
+rodio = { features = [ "symphonia-all" ], git = "https://github.com/RustAudio/rodio.git", version = "^0" }
 rustyline = "^4"
 serde = "^1"
 serde_derive = "^1"

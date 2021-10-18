@@ -35,7 +35,7 @@ impl AppCommand for Command {
 
             Self::ToggleHiddenFiles => CMD_TOGGLE_HIDDEN,
 
-            Self::Request(request) => "",
+            Self::Request(request) => request.api_path(),
         }
     }
 }

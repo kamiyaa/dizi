@@ -68,6 +68,34 @@ pub enum ClientRequest {
 }
 
 impl ClientRequest {
+    pub fn api_path(&self) -> &'static str {
+        match &*self {
+            Self::ServerQuit => "/server/quit",
+            Self::PlayerGet => "/player/get",
+            Self::PlayerFilePlay { .. } => "/player/play/file",
+            Self::PlayerPlayNext => "/player/play/next",
+            Self::PlayerPlayPrevious => "/player/play/previous",
+            Self::PlayerPause => "/player/pause",
+            Self::PlayerResume => "/player/resume",
+            Self::PlayerGetVolume => "/player/volume/get",
+            Self::PlayerRewind { .. } => "/player/rewind",
+            Self::PlayerFastForward { .. } => "/player/fast_forward",
+            Self::PlayerTogglePlay => "/player/toggle/play",
+            Self::PlayerToggleNext => "/player/toggle/next",
+            Self::PlayerToggleRepeat => "/player/toggle/repeat",
+            Self::PlayerToggleShuffle => "/player/toggle/shuffle",
+            Self::PlayerVolumeUp { .. } => "/player/volume/increase",
+            Self::PlayerVolumeDown { .. } => "/player/volume/decrease",
+            Self::PlaylistGet => "/playlist/get",
+            Self::PlaylistOpen { .. } => "/playlist/open",
+            Self::PlaylistPlay { .. } => "/playlist/play",
+            Self::PlaylistAppend { .. } => "/playlist/append",
+            Self::PlaylistRemove { .. } => "/playlist/remove",
+            Self::PlaylistMoveUp { .. } => "/playlist/move_up",
+            Self::PlaylistMoveDown { .. } => "/playlist/move_down"
+        }
+    }
+
     pub fn parse_str(s: &str, args: &str) -> DiziResult<Self> {
         match s {
             "/server/quit" => Ok(Self::ServerQuit),
@@ -81,8 +109,8 @@ impl ClientRequest {
             "/player/resume" => Ok(Self::PlayerResume),
             "/player/volume/get" => Ok(Self::PlayerGetVolume),
 
-            "/player/rewind" => Ok(Self::PlayerRewind { amount: time::Duration::from_secs(0) }),
-            "/player/fast_forward" => Ok(Self::PlayerFastForward { amount: time::Duration::from_secs(0)  }),
+            "/player/rewind" => Ok(Self::PlayerRewind { amount: time::Duration::from_secs(1) }),
+            "/player/fast_forward" => Ok(Self::PlayerFastForward { amount: time::Duration::from_secs(1) }),
 
             "/player/toggle/play" => Ok(Self::PlayerTogglePlay),
             "/player/toggle/next" => Ok(Self::PlayerToggleNext),

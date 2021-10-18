@@ -2,7 +2,6 @@ use dizi_lib::error::DiziResult;
 use dizi_lib::request::client::ClientRequest;
 
 use crate::context::AppContext;
-use crate::ui::TuiBackend;
 use crate::util::request::send_client_request;
 
 use super::change_directory;
