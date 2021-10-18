@@ -118,7 +118,7 @@ impl PlayerStream {
             .amplify(1.0)
             .pausable(false)
             .periodic_access(POLL_RATE, move |source| {
-                if paused == false {
+                if !paused {
                     update_tracker += POLL_RATE;
                     if update_tracker >= UPDATE_RATE {
                         duration_played += update_tracker;

@@ -83,7 +83,7 @@ fn run_app(args: Args) -> DiziResult<()> {
 
     eprintln!("{:#?}", keymap);
 
-    if let Err(_) = UnixStream::connect(&config.client_ref().socket) {
+    if UnixStream::connect(&config.client_ref().socket).is_err() {
         println!("Server is not running");
         return Ok(()); // don't start server, still need to iron things out
         println!("Starting server...");

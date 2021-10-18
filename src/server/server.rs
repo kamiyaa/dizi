@@ -73,10 +73,8 @@ pub fn process_server_event(context: &mut AppContext, event: ServerEvent) {
 }
 
 pub fn listen_for_clients(listener: UnixListener, event_tx: ServerEventSender) -> DiziResult<()> {
-    for stream in listener.incoming() {
-        if let Ok(stream) = stream {
-            event_tx.send(ServerEvent::NewClient(stream));
-        }
+    for stream in listener.incoming().flatten() {
+        event_tx.send(ServerEvent::NewClient(stream));
     }
     Ok(())
 }

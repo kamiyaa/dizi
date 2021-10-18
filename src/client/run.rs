@@ -29,10 +29,8 @@ pub fn run(
 
         let _ = thread::spawn(move || {
             let cursor = BufReader::new(stream);
-            for line in cursor.lines() {
-                if let Ok(line) = line {
-                    event_tx.send(AppEvent::Server(line));
-                }
+            for line in cursor.lines().flatten() {
+                event_tx.send(AppEvent::Server(line));
             }
         });
     }

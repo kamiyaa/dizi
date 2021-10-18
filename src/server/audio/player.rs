@@ -82,7 +82,7 @@ impl Player {
         let dirlist_playlist = match song.file_path().parent() {
             Some(parent) => {
                 // make the playlist and make sure the first song is the current song
-                let mut playlist = DirlistPlaylist::from(&parent)?;
+                let mut playlist = DirlistPlaylist::from(parent)?;
                 // sort alphabetically or randomly if shuffle is enabled
                 if !self.shuffle_enabled() {
                     playlist.list_mut().sort();
@@ -173,7 +173,7 @@ impl Player {
 
         let song = {
             let next_song_path = &self.dirlist_playlist_ref().list_ref()[new_index];
-            Song::new(&next_song_path)?
+            Song::new(next_song_path)?
         };
 
         self.play(&song)?;

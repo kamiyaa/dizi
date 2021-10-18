@@ -37,15 +37,13 @@ pub fn handle_client(
     });
 
     // listen for client requests
-    let event_tx_clone = event_tx.clone();
+    let event_tx_clone = event_tx;
     let stream_clone = stream.try_clone().unwrap();
     let _ = thread::spawn(move || {
         let cursor = BufReader::new(stream_clone);
-        for line in cursor.lines() {
-            if let Ok(line) = line {
-                if event_tx_clone.send(ClientMessage::Client(line)).is_err() {
-                    return;
-                }
+        for line in cursor.lines().flatten() {
+            if event_tx_clone.send(ClientMessage::Client(line)).is_err() {
+                return;
             }
         }
     });

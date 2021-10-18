@@ -36,7 +36,7 @@ impl std::str::FromStr for Command {
             None => (s, ""),
         };
 
-        if command.starts_with("/") {
+        if command.starts_with('/') {
             match ClientRequest::parse_str(command, arg) {
                 Ok(s) => return Ok(Self::Request(s)),
                 Err(e) => return Err(e),
