@@ -1,11 +1,12 @@
 use tui::buffer::Buffer;
 use tui::layout::{Constraint, Direction, Layout, Rect};
+use tui::style::{Color, Modifier, Style};
 use tui::symbols::line::{HORIZONTAL_DOWN, HORIZONTAL_UP};
 use tui::text::Span;
 use tui::widgets::{Block, Borders, Paragraph, Widget, Wrap};
 
 use crate::context::AppContext;
-use crate::ui::widgets::{TuiPlayer, TuiTopBar};
+use crate::ui::widgets::{TuiPlayer, TuiPlaylist, TuiTopBar};
 
 use super::TuiFolderView;
 
@@ -28,74 +29,44 @@ impl<'a> Widget for TuiView<'a> {
         let config = self.context.config_ref();
         let display_options = config.display_options_ref();
 
-        let (default_layout, constraints): (bool, &[Constraint; 3]) =
-            (true, &display_options.default_layout);
+        let default_layout = [Constraint::Ratio(1, 2), Constraint::Ratio(1, 2)];
 
-        let layout_rect = if config.display_options_ref().show_borders() {
-            let area = Rect {
-                y: area.top() + 1,
-                height: area.height - 2,
-                ..area
-            };
+        let mut layout_rect = Layout::default()
+            .direction(Direction::Horizontal)
+            .vertical_margin(1)
+            .constraints(default_layout)
+            .split(area);
 
-            let block = Block::default().borders(Borders::ALL);
-            let inner = block.inner(area);
-            block.render(area, buf);
+        let focused_panel_style = Style::default().fg(Color::Blue);
 
-            let layout_rect = Layout::default()
-                .direction(Direction::Horizontal)
-                .constraints(constraints.as_ref())
-                .split(inner);
+        let block = Block::default()
+            .border_style(focused_panel_style)
+            .borders(Borders::ALL);
+        let border_inner_rect = block.inner(layout_rect[0]);
+        block.render(layout_rect[0], buf);
+        layout_rect[0] = border_inner_rect;
 
-            // Render inner borders properly.
-            {
-                let top = area.top();
-                let bottom = area.bottom() - 1;
-                let left = layout_rect[1].left() - 1;
-                let right = layout_rect[2].left();
-                let intersections = Intersections {
-                    top,
-                    bottom,
-                    left,
-                    right,
-                };
+        let nested_layout = [Constraint::Ratio(1, 2), Constraint::Ratio(1, 2)];
+        let mut layout_rect2 = Layout::default()
+            .direction(Direction::Vertical)
+            .constraints(nested_layout)
+            .split(layout_rect[1]);
 
-                intersections.render_left(buf);
-                if default_layout {
-                    intersections.render_right(buf);
-                }
-            }
+        let block = Block::default().borders(Borders::ALL);
+        let border_inner_rect = block.inner(layout_rect2[0]);
+        block.render(layout_rect2[0], buf);
+        layout_rect2[0] = border_inner_rect;
 
-            let block = Block::default().borders(Borders::RIGHT);
-            let inner1 = block.inner(layout_rect[0]);
-            block.render(layout_rect[0], buf);
+        let block = Block::default().borders(Borders::ALL);
+        let border_inner_rect = block.inner(layout_rect2[1]);
+        block.render(layout_rect2[1], buf);
+        layout_rect2[1] = border_inner_rect;
 
-            let block = Block::default().borders(Borders::LEFT);
-            let inner3 = block.inner(layout_rect[2]);
-            block.render(layout_rect[2], buf);
-
-            vec![inner1, layout_rect[1], inner3]
-        } else {
-            let mut layout_rect = Layout::default()
-                .direction(Direction::Horizontal)
-                .vertical_margin(1)
-                .constraints(constraints.as_ref())
-                .split(area);
-
-            layout_rect[0] = Rect {
-                width: layout_rect[0].width - 1,
-                ..layout_rect[0]
-            };
-            layout_rect[1] = Rect {
-                width: layout_rect[1].width - 1,
-                ..layout_rect[1]
-            };
-            layout_rect
-        };
-
-        TuiFolderView::new(self.context).render(layout_rect[1], buf);
+        TuiFolderView::new(self.context).render(layout_rect[0], buf);
         TuiPlayer::new(self.context.server_state_ref().player_state_ref())
-            .render(layout_rect[2], buf);
+            .render(layout_rect2[0], buf);
+        TuiPlaylist::new(self.context.server_state_ref().player_state_ref())
+            .render(layout_rect2[1], buf);
 
         if let Some(msg) = self.context.message_queue_ref().current_message() {
             let rect = Rect {

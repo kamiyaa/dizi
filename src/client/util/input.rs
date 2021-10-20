@@ -105,6 +105,13 @@ pub fn process_server_event(context: &mut AppContext, s: &str) -> DiziResult<()>
                 .player_state_mut()
                 .set_elapsed(elapsed);
         }
+        ServerBroadcastEvent::PlaylistAppend { song } => {
+            context
+                .server_state_mut()
+                .player_state_mut()
+                .playlist_mut()
+                .append_song(song);
+        }
         s => {
             context
                 .message_queue_mut()

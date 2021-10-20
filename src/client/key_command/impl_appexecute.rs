@@ -70,11 +70,22 @@ pub fn execute_request(context: &mut AppContext, request: &ClientRequest) -> Diz
     match request {
         ClientRequest::ServerQuit => {
             quit::server_quit(context)?;
-            Ok(())
+        }
+        ClientRequest::PlaylistAppend { .. } => {
+            if let Some(entry) = context.curr_list_ref().and_then(|s| s.curr_entry_ref()) {
+                if entry.file_path().is_dir() {
+                } else {
+                    let request = ClientRequest::PlaylistAppend {
+                        path: entry.file_path().to_path_buf(),
+                    };
+                    send_client_request(context, &request)?;
+                }
+            }
+            eprintln!("Hello");
         }
         request => {
             send_client_request(context, &request)?;
-            Ok(())
         }
     }
+    Ok(())
 }

@@ -25,5 +25,9 @@ pub enum ServerBroadcastEvent {
     PlayerVolumeUpdate { volume: usize },
     PlayerProgressUpdate { elapsed: time::Duration },
 
+    // playlist
     PlaylistPlay { index: usize },
+
+    PlaylistAppend { song: Song },
+    PlaylistRemove { index: usize },
 }

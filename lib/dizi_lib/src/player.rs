@@ -97,4 +97,11 @@ impl PlayerState {
     pub fn set_next(&mut self, next: bool) {
         self.next = next;
     }
+
+    pub fn playlist_ref(&self) -> &Playlist {
+        &self.playlist
+    }
+    pub fn playlist_mut(&mut self) -> &mut Playlist {
+        &mut self.playlist
+    }
 }

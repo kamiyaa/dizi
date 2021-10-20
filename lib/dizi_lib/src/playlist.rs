@@ -19,6 +19,10 @@ impl Playlist {
         Self::default()
     }
 
+    pub fn first_index_for_viewport(&self, viewport_height: usize) -> usize {
+        self.index / viewport_height as usize * viewport_height as usize
+    }
+
     pub fn playlist(&self) -> &[Song] {
         self._list.as_slice()
     }

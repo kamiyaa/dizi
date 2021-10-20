@@ -11,6 +11,53 @@ use serde_derive::{Deserialize, Serialize};
 use crate::error::DiziResult;
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
+pub struct Song {
+    _file_name: String,
+    #[serde(rename = "path")]
+    _path: PathBuf,
+    #[serde(rename = "audio_metadata")]
+    _audio_metadata: AudioMetadata,
+    #[serde(rename = "music_metadata")]
+    _music_metadata: MusicMetadata,
+}
+
+impl Song {
+    pub fn new(path: &Path) -> DiziResult<Self> {
+        let file = File::open(path)?;
+        let buffer = BufReader::new(file);
+        let source = Decoder::new(buffer)?;
+
+        let audio_metadata = AudioMetadata::from_source(&source);
+        let music_metadata = MusicMetadata {};
+
+        let file_name = path.file_name().map(|s| s.to_string_lossy()).unwrap().into_owned();
+
+        Ok(Self {
+            _file_name: file_name,
+            _path: path.to_path_buf(),
+            _audio_metadata: audio_metadata,
+            _music_metadata: music_metadata,
+        })
+    }
+
+    pub fn file_path(&self) -> &Path {
+        self._path.as_path()
+    }
+
+    pub fn file_name(&self) -> &str {
+        &self._file_name
+    }
+
+    pub fn audio_metadata(&self) -> &AudioMetadata {
+        &self._audio_metadata
+    }
+
+    pub fn music_metadata(&self) -> &MusicMetadata {
+        &self._music_metadata
+    }
+}
+
+#[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct AudioMetadata {
     #[serde(rename = "channels")]
     _channels: u16,
@@ -50,42 +97,3 @@ impl AudioMetadata {
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct MusicMetadata {}
-
-#[derive(Clone, Debug, Serialize, Deserialize)]
-pub struct Song {
-    #[serde(rename = "path")]
-    _path: PathBuf,
-    #[serde(rename = "audio_metadata")]
-    _audio_metadata: AudioMetadata,
-    #[serde(rename = "music_metadata")]
-    _music_metadata: MusicMetadata,
-}
-
-impl Song {
-    pub fn new(path: &Path) -> DiziResult<Self> {
-        let file = File::open(path)?;
-        let buffer = BufReader::new(file);
-        let source = Decoder::new(buffer)?;
-
-        let audio_metadata = AudioMetadata::from_source(&source);
-        let music_metadata = MusicMetadata {};
-
-        Ok(Self {
-            _path: path.to_path_buf(),
-            _audio_metadata: audio_metadata,
-            _music_metadata: music_metadata,
-        })
-    }
-
-    pub fn file_path(&self) -> &Path {
-        self._path.as_path()
-    }
-
-    pub fn audio_metadata(&self) -> &AudioMetadata {
-        &self._audio_metadata
-    }
-
-    pub fn music_metadata(&self) -> &MusicMetadata {
-        &self._music_metadata
-    }
-}

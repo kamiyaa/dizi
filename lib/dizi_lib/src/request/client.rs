@@ -52,9 +52,8 @@ pub enum ClientRequest {
     PlayerVolumeDown { amount: usize },
 
     // playlist requests
-
-    #[serde(rename = "/playlist/get")]
-    PlaylistGet,
+    #[serde(rename = "/playlist/state")]
+    PlaylistState,
     #[serde(rename = "/playlist/open")]
     PlaylistOpen { path: PathBuf },
     #[serde(rename = "/playlist/play")]
@@ -90,7 +89,7 @@ impl ClientRequest {
             Self::PlayerToggleShuffle => "/player/toggle/shuffle",
             Self::PlayerVolumeUp { .. } => "/player/volume/increase",
             Self::PlayerVolumeDown { .. } => "/player/volume/decrease",
-            Self::PlaylistGet => "/playlist/get",
+            Self::PlaylistState => "/playlist/state",
             Self::PlaylistOpen { .. } => "/playlist/open",
             Self::PlaylistPlay { .. } => "/playlist/play",
             Self::PlaylistAppend { .. } => "/playlist/append",
@@ -127,7 +126,7 @@ impl ClientRequest {
             "/player/volume/increase" => Ok(Self::PlayerVolumeUp { amount: 1 }),
             "/player/volume/decrease" => Ok(Self::PlayerVolumeDown { amount: 1 }),
 
-            "/playlist/get" => Ok(Self::PlaylistGet),
+            "/playlist/state" => Ok(Self::PlaylistState),
             "/playlist/open" => Ok(Self::PlaylistOpen { path: PathBuf::new() }),
             "/playlist/play" => Ok(Self::PlaylistPlay { index: 0 }),
 

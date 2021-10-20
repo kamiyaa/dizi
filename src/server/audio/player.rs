@@ -67,8 +67,8 @@ impl Player {
 
             event_tx,
 
-            dirlist_playlist: DirlistPlaylist::new(),
             playlist: Playlist::new(),
+            dirlist_playlist: DirlistPlaylist::new(),
             player_handle,
             player_req_tx,
             player_res_rx,

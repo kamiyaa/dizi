@@ -138,6 +138,22 @@ pub fn run_command(context: &mut AppContext, event: ClientRequest) -> DiziResult
                 .events
                 .broadcast_event(ServerBroadcastEvent::PlayerShuffle { on: !enabled });
         }
+        ClientRequest::PlaylistAppend { path } => {
+            let song = playlist::playlist_append(context, &path)?;
+            context
+                .events
+                .broadcast_event(ServerBroadcastEvent::PlaylistAppend { song });
+        }
+        ClientRequest::PlaylistRemove { index } => {
+            playlist::playlist_remove(context, index)?;
+            context
+                .events
+                .broadcast_event(ServerBroadcastEvent::PlaylistRemove { index });
+        }
+        ClientRequest::PlaylistMoveUp { .. } => {}
+        ClientRequest::PlaylistMoveDown { .. } => {}
+        ClientRequest::PlaylistPlay { .. } => {}
+        ClientRequest::PlaylistOpen { .. } => {}
         s => {
             eprintln!("Error: '{:?}' not implemented", s);
         }
