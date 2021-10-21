@@ -43,6 +43,7 @@ whenever mocp is playing music, other audio/video apps stop working and vice ver
    - [x] repeat
    - [x] next
  - [ ] playlist support
+   - [ ] add/delete/update songs
    - [ ] shuffle
    - [ ] repeat
    - [ ] next
@@ -58,8 +59,13 @@ whenever mocp is playing music, other audio/video apps stop working and vice ver
    - [x] glob search
    - [x] case-insensitive search
    - [x] skim search (fzf)
- - [ ] show player progression
- - [ ] show playlist
+ - [x] show player progression
+ - [ ] playlist support
+   - [x] show playlist
+   - [ ] add/delete/update songs
+   - [ ] shuffle
+   - [ ] repeat
+   - [ ] next
  - [ ] show audio metadata
  - [ ] theming support
- - [ ] custom layout support
+ - [x] custom layout support

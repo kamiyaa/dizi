@@ -82,18 +82,10 @@ fn get_page_size(context: &AppContext, backend: &TuiBackend) -> Option<usize> {
     let rect = backend.terminal.as_ref().map(|t| t.size())?.ok()?;
 
     let rect_height = rect.height as usize;
-    if config.display_options_ref().show_borders() {
-        if rect_height >= 4 {
-            Some(rect_height - 4)
-        } else {
-            None
-        }
+    if rect_height >= 2 {
+        Some(rect_height - 2)
     } else {
-        if rect_height >= 2 {
-            Some(rect_height - 2)
-        } else {
-            None
-        }
+        None
     }
 }
 

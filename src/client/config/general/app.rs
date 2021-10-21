@@ -1,7 +1,7 @@
 use serde_derive::Deserialize;
 
 use crate::config::option::{DisplayOption, SortOption};
-use crate::config::{parse_to_config_file, TomlConfigFile};
+use crate::config::{parse_toml_to_config, TomlConfigFile};
 
 use super::client::{ClientConfig, ClientConfigCrude};
 
@@ -72,6 +72,6 @@ impl std::default::Default for AppConfig {
 
 impl TomlConfigFile for AppConfig {
     fn get_config(file_name: &str) -> Self {
-        parse_to_config_file::<AppConfigCrude, AppConfig>(file_name).unwrap_or_else(Self::default)
+        parse_toml_to_config::<AppConfigCrude, AppConfig>(file_name).unwrap_or_else(Self::default)
     }
 }

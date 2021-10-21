@@ -4,7 +4,7 @@ use tui::layout::Direction;
 
 use dizi_lib::error::{DiziError, DiziErrorKind, DiziResult};
 
-use crate::config::LayoutCompositionCrude;
+use crate::config::general::LayoutCompositionCrude;
 
 #[derive(Clone, Copy, Debug)]
 pub enum WidgetType {
@@ -72,14 +72,16 @@ impl LayoutComposition {
                 ratio,
             } => {
                 let direction = str_to_direction(&direction)?;
-                let widgets: Vec<LayoutComposition> = widgets
-                    .iter()
-                    .filter_map(|w| LayoutComposition::from(w).ok())
-                    .collect();
+                let mut new_widgets: Vec<LayoutComposition> = Vec::new();
+                for w in widgets {
+                    let widget = LayoutComposition::from(&w)?;
+                    new_widgets.push(widget);
+                }
+
                 let ratio = *ratio;
                 Ok(Self::Composite {
                     direction,
-                    widgets,
+                    widgets: new_widgets,
                     ratio,
                 })
             }
@@ -87,10 +89,45 @@ impl LayoutComposition {
     }
 }
 
+impl std::default::Default for LayoutComposition {
+    fn default() -> Self {
+        LayoutComposition::Composite {
+            direction: Direction::Horizontal,
+            ratio: 1,
+            widgets: vec![
+                LayoutComposition::Simple {
+                    widget: WidgetType::FileBrowser,
+                    ratio: 1,
+                    border: true,
+                    title: true,
+                },
+                LayoutComposition::Composite {
+                    direction: Direction::Vertical,
+                    ratio: 1,
+                    widgets: vec![
+                        LayoutComposition::Simple {
+                            widget: WidgetType::MusicPlayer,
+                            ratio: 1,
+                            border: true,
+                            title: true,
+                        },
+                        LayoutComposition::Simple {
+                            widget: WidgetType::Playlist,
+                            ratio: 1,
+                            border: true,
+                            title: true,
+                        },
+                    ],
+                },
+            ],
+        }
+    }
+}
+
 pub fn str_to_direction(s: &str) -> DiziResult<Direction> {
     match s {
         "horizontal" => Ok(Direction::Horizontal),
-        "veritcal" => Ok(Direction::Vertical),
+        "vertical" => Ok(Direction::Vertical),
         s => Err(DiziError::new(
             DiziErrorKind::ParseError,
             format!("Unknown direction: '{}'", s),

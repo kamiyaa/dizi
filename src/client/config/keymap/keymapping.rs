@@ -10,7 +10,7 @@ use termion::event::MouseEvent;
 
 use dizi_lib::error::DiziResult;
 
-use crate::config::{parse_to_config_file, TomlConfigFile};
+use crate::config::{parse_toml_to_config, TomlConfigFile};
 use crate::key_command::{Command, CommandKeybind};
 use crate::util::keyparse::str_to_event;
 
@@ -91,7 +91,7 @@ impl From<AppKeyMappingCrude> for AppKeyMapping {
 
 impl TomlConfigFile for AppKeyMapping {
     fn get_config(file_name: &str) -> Self {
-        parse_to_config_file::<AppKeyMappingCrude, AppKeyMapping>(file_name)
+        parse_toml_to_config::<AppKeyMappingCrude, AppKeyMapping>(file_name)
             .unwrap_or_else(Self::default)
     }
 }

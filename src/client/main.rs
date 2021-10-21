@@ -20,7 +20,9 @@ use dizi_lib::error::DiziResult;
 use lazy_static::lazy_static;
 use structopt::StructOpt;
 
-use crate::config::{AppConfig, AppKeyMapping, AppLayout, AppTheme, TomlConfigFile};
+use crate::config::{
+    AppConfig, AppKeyMapping, AppLayout, AppTheme, JsonConfigFile, TomlConfigFile,
+};
 use crate::context::AppContext;
 use crate::history::DirectoryHistory;
 use crate::run::run;
@@ -29,7 +31,7 @@ const PROGRAM_NAME: &str = "dizi";
 const CONFIG_FILE: &str = "client.toml";
 const KEYMAP_FILE: &str = "keymap.toml";
 const THEME_FILE: &str = "theme.toml";
-const LAYOUT_FILE: &str = "layout.toml";
+const LAYOUT_FILE: &str = "layout.json";
 
 lazy_static! {
     // dynamically builds the config hierarchy
@@ -83,7 +85,7 @@ fn run_app(args: Args) -> DiziResult<()> {
     let config = AppConfig::get_config(CONFIG_FILE);
     let keymap = AppKeyMapping::get_config(KEYMAP_FILE);
 
-    eprintln!("keymap: {:#?}", keymap);
+    // eprintln!("keymap: {:#?}", keymap);
 
     if UnixStream::connect(&config.client_ref().socket).is_err() {
         println!("Server is not running");

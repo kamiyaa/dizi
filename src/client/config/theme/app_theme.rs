@@ -4,7 +4,7 @@ use std::collections::HashMap;
 use tui::style::{Color, Modifier};
 
 use super::{AppStyle, RawAppStyle};
-use crate::config::{parse_to_config_file, TomlConfigFile};
+use crate::config::{parse_toml_to_config, TomlConfigFile};
 
 #[derive(Clone, Debug, Deserialize)]
 pub struct AppThemeCrude {
@@ -86,7 +86,7 @@ impl From<AppThemeCrude> for AppTheme {
 
 impl TomlConfigFile for AppTheme {
     fn get_config(file_name: &str) -> Self {
-        parse_to_config_file::<AppThemeCrude, AppTheme>(file_name).unwrap_or_else(Self::default)
+        parse_toml_to_config::<AppThemeCrude, AppTheme>(file_name).unwrap_or_else(Self::default)
     }
 }
 
