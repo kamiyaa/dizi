@@ -5,8 +5,11 @@ use tui::symbols::line::{HORIZONTAL_DOWN, HORIZONTAL_UP};
 use tui::text::Span;
 use tui::widgets::{Block, Borders, Paragraph, Widget, Wrap};
 
+use crate::config::option::{LayoutComposition, WidgetType};
 use crate::context::AppContext;
 use crate::ui::widgets::{TuiPlayer, TuiPlaylist, TuiTopBar};
+
+use crate::LAYOUT_T;
 
 use super::TuiFolderView;
 
@@ -24,49 +27,74 @@ impl<'a> TuiView<'a> {
     }
 }
 
+pub fn render_widget(
+    context: &AppContext,
+    layout: &LayoutComposition,
+    area: Rect,
+    buf: &mut Buffer,
+) {
+    match layout {
+        LayoutComposition::Simple {
+            widget,
+            ratio,
+            border,
+            title,
+        } => {
+            let focused_panel_style = Style::default().fg(Color::Blue);
+            let rect = if *border {
+                let block = Block::default()
+                    .border_style(focused_panel_style)
+                    .borders(Borders::ALL);
+                let inner = block.inner(area);
+                block.render(area, buf);
+                inner
+            } else {
+                area
+            };
+            match widget {
+                WidgetType::FileBrowser => TuiFolderView::new(context).render(rect, buf),
+                WidgetType::MusicPlayer => {
+                    TuiPlayer::new(context.server_state_ref().player_state_ref()).render(rect, buf)
+                }
+                WidgetType::Playlist => {
+                    TuiPlaylist::new(context.server_state_ref().player_state_ref())
+                        .render(rect, buf)
+                }
+            }
+        }
+        LayoutComposition::Composite {
+            direction,
+            widgets,
+            ratio,
+        } => {
+            let widget_sizes: Vec<usize> = widgets.iter().map(|w| w.ratio()).collect();
+            let widget_size_sum = widget_sizes.iter().map(|n| *n as u32).sum();
+            let constraints: Vec<Constraint> = widget_sizes
+                .iter()
+                .map(|n| Constraint::Ratio(*n as u32, widget_size_sum))
+                .collect();
+
+            let layout_rect = Layout::default()
+                .direction(direction.clone())
+                .constraints(constraints)
+                .split(area);
+            for (widget, rect) in widgets.iter().zip(layout_rect) {
+                render_widget(context, widget, rect, buf);
+            }
+        }
+    }
+}
+
 impl<'a> Widget for TuiView<'a> {
     fn render(self, area: Rect, buf: &mut Buffer) {
-        let config = self.context.config_ref();
-        let display_options = config.display_options_ref();
-
-        let default_layout = [Constraint::Ratio(1, 2), Constraint::Ratio(1, 2)];
-
+        let default_layout = [Constraint::Ratio(1, 1)];
         let mut layout_rect = Layout::default()
             .direction(Direction::Horizontal)
             .vertical_margin(1)
             .constraints(default_layout)
             .split(area);
 
-        let focused_panel_style = Style::default().fg(Color::Blue);
-
-        let block = Block::default()
-            .border_style(focused_panel_style)
-            .borders(Borders::ALL);
-        let border_inner_rect = block.inner(layout_rect[0]);
-        block.render(layout_rect[0], buf);
-        layout_rect[0] = border_inner_rect;
-
-        let nested_layout = [Constraint::Ratio(1, 2), Constraint::Ratio(1, 2)];
-        let mut layout_rect2 = Layout::default()
-            .direction(Direction::Vertical)
-            .constraints(nested_layout)
-            .split(layout_rect[1]);
-
-        let block = Block::default().borders(Borders::ALL);
-        let border_inner_rect = block.inner(layout_rect2[0]);
-        block.render(layout_rect2[0], buf);
-        layout_rect2[0] = border_inner_rect;
-
-        let block = Block::default().borders(Borders::ALL);
-        let border_inner_rect = block.inner(layout_rect2[1]);
-        block.render(layout_rect2[1], buf);
-        layout_rect2[1] = border_inner_rect;
-
-        TuiFolderView::new(self.context).render(layout_rect[0], buf);
-        TuiPlayer::new(self.context.server_state_ref().player_state_ref())
-            .render(layout_rect2[0], buf);
-        TuiPlaylist::new(self.context.server_state_ref().player_state_ref())
-            .render(layout_rect2[1], buf);
+        render_widget(self.context, &LAYOUT_T.layout, layout_rect[0], buf);
 
         if let Some(msg) = self.context.message_queue_ref().current_message() {
             let rect = Rect {

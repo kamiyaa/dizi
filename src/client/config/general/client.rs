@@ -1,48 +1,48 @@
+use std::convert::From;
 use std::path::PathBuf;
 
 use serde_derive::Deserialize;
 
-use crate::config::Flattenable;
-use crate::util::display_option::DisplayOption;
+use crate::config::option::{DisplayOption, PlayerOption};
 
-use super::display::RawDisplayOption;
-use super::player::{PlayerOption, RawPlayerOption};
+use super::display_crude::DisplayOptionCrude;
+use super::player_crude::PlayerOptionCrude;
 
 const fn default_true() -> bool {
     true
 }
 
 #[derive(Clone, Debug, Deserialize)]
-pub struct RawClientConfig {
+pub struct ClientConfigCrude {
     #[serde(default)]
     pub socket: String,
     #[serde(default)]
     pub home_dir: String,
 
     #[serde(default, rename = "display")]
-    pub display_options: RawDisplayOption,
+    pub display_options: DisplayOptionCrude,
     #[serde(default, rename = "player")]
-    pub player_options: RawPlayerOption,
+    pub player_options: PlayerOptionCrude,
 }
 
-impl Flattenable<ClientConfig> for RawClientConfig {
-    fn flatten(self) -> ClientConfig {
-        ClientConfig {
-            socket: PathBuf::from(self.socket),
-            home_dir: PathBuf::from(self.home_dir),
-            display_options: self.display_options.flatten(),
-            player_options: self.player_options.flatten(),
-        }
-    }
-}
-
-impl std::default::Default for RawClientConfig {
+impl std::default::Default for ClientConfigCrude {
     fn default() -> Self {
         Self {
             socket: "".to_string(),
             home_dir: "".to_string(),
-            display_options: RawDisplayOption::default(),
-            player_options: RawPlayerOption::default(),
+            display_options: DisplayOptionCrude::default(),
+            player_options: PlayerOptionCrude::default(),
+        }
+    }
+}
+
+impl From<ClientConfigCrude> for ClientConfig {
+    fn from(crude: ClientConfigCrude) -> Self {
+        Self {
+            socket: PathBuf::from(crude.socket),
+            home_dir: PathBuf::from(crude.home_dir),
+            display_options: DisplayOption::from(crude.display_options),
+            player_options: PlayerOption::from(crude.player_options),
         }
     }
 }

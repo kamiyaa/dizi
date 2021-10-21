@@ -1,7 +1,7 @@
 use std::cmp;
 
+use crate::config::option::{SortType, SortTypes};
 use crate::fs::DirEntry;
-use crate::util::sort_type::{SortType, SortTypes};
 
 #[derive(Clone, Debug)]
 pub struct SortOption {

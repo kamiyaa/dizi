@@ -1,8 +1,8 @@
 use dizi_lib::error::DiziResult;
 
+use crate::config::option::SortType;
 use crate::context::AppContext;
 use crate::history::DirectoryHistory;
-use crate::util::sort_type::SortType;
 
 use super::reload;
 

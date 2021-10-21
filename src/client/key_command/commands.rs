@@ -2,8 +2,8 @@ use std::path;
 
 use dizi_lib::request::client::ClientRequest;
 
-use crate::util::select::SelectOption;
-use crate::util::sort_type::SortType;
+use crate::config::option::SelectOption;
+use crate::config::option::SortType;
 
 #[derive(Clone, Debug)]
 pub enum Command {

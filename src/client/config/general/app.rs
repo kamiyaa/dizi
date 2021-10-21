@@ -1,10 +1,9 @@
 use serde_derive::Deserialize;
 
-use crate::config::{parse_to_config_file, ConfigStructure, Flattenable};
-use crate::util::display_option::DisplayOption;
-use crate::util::sort_option::SortOption;
+use crate::config::option::{DisplayOption, SortOption};
+use crate::config::{parse_to_config_file, TomlConfigFile};
 
-use super::client::{ClientConfig, RawClientConfig};
+use super::client::{ClientConfig, ClientConfigCrude};
 
 const fn default_true() -> bool {
     true
@@ -17,15 +16,15 @@ const fn default_max_preview_size() -> u64 {
 }
 
 #[derive(Clone, Debug, Deserialize)]
-pub struct RawAppConfig {
+pub struct AppConfigCrude {
     #[serde(default)]
-    pub client: RawClientConfig,
+    pub client: ClientConfigCrude,
 }
 
-impl Flattenable<AppConfig> for RawAppConfig {
-    fn flatten(self) -> AppConfig {
-        AppConfig {
-            _client: self.client.flatten(),
+impl From<AppConfigCrude> for AppConfig {
+    fn from(crude: AppConfigCrude) -> Self {
+        Self {
+            _client: ClientConfig::from(crude.client),
         }
     }
 }
@@ -63,16 +62,16 @@ impl AppConfig {
     }
 }
 
-impl ConfigStructure for AppConfig {
-    fn get_config(file_name: &str) -> Self {
-        parse_to_config_file::<RawAppConfig, AppConfig>(file_name).unwrap_or_else(Self::default)
-    }
-}
-
 impl std::default::Default for AppConfig {
     fn default() -> Self {
         Self {
             _client: ClientConfig::default(),
         }
+    }
+}
+
+impl TomlConfigFile for AppConfig {
+    fn get_config(file_name: &str) -> Self {
+        parse_to_config_file::<AppConfigCrude, AppConfig>(file_name).unwrap_or_else(Self::default)
     }
 }

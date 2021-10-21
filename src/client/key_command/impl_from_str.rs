@@ -7,8 +7,8 @@ use shellexpand::tilde_with_context;
 use dizi_lib::error::{DiziError, DiziErrorKind};
 use dizi_lib::request::client::ClientRequest;
 
-use crate::util::select::SelectOption;
-use crate::util::sort_type::SortType;
+use crate::config::option::SelectOption;
+use crate::config::option::SortType;
 
 use crate::HOME_DIR;
 

@@ -67,26 +67,26 @@ impl PlayerStream {
 
     pub fn pause(&self) {
         if let Some(source_tx) = self.source_tx.as_ref() {
-            source_tx.send(PlayerRequest::Pause);
+            let _ = source_tx.send(PlayerRequest::Pause);
         }
     }
     pub fn resume(&self) {
         if let Some(source_tx) = self.source_tx.as_ref() {
-            source_tx.send(PlayerRequest::Resume);
+            let _ = source_tx.send(PlayerRequest::Resume);
         }
     }
     // might be useless
     pub fn stop(&mut self) {
         let source_tx = self.source_tx.take();
         if let Some(source_tx) = source_tx {
-            source_tx.send(PlayerRequest::Stop);
+            let _ = source_tx.send(PlayerRequest::Stop);
         }
         self.receiver.take();
     }
 
     pub fn set_volume(&self, volume: f32) {
         if let Some(source_tx) = self.source_tx.as_ref() {
-            source_tx.send(PlayerRequest::SetVolume(volume));
+            let _ = source_tx.send(PlayerRequest::SetVolume(volume));
         }
     }
 
@@ -123,7 +123,7 @@ impl PlayerStream {
                     if update_tracker >= UPDATE_RATE {
                         duration_played += update_tracker;
                         update_tracker = Duration::from_secs(0);
-                        event_tx.send(ServerEvent::PlayerProgressUpdate(duration_played));
+                        let _ = event_tx.send(ServerEvent::PlayerProgressUpdate(duration_played));
                     }
                 }
 

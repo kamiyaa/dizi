@@ -1,14 +1,14 @@
 use serde_derive::Deserialize;
+use std::convert::Into;
 
-use crate::util::sort_option::SortOption;
-use crate::util::sort_type::{SortType, SortTypes};
+use crate::config::option::{SortOption, SortType, SortTypes};
 
 const fn default_true() -> bool {
     true
 }
 
 #[derive(Clone, Debug, Deserialize)]
-pub struct SortRawOption {
+pub struct SortOptionCrude {
     #[serde(default = "default_true")]
     pub directories_first: bool,
     #[serde(default)]
@@ -19,8 +19,8 @@ pub struct SortRawOption {
     pub sort_method: Option<String>,
 }
 
-impl SortRawOption {
-    pub fn into(self) -> SortOption {
+impl Into<SortOption> for SortOptionCrude {
+    fn into(self) -> SortOption {
         let sort_method = match self.sort_method.as_ref() {
             Some(s) => SortType::parse(s).unwrap_or(SortType::Natural),
             None => SortType::Natural,
@@ -38,7 +38,7 @@ impl SortRawOption {
     }
 }
 
-impl std::default::Default for SortRawOption {
+impl std::default::Default for SortOptionCrude {
     fn default() -> Self {
         Self {
             directories_first: true,

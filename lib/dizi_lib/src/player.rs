@@ -1,7 +1,7 @@
 use std::time;
 use serde_derive::{Deserialize, Serialize};
 
-use crate::playlist::{DirlistPlaylist, Playlist};
+use crate::playlist::Playlist;
 use crate::song::Song;
 
 #[derive(Copy, Clone, Debug, PartialEq, Serialize, Deserialize)]

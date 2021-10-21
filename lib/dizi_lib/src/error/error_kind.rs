@@ -73,3 +73,9 @@ impl From<serde_json::Error> for DiziErrorKind {
         Self::SerdeJson(err)
     }
 }
+
+impl From<toml::de::Error> for DiziErrorKind {
+    fn from(_: toml::de::Error) -> Self {
+        Self::ParseError
+    }
+}

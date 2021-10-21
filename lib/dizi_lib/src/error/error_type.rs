@@ -107,3 +107,12 @@ impl From<serde_json::Error> for DiziError {
         }
     }
 }
+
+impl From<toml::de::Error> for DiziError {
+    fn from(err: toml::de::Error) -> Self {
+        Self {
+            _kind: DiziErrorKind::from(err),
+            _cause: "Failed to parse JSON".to_string(),
+        }
+    }
+}

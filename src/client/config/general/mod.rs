@@ -1,11 +1,10 @@
+pub mod app;
 pub mod client;
-pub mod config;
-pub mod display;
-pub mod player;
-pub mod sort;
+pub mod display_crude;
+pub mod layout_crude;
+pub mod player_crude;
+pub mod sort_crude;
 
+pub use self::app::AppConfig;
 pub use self::client::ClientConfig;
-pub use self::config::AppConfig;
-pub use self::display::RawDisplayOption;
-pub use self::player::PlayerOption;
-pub use self::sort::*;
+pub use self::layout_crude::*;

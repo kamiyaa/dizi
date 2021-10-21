@@ -112,6 +112,13 @@ pub fn process_server_event(context: &mut AppContext, s: &str) -> DiziResult<()>
                 .playlist_mut()
                 .append_song(song);
         }
+        ServerBroadcastEvent::PlaylistRemove { index } => {
+            context
+                .server_state_mut()
+                .player_state_mut()
+                .playlist_mut()
+                .remove_song(index);
+        }
         s => {
             context
                 .message_queue_mut()

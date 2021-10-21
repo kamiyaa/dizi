@@ -2,7 +2,7 @@ use std::fs;
 
 use tui::layout::Constraint;
 
-use crate::util::sort_option::SortOption;
+use crate::config::option::SortOption;
 
 pub const fn default_column_ratio() -> (usize, usize, usize) {
     (1, 3, 4)

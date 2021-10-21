@@ -20,7 +20,7 @@ use dizi_lib::error::DiziResult;
 use lazy_static::lazy_static;
 use structopt::StructOpt;
 
-use crate::config::{AppConfig, AppKeyMapping, AppTheme, ConfigStructure};
+use crate::config::{AppConfig, AppKeyMapping, AppLayout, AppTheme, TomlConfigFile};
 use crate::context::AppContext;
 use crate::history::DirectoryHistory;
 use crate::run::run;
@@ -29,6 +29,7 @@ const PROGRAM_NAME: &str = "dizi";
 const CONFIG_FILE: &str = "client.toml";
 const KEYMAP_FILE: &str = "keymap.toml";
 const THEME_FILE: &str = "theme.toml";
+const LAYOUT_FILE: &str = "layout.toml";
 
 lazy_static! {
     // dynamically builds the config hierarchy
@@ -63,6 +64,7 @@ lazy_static! {
 
     static ref THEME_T: AppTheme = AppTheme::get_config(THEME_FILE);
     static ref HOME_DIR: Option<PathBuf> = dirs_next::home_dir();
+    static ref LAYOUT_T: AppLayout = AppLayout::get_config(LAYOUT_FILE);
 }
 
 #[derive(Clone, Debug, StructOpt)]

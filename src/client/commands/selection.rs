@@ -2,8 +2,8 @@ use globset::Glob;
 
 use dizi_lib::error::{DiziError, DiziErrorKind, DiziResult};
 
+use crate::config::option::SelectOption;
 use crate::context::AppContext;
-use crate::util::select::SelectOption;
 
 use super::cursor_move;
 

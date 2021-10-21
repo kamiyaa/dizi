@@ -5,7 +5,6 @@ use std::time;
 
 use rand::seq::SliceRandom;
 use rand::thread_rng;
-use serde_derive::{Deserialize, Serialize};
 
 use dizi_lib::error::DiziResult;
 use dizi_lib::player::{PlayerState, PlayerStatus, PlaylistStatus};

@@ -1,8 +1,7 @@
 use std::{fs, io, path};
 
+use crate::config::option::DisplayOption;
 use crate::fs::Metadata;
-
-use crate::util::display_option::DisplayOption;
 
 #[derive(Clone, Debug)]
 pub struct DirEntry {
