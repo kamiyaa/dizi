@@ -81,7 +81,6 @@ pub fn execute_request(context: &mut AppContext, request: &ClientRequest) -> Diz
                     send_client_request(context, &request)?;
                 }
             }
-            eprintln!("Hello");
         }
         request => {
             send_client_request(context, &request)?;
