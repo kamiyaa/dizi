@@ -100,7 +100,7 @@ impl PlayerStream {
         const POLL_RATE: Duration = Duration::from_millis(200);
         const UPDATE_RATE: Duration = Duration::from_secs(1);
 
-        self.stop()?;
+        self.stop();
 
         let mut duration_played = Duration::from_secs(0);
         let mut update_tracker = Duration::from_secs(0);
@@ -186,7 +186,9 @@ pub fn player_stream(
                     _ => {}
                 }
 
-                match player_stream.play(&queue_tx, song.file_path()) {
+                let res = player_stream.play(&queue_tx, song.file_path());
+
+                match res {
                     Ok(receiver) => {
                         // wait for previous listener (if any) to finish sending messages to listeners
                         // before repopulating listeners list for new song
@@ -194,13 +196,15 @@ pub fn player_stream(
                         if let Some(prev_listener) = prev_listener {
                             prev_listener.join();
                         }
+
                         // spawn new listening thread for new song
                         let stream_listeners2 = stream_listeners.clone();
                         let listener = thread::spawn(move || {
                             receiver.recv();
-                            let stream_listeners2 = stream_listeners2.lock().unwrap();
-                            for stream_listener in stream_listeners2.iter() {
-                                (*stream_listener).send(ServerEvent::PlayerDone);
+                            if let Ok(stream_listeners) = stream_listeners2.lock() {
+                                for stream_listener in stream_listeners.iter() {
+                                    (*stream_listener).send(ServerEvent::PlayerDone);
+                                }
                             }
                         });
                         done_listener = Some(listener);
@@ -210,12 +214,7 @@ pub fn player_stream(
                             Ok(mut vec) => vec.push(player_stream.event_tx.clone()),
                             _ => {}
                         }
-                        match player_stream.player_res().send(Ok(())) {
-                            Ok(_) => {}
-                            Err(e) => {
-                                eprintln!("Sending message: {:?}", e);
-                            }
-                        }
+                        player_stream.player_res().send(Ok(()))?;
                     }
                     Err(e) => player_stream.player_res().send(Err(e))?,
                 };

@@ -6,6 +6,7 @@ use serde_derive::{Deserialize, Serialize};
 use crate::error::{DiziError, DiziErrorKind, DiziResult};
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
+#[serde(tag = "request")]
 pub enum ClientRequest {
     // quit
     #[serde(rename = "/client/leave")]
@@ -18,7 +19,7 @@ pub enum ClientRequest {
     #[serde(rename = "/player/state")]
     PlayerState,
     #[serde(rename = "/player/play/file")]
-    PlayerFilePlay { path: PathBuf },
+    PlayerFilePlay { path: Option<PathBuf> },
 
     #[serde(rename = "/player/play/next")]
     PlayerPlayNext,
@@ -55,18 +56,18 @@ pub enum ClientRequest {
     #[serde(rename = "/playlist/state")]
     PlaylistState,
     #[serde(rename = "/playlist/open")]
-    PlaylistOpen { path: PathBuf },
+    PlaylistOpen { cwd: Option<PathBuf>, path: Option<PathBuf> },
     #[serde(rename = "/playlist/play")]
-    PlaylistPlay { index: usize },
+    PlaylistPlay { index: Option<usize> },
 
     #[serde(rename = "/playlist/append")]
-    PlaylistAppend { path: PathBuf },
+    PlaylistAppend { path: Option<PathBuf> },
     #[serde(rename = "/playlist/remove")]
-    PlaylistRemove { index: usize },
+    PlaylistRemove { index: Option<usize> },
     #[serde(rename = "/playlist/move_up")]
-    PlaylistMoveUp { index: usize },
+    PlaylistMoveUp { index: Option<usize> },
     #[serde(rename = "/playlist/move_down")]
-    PlaylistMoveDown { index: usize },
+    PlaylistMoveDown { index: Option<usize> },
 }
 
 impl ClientRequest {
@@ -74,6 +75,7 @@ impl ClientRequest {
         match &*self {
             Self::Leave { .. } => "/client/leave",
             Self::ServerQuit => "/server/quit",
+
             Self::PlayerState => "/player/state",
             Self::PlayerFilePlay { .. } => "/player/play/file",
             Self::PlayerPlayNext => "/player/play/next",
@@ -89,9 +91,11 @@ impl ClientRequest {
             Self::PlayerToggleShuffle => "/player/toggle/shuffle",
             Self::PlayerVolumeUp { .. } => "/player/volume/increase",
             Self::PlayerVolumeDown { .. } => "/player/volume/decrease",
+
             Self::PlaylistState => "/playlist/state",
             Self::PlaylistOpen { .. } => "/playlist/open",
             Self::PlaylistPlay { .. } => "/playlist/play",
+
             Self::PlaylistAppend { .. } => "/playlist/append",
             Self::PlaylistRemove { .. } => "/playlist/remove",
             Self::PlaylistMoveUp { .. } => "/playlist/move_up",
@@ -106,7 +110,7 @@ impl ClientRequest {
             "/server/quit" => Ok(Self::ServerQuit),
 
             "/player/state" => Ok(Self::PlayerState),
-            "/player/play/file" => Ok(Self::PlayerFilePlay { path: PathBuf::new() }),
+            "/player/play/file" => Ok(Self::PlayerFilePlay { path: None }),
 
             "/player/play/next" => Ok(Self::PlayerPlayNext),
             "/player/play/previous" => Ok(Self::PlayerPlayPrevious),
@@ -127,13 +131,13 @@ impl ClientRequest {
             "/player/volume/decrease" => Ok(Self::PlayerVolumeDown { amount: 1 }),
 
             "/playlist/state" => Ok(Self::PlaylistState),
-            "/playlist/open" => Ok(Self::PlaylistOpen { path: PathBuf::new() }),
-            "/playlist/play" => Ok(Self::PlaylistPlay { index: 0 }),
+            "/playlist/open" => Ok(Self::PlaylistOpen { cwd: None, path: None }),
+            "/playlist/play" => Ok(Self::PlaylistPlay { index: None }),
 
-            "/playlist/append" => Ok(Self::PlaylistAppend { path: PathBuf::new() }),
-            "/playlist/remove" => Ok(Self::PlaylistRemove { index: 0 }),
-            "/playlist/move_up" => Ok(Self::PlaylistMoveUp { index: 0 }),
-            "/playlist/move_down" => Ok(Self::PlaylistMoveDown { index: 0 }),
+            "/playlist/append" => Ok(Self::PlaylistAppend { path: None }),
+            "/playlist/remove" => Ok(Self::PlaylistRemove { index: None }),
+            "/playlist/move_up" => Ok(Self::PlaylistMoveUp { index: None }),
+            "/playlist/move_down" => Ok(Self::PlaylistMoveDown { index: None }),
 
             s => Err(DiziError::new(DiziErrorKind::UnrecognizedCommand, format!("Unrecognized command: '{}'", s))),
         }

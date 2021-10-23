@@ -1,54 +1,198 @@
-mapcommand = [
-	{ keys = [ "q" ],		command = "close" },
-	{ keys = [ "Q" ],		command = "/server/quit" },
+[[keymap]]
+keys = [ "q" ]
+command = "close"
 
-	{ keys = [ "r" ],		command = "reload_dirlist" },
-	{ keys = [ "z", "h" ],		command = "toggle_hidden" },
+[[keymap]]
+keys = [ "r" ]
+command = "reload_dirlist"
 
-	# arrow keys
-	{ keys = [ "arrow_up" ],	command = "cursor_move_up" },
-	{ keys = [ "arrow_down" ],	command = "cursor_move_down" },
-	{ keys = [ "arrow_left" ],	command = "cd .." },
-	{ keys = [ "arrow_right" ],	command = "open" },
-	{ keys = [ "\n" ],		command = "open" },
-	{ keys = [ "end" ],		command = "cursor_move_end" },
-	{ keys = [ "home" ],		command = "cursor_move_home" },
-	{ keys = [ "page_up" ],		command = "cursor_move_page_up" },
-	{ keys = [ "page_down" ],	command = "cursor_move_page_down" },
+[[keymap]]
+keys = [ "z", "h" ]
+command = "reload_dirlist"
 
-	{ keys = [ "c", "d" ],		command = ":cd " },
+[[keymap]]
+keys = [ "arrow_up" ]
+command = "cursor_move_up"
 
-	{ keys = [ " " ],		command = "/player/toggle/play" },
-	{ keys = [ "0" ],		command = "/player/volume/increase 1" },
-	{ keys = [ "9" ],		command = "/player/volume/decrease 1" },
-	{ keys = [ "S" ],		command = "/player/toggle/shuffle" },
-	{ keys = [ "R" ],		command = "/player/toggle/repeat" },
-	{ keys = [ "N" ],		command = "/player/toggle/next" },
-	{ keys = [ "n" ],		command = "/player/play/next" },
-	{ keys = [ "p" ],		command = "/player/play/previous" },
+[[keymap]]
+keys = [ "arrow_down" ]
+command = "cursor_move_down"
 
-	{ keys = [ "t" ],		command = "select --all=true --toggle=true" },
+[[keymap]]
+keys = [ "arrow_left" ]
+command = "cd .."
 
-	{ keys = [ ":" ],		command = ":" },
-	{ keys = [ ";" ],		command = ":" },
+[[keymap]]
+keys = [ "arrow_right" ]
+command = "open"
 
-	{ keys = [ "/" ],		command = ":search " },
-	{ keys = [ "\\" ],		command = ":search_glob " },
-	{ keys = [ "C" ],		command = "search_skim" },
+[[keymap]]
+keys = [ "\n" ]
+command = "open"
 
-	{ keys = [ "n" ],		command = "search_next" },
-	{ keys = [ "N" ],		command = "search_prev" },
+[[keymap]]
+keys = [ "end" ]
+command = "cursor_move_end"
 
-	{ keys = [ "s", "r" ],		command = "sort reverse" },
-	{ keys = [ "s", "l" ],		command = "sort lexical" },
-	{ keys = [ "s", "m" ],		command = "sort mtime" },
-	{ keys = [ "s", "n" ],		command = "sort natural" },
-	{ keys = [ "s", "s" ],		command = "sort size" },
-	{ keys = [ "s", "e" ],		command = "sort ext" },
+[[keymap]]
+keys = [ "home" ]
+command = "cursor_move_home"
 
-	{ keys = [ "g", "r" ],		command = "cd /" },
-	{ keys = [ "g", "c" ],		command = "cd ~/.config" },
-	{ keys = [ "g", "d" ],		command = "cd ~/Downloads" },
-	{ keys = [ "g", "e" ],		command = "cd /etc" },
-	{ keys = [ "g", "h" ],		command = "cd ~/" },
-]
+[[keymap]]
+keys = [ "page_up" ]
+command = "cursor_move_page_up"
+
+[[keymap]]
+keys = [ "page_down" ]
+command = "cursor_move_page_down"
+
+[[keymap]]
+keys = [ "\t" ]
+command = "toggle_view"
+
+[[keymap]]
+keys = [ "c", "d" ]
+command = ":cd "
+
+[[keymap]]
+keys = [ "t" ]
+command = "select --all=true --toggle=true"
+
+[[keymap]]
+keys = [ ":" ]
+command = ":"
+
+[[keymap]]
+keys = [ ";" ]
+command = ":"
+
+[[keymap]]
+keys = [ "?" ]
+command = ":search "
+
+[[keymap]]
+keys = [ "\\" ]
+command = ":search_glob "
+
+[[keymap]]
+keys = [ "/" ]
+command = "search_skim"
+
+[[keymap]]
+keys = [ "[" ]
+command = "search_prev"
+
+[[keymap]]
+keys = [ "]" ]
+command = "search_next"
+
+[[keymap]]
+keys = [ "u", "r" ]
+command = "sort reverse"
+
+[[keymap]]
+keys = [ "u", "l" ]
+command = "sort lexical"
+
+[[keymap]]
+keys = [ "u", "m" ]
+command = "sort mtime"
+
+[[keymap]]
+keys = [ "u", "n" ]
+command = "sort natural"
+
+[[keymap]]
+keys = [ "u", "s" ]
+command = "sort size"
+
+[[keymap]]
+keys = [ "u", "e" ]
+command = "sort ext"
+
+[[keymap]]
+keys = [ "g", "r" ]
+command = "cd /"
+
+[[keymap]]
+keys = [ "g", "c" ]
+command = "cd ~/.config"
+
+[[keymap]]
+keys = [ "g", "d" ]
+command = "cd ~/Downloads"
+
+[[keymap]]
+keys = [ "g", "e" ]
+command = "cd /etc"
+
+[[keymap]]
+keys = [ "g", "h" ]
+command = "cd ~/"
+
+[[keymap]]
+keys = [ "Q" ]
+command = "server_request"
+json.request = "/server/quit"
+
+[[keymap]]
+keys = [ " " ]
+command = "server_request"
+json.request = "/player/toggle/play"
+
+[[keymap]]
+keys = [ "0" ]
+command = "server_request"
+json.request = "/player/volume/increase"
+json.amount = 1
+
+[[keymap]]
+keys = [ "9" ]
+command = "server_request"
+json.request = "/player/volume/decrease"
+json.amount = 1
+
+[[keymap]]
+keys = [ "S" ]
+command = "server_request"
+json.request = "/player/toggle/shuffle"
+
+[[keymap]]
+keys = [ "R" ]
+command = "server_request"
+json.request = "/player/toggle/repeat"
+
+[[keymap]]
+keys = [ "N" ]
+command = "server_request"
+json.request = "/player/toggle/next"
+
+[[keymap]]
+keys = [ "n" ]
+command = "server_request"
+json.request = "/player/play/next"
+
+[[keymap]]
+keys = [ "p" ]
+command = "server_request"
+json.request = "/player/play/previous"
+
+[[keymap]]
+keys = [ "a" ]
+command = "server_request"
+json.request = "/playlist/append"
+
+[[keymap]]
+keys = [ "d" ]
+command = "server_request"
+json.request = "/playlist/remove"
+
+[[keymap]]
+keys = [ "w" ]
+command = "server_request"
+json.request = "/playlist/move_up"
+
+[[keymap]]
+keys = [ "s" ]
+command = "server_request"
+json.request = "/playlist/move_down"

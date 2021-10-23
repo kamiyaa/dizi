@@ -9,6 +9,7 @@ use termion::event::Event;
 use termion::event::MouseEvent;
 
 use dizi_lib::error::DiziResult;
+use dizi_lib::request::client::ClientRequest;
 
 use crate::config::{parse_toml_to_config, TomlConfigFile};
 use crate::key_command::{Command, CommandKeybind};
@@ -17,15 +18,16 @@ use crate::util::keyparse::str_to_event;
 use super::default_keymap::DEFAULT_KEYMAP;
 
 #[derive(Debug, Deserialize)]
-struct CommandKeymap {
-    pub command: String,
+pub struct CommandKeymap {
     pub keys: Vec<String>,
+    pub command: String,
+    pub json: Option<ClientRequest>,
 }
 
 #[derive(Debug, Deserialize)]
 struct AppKeyMappingCrude {
     #[serde(default)]
-    pub mapcommand: Vec<CommandKeymap>,
+    pub keymap: Vec<CommandKeymap>,
 }
 
 #[derive(Debug)]
@@ -62,8 +64,8 @@ impl AsMut<HashMap<Event, CommandKeybind>> for AppKeyMapping {
 impl From<AppKeyMappingCrude> for AppKeyMapping {
     fn from(crude: AppKeyMappingCrude) -> Self {
         let mut keymaps = Self::new();
-        for m in crude.mapcommand {
-            match Command::from_str(m.command.as_str()) {
+        for m in crude.keymap {
+            match Command::from_keymap(&m) {
                 Ok(command) => {
                     let events: Vec<Event> = m
                         .keys
@@ -91,8 +93,7 @@ impl From<AppKeyMappingCrude> for AppKeyMapping {
 
 impl TomlConfigFile for AppKeyMapping {
     fn get_config(file_name: &str) -> Self {
-        parse_toml_to_config::<AppKeyMappingCrude, AppKeyMapping>(file_name)
-            .unwrap_or_else(Self::default)
+        parse_toml_to_config::<AppKeyMappingCrude, AppKeyMapping>(file_name).unwrap()
     }
 }
 

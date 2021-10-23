@@ -4,9 +4,10 @@ use std::time;
 use dirs_next::home_dir;
 use shellexpand::tilde_with_context;
 
-use dizi_lib::error::{DiziError, DiziErrorKind};
+use dizi_lib::error::{DiziError, DiziErrorKind, DiziResult};
 use dizi_lib::request::client::ClientRequest;
 
+use crate::config::keymap::CommandKeymap;
 use crate::config::option::SelectOption;
 use crate::config::option::SortType;
 
@@ -23,19 +24,32 @@ macro_rules! simple_command_conversion_case {
     };
 }
 
-impl std::str::FromStr for Command {
-    type Err = DiziError;
-
-    fn from_str(s: &str) -> Result<Self, Self::Err> {
-        if let Some(stripped) = s.strip_prefix(':') {
+impl Command {
+    pub fn from_keymap(keymap: &CommandKeymap) -> DiziResult<Self> {
+        // command line keys
+        if let Some(stripped) = keymap.command.strip_prefix(':') {
             return Ok(Self::CommandLine(stripped.to_owned(), "".to_owned()));
         }
 
-        let (command, arg) = match s.find(' ') {
-            Some(i) => (&s[..i], s[i..].trim_start()),
-            None => (s, ""),
+        let (command, arg): (&str, &str) = match keymap.command.find(' ') {
+            Some(i) => (&keymap.command[..i], keymap.command[i..].trim_start()),
+            None => (&keymap.command, ""),
         };
 
+        // server requests
+        if command == "server_request" {
+            match &keymap.json {
+                Some(json) => return Ok(Self::Request(json.clone())),
+                None => {
+                    return Err(DiziError::new(
+                        DiziErrorKind::InvalidParameters,
+                        format!("No json provided to server_request"),
+                    ))
+                }
+            }
+        }
+
+        // client stuff
         simple_command_conversion_case!(command, CMD_CLOSE, Self::Close);
         simple_command_conversion_case!(command, CMD_CURSOR_MOVE_HOME, Self::CursorMoveHome);
         simple_command_conversion_case!(command, CMD_CURSOR_MOVE_END, Self::CursorMoveEnd);

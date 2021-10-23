@@ -78,15 +78,47 @@ pub fn execute_request(context: &mut AppContext, request: &ClientRequest) -> Diz
         ClientRequest::ServerQuit => {
             quit::server_quit(context)?;
         }
-        ClientRequest::PlaylistAppend { .. } => {
+        ClientRequest::PlaylistAppend { path: None } => {
             if let Some(entry) = context.curr_list_ref().and_then(|s| s.curr_entry_ref()) {
                 if entry.file_path().is_dir() {
                 } else {
                     let request = ClientRequest::PlaylistAppend {
-                        path: entry.file_path().to_path_buf(),
+                        path: Some(entry.file_path().to_path_buf()),
                     };
                     send_client_request(context, &request)?;
                 }
+            }
+        }
+        ClientRequest::PlaylistOpen {
+            cwd: None,
+            path: None,
+        } => {}
+        ClientRequest::PlaylistPlay { index: None } => {
+            let playlist = context.server_state_ref().player_state_ref().playlist_ref();
+            if let Some(index) = playlist.get_index() {
+                let request = ClientRequest::PlaylistPlay { index: Some(index) };
+                send_client_request(context, &request)?;
+            }
+        }
+        ClientRequest::PlaylistRemove { index: None } => {
+            let playlist = context.server_state_ref().player_state_ref().playlist_ref();
+            if let Some(index) = playlist.get_index() {
+                let request = ClientRequest::PlaylistRemove { index: Some(index) };
+                send_client_request(context, &request)?;
+            }
+        }
+        ClientRequest::PlaylistMoveUp { index: None } => {
+            let playlist = context.server_state_ref().player_state_ref().playlist_ref();
+            if let Some(index) = playlist.get_index() {
+                let request = ClientRequest::PlaylistMoveUp { index: Some(index) };
+                send_client_request(context, &request)?;
+            }
+        }
+        ClientRequest::PlaylistMoveDown { index: Noe } => {
+            let playlist = context.server_state_ref().player_state_ref().playlist_ref();
+            if let Some(index) = playlist.get_index() {
+                let request = ClientRequest::PlaylistMoveDown { index: Some(index) };
+                send_client_request(context, &request)?;
             }
         }
         request => {

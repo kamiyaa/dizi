@@ -25,7 +25,7 @@ pub fn file_browser_open(context: &mut AppContext) -> DiziResult<()> {
             change_directory::cd(path.as_path(), context)?;
         } else {
             let request = ClientRequest::PlayerFilePlay {
-                path: entry.file_path().to_path_buf(),
+                path: Some(entry.file_path().to_path_buf()),
             };
             send_client_request(context, &request)?;
         }
@@ -40,7 +40,7 @@ pub fn playlist_open(context: &mut AppContext) -> DiziResult<()> {
         .playlist_ref()
         .get_index()
     {
-        let request = ClientRequest::PlaylistPlay { index };
+        let request = ClientRequest::PlaylistPlay { index: Some(index) };
         send_client_request(context, &request)?;
     }
     Ok(())

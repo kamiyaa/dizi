@@ -67,7 +67,12 @@ impl Player {
         let config_t2 = config_t.clone();
         let event_tx2 = event_tx.clone();
         let player_handle = thread::spawn(move || {
-            player_stream(config_t2, player_res_tx, player_req_rx, event_tx2)
+            let res = player_stream(config_t2, player_res_tx, player_req_rx, event_tx2);
+            match res.as_ref() {
+                Ok(_) => {}
+                Err(e) => eprintln!("PlayerStream: {:?}", e),
+            }
+            res
         });
 
         let server_config = config_t.server_ref();
@@ -137,12 +142,10 @@ impl Player {
     pub fn play(&mut self, song: &Song) -> DiziResult<()> {
         self.player_stream_req()
             .send(PlayerRequest::Play(song.clone()))?;
-        eprintln!("waiting for stream response");
         let resp = self.player_stream_res().recv()??;
 
         self.status = PlayerStatus::Playing;
         self.current_song = Some(song.clone());
-
         Ok(())
     }
 
@@ -177,8 +180,6 @@ impl Player {
         self.play(&song)?;
         self.dirlist_playlist = dirlist_playlist;
         self._playlist_status = PlaylistStatus::DirectoryListing;
-        eprintln!("playlist len: {}", self.dirlist_playlist.len());
-
         Ok(())
     }
 
@@ -190,7 +191,6 @@ impl Player {
             ));
         }
         let song = self.playlist.list_ref()[index].clone();
-        eprintln!("{:?}", song);
         self.play(&song)?;
         self.playlist_mut().set_index(index);
         self._playlist_status = PlaylistStatus::PlaylistFile;

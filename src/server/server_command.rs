@@ -34,8 +34,8 @@ pub fn run_command(context: &mut AppContext, event: ClientRequest) -> DiziResult
                 .events
                 .broadcast_event(ServerBroadcastEvent::PlayerState { state });
         }
-        ClientRequest::PlayerFilePlay { path } => {
-            let song = Song::new(path.as_path())?;
+        ClientRequest::PlayerFilePlay { path: Some(p) } => {
+            let song = Song::new(p.as_path())?;
             player_play(context, song.file_path())?;
             context
                 .events
@@ -92,28 +92,46 @@ pub fn run_command(context: &mut AppContext, event: ClientRequest) -> DiziResult
             }
         }
         ClientRequest::PlayerPlayNext => {
-            player_play_next(context)?;
-            send_latest_song_info(context);
+            let len1 = context
+                .player_context_ref()
+                .player_ref()
+                .dirlist_playlist_ref()
+                .len();
+
+            let len2 = context
+                .player_context_ref()
+                .player_ref()
+                .playlist_ref()
+                .len();
+
+            let len = if len1 < len2 { len2 } else { len1 };
+            for i in (1..len) {
+                if player_play_next(context, i).is_err() {
+                    continue;
+                }
+                send_latest_song_info(context)?;
+                break;
+            }
         }
         ClientRequest::PlayerPlayPrevious => {
             player_play_previous(context)?;
             send_latest_song_info(context);
         }
-        ClientRequest::PlaylistAppend { path } => {
-            let song = playlist::playlist_append(context, &path)?;
+        ClientRequest::PlaylistAppend { path: Some(p) } => {
+            let song = playlist::playlist_append(context, &p)?;
             context
                 .events
                 .broadcast_event(ServerBroadcastEvent::PlaylistAppend { song });
         }
-        ClientRequest::PlaylistRemove { index } => {
+        ClientRequest::PlaylistRemove { index: Some(index) } => {
             playlist::playlist_remove(context, index)?;
             context
                 .events
                 .broadcast_event(ServerBroadcastEvent::PlaylistRemove { index });
         }
-        ClientRequest::PlaylistMoveUp { .. } => {}
-        ClientRequest::PlaylistMoveDown { .. } => {}
-        ClientRequest::PlaylistPlay { index } => {
+        ClientRequest::PlaylistMoveUp { index: Some(index) } => {}
+        ClientRequest::PlaylistMoveDown { index: Some(index) } => {}
+        ClientRequest::PlaylistPlay { index: Some(index) } => {
             playlist::playlist_play(context, index)?;
             context
                 .events

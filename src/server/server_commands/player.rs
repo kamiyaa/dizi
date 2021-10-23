@@ -70,7 +70,46 @@ pub fn player_volume_decrease(context: &mut AppContext, amount: usize) -> DiziRe
     Ok(volume)
 }
 
-pub fn player_play_next(context: &mut AppContext) -> DiziResult<()> {
+pub fn player_play_again(context: &mut AppContext) -> DiziResult<()> {
+    eprintln!("player_play_again");
+    let playlist_status = context.player_context_ref().player_ref().playlist_status();
+    match playlist_status {
+        PlaylistStatus::DirectoryListing => {
+            let song = {
+                let playlist = context
+                    .player_context_ref()
+                    .player_ref()
+                    .dirlist_playlist_ref();
+                let index = playlist.index;
+                let len = playlist.len();
+                let next_song_path = &playlist.list_ref()[index];
+                Song::new(next_song_path)?
+            };
+            context.player_context_mut().player_mut().play(&song)?;
+        }
+        PlaylistStatus::PlaylistFile => {
+            let index = context
+                .player_context_ref()
+                .player_ref()
+                .playlist_ref()
+                .get_index();
+            let len = context
+                .player_context_ref()
+                .player_ref()
+                .playlist_ref()
+                .len();
+            if let Some(index) = index {
+                context
+                    .player_context_mut()
+                    .player_mut()
+                    .play_from_playlist(index);
+            }
+        }
+    }
+    Ok(())
+}
+
+pub fn player_play_next(context: &mut AppContext, skip_amount: usize) -> DiziResult<()> {
     eprintln!("player_play_next");
     let playlist_status = context.player_context_ref().player_ref().playlist_status();
     match playlist_status {
@@ -83,7 +122,11 @@ pub fn player_play_next(context: &mut AppContext) -> DiziResult<()> {
                 let index = playlist.index;
                 let len = playlist.len();
 
-                let new_index = if index + 1 >= len { 0 } else { index + 1 };
+                let new_index = if index + skip_amount >= len {
+                    (index + skip_amount) % len
+                } else {
+                    index + skip_amount
+                };
                 let next_song_path = &playlist.list_ref()[new_index];
 
                 Song::new(next_song_path)?
@@ -102,7 +145,11 @@ pub fn player_play_next(context: &mut AppContext) -> DiziResult<()> {
                 .playlist_ref()
                 .len();
             if let Some(index) = index {
-                let new_index = if index + 1 >= len { 0 } else { index + 1 };
+                let new_index = if index + skip_amount >= len {
+                    (index + skip_amount) % len
+                } else {
+                    index + skip_amount
+                };
                 context
                     .player_context_mut()
                     .player_mut()

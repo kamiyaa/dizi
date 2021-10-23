@@ -13,8 +13,8 @@ use crate::client;
 use crate::config::AppConfig;
 use crate::context::{AppContext, QuitType};
 use crate::events::{AppEvent, ServerEvent, ServerEventSender};
-use crate::server_command::run_command;
-use crate::server_commands::{player_play, player_play_next};
+use crate::server_command::{run_command, send_latest_song_info};
+use crate::server_commands::player::*;
 
 pub fn setup_socket(config: &AppConfig) -> DiziResult<UnixListener> {
     let socket = Path::new(config.server_ref().socket.as_path());
@@ -91,7 +91,9 @@ pub fn process_server_event(context: &mut AppContext, event: ServerEvent) {
                 .broadcast_event(ServerBroadcastEvent::PlayerProgressUpdate { elapsed });
         }
         ServerEvent::PlayerDone => {
-            process_done_song(context);
+            if let Err(e) = process_done_song(context) {
+                eprintln!("ServerEvent::PlayerDone: {:?}", e);
+            }
         }
     }
 }
@@ -103,34 +105,38 @@ pub fn listen_for_clients(listener: UnixListener, event_tx: ServerEventSender) -
     Ok(())
 }
 
-pub fn process_done_song(context: &mut AppContext) {
+pub fn process_done_song(context: &mut AppContext) -> DiziResult<()> {
     let next_enabled = context.player_context_ref().player_ref().next_enabled();
     let repeat_enabled = context.player_context_ref().player_ref().repeat_enabled();
 
     if !next_enabled {
         if repeat_enabled {
-            eprintln!("Replaying song!");
-            let song = context
-                .player_context_mut()
-                .player_mut()
-                .current_song_ref()
-                .map(|s| s.clone());
-            if let Some(song) = song {
-                player_play(context, song.file_path());
-                context
-                    .events
-                    .broadcast_event(ServerBroadcastEvent::PlayerFilePlay { song });
-            }
+            player_play_again(context)?;
+            send_latest_song_info(context)?;
         } else {
             eprintln!("Done playing song!");
         }
     } else {
-        player_play_next(context);
-        if let Some(song) = context.player_context_ref().player_ref().current_song_ref() {
-            let song = song.clone();
-            context
-                .events
-                .broadcast_event(ServerBroadcastEvent::PlayerFilePlay { song });
+        let len1 = context
+            .player_context_ref()
+            .player_ref()
+            .dirlist_playlist_ref()
+            .len();
+
+        let len2 = context
+            .player_context_ref()
+            .player_ref()
+            .playlist_ref()
+            .len();
+
+        let len = if len1 < len2 { len2 } else { len1 };
+        for i in (1..len) {
+            if player_play_next(context, i).is_err() {
+                continue;
+            }
+            send_latest_song_info(context)?;
+            break;
         }
     }
+    Ok(())
 }
