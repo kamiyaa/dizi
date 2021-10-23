@@ -6,7 +6,7 @@ use dizi_lib::error::{DiziError, DiziErrorKind, DiziResult};
 
 use crate::config::general::LayoutCompositionCrude;
 
-#[derive(Clone, Copy, Debug)]
+#[derive(Clone, Copy, Debug, PartialEq)]
 pub enum WidgetType {
     FileBrowser,
     MusicPlayer,

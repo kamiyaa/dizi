@@ -34,10 +34,11 @@ pub fn search_string_rev(curr_list: &DirList, pattern: &str) -> Option<usize> {
 }
 
 pub fn search_string(context: &mut AppContext, pattern: &str) -> DiziResult<()> {
+    let widget = context.get_view_widget();
     let pattern = pattern.to_lowercase();
     let index = search_string_fwd(context.curr_list_ref().unwrap(), pattern.as_str());
     if let Some(index) = index {
-        let _ = cursor_move::cursor_move(index, context);
+        cursor_move::cursor_move(context, widget, index);
     }
     context.set_search_context(SearchPattern::String(pattern));
     Ok(())

@@ -11,7 +11,7 @@ use crate::song::Song;
 pub struct Playlist {
     #[serde(rename = "list")]
     _list: Vec<Song>,
-    pub index: usize,
+    index: usize,
 }
 
 impl Playlist {
@@ -20,7 +20,10 @@ impl Playlist {
     }
 
     pub fn first_index_for_viewport(&self, viewport_height: usize) -> usize {
-        self.index / viewport_height as usize * viewport_height as usize
+        match self.get_index() {
+            Some(index) => index / viewport_height as usize * viewport_height as usize,
+            None => 0,
+        }
     }
 
     pub fn playlist(&self) -> &[Song] {
@@ -32,8 +35,24 @@ impl Playlist {
     }
 
     pub fn remove_song(&mut self, index: usize) -> Song {
-        let song = self._list.remove(index);
+        let song = self.list_mut().remove(index);
+        if self.list_ref().is_empty() {
+            self.index = 0;
+        } else if self.index >= self.list_ref().len() {
+            self.index = self.list_ref().len() - 1;
+        }
         song
+    }
+
+    pub fn get_index(&self) -> Option<usize> {
+        if self.list_ref().is_empty() {
+            None
+        } else {
+            Some(self.index)
+        }
+    }
+    pub fn set_index(&mut self, index: usize) {
+        self.index = index;
     }
 
     pub fn len(&self) -> usize {

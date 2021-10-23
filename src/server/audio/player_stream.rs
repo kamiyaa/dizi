@@ -29,10 +29,12 @@ pub enum PlayerRequest {
     //    ClearListeners,
 }
 
+/*
 type RodioSource = Decoder<BufReader<File>>;
-type RodioControllableSource = Pausable<Amplify<Stoppable<RodioSource>>>;
+type RodioControllableSource = Stoppable<Pausable<Amplify<RodioSource>>>;
 pub type RodioDecoder =
     PeriodicAccess<RodioControllableSource, dyn FnMut(&mut RodioControllableSource)>;
+*/
 
 pub struct PlayerStream {
     pub event_tx: ServerEventSender,
@@ -65,23 +67,23 @@ impl PlayerStream {
         &self.player_res_tx
     }
 
-    pub fn pause(&self) {
+    pub fn pause(&self) -> Result<(), mpsc::SendError<PlayerRequest>> {
         if let Some(source_tx) = self.source_tx.as_ref() {
-            let _ = source_tx.send(PlayerRequest::Pause);
+            let _ = source_tx.send(PlayerRequest::Pause)?;
         }
+        Ok(())
     }
-    pub fn resume(&self) {
+    pub fn resume(&self) -> Result<(), mpsc::SendError<PlayerRequest>> {
         if let Some(source_tx) = self.source_tx.as_ref() {
-            let _ = source_tx.send(PlayerRequest::Resume);
+            source_tx.send(PlayerRequest::Resume)?;
         }
+        Ok(())
     }
-    // might be useless
-    pub fn stop(&mut self) {
-        let source_tx = self.source_tx.take();
-        if let Some(source_tx) = source_tx {
-            let _ = source_tx.send(PlayerRequest::Stop);
+    pub fn stop(&mut self) -> Result<(), mpsc::SendError<PlayerRequest>> {
+        if let Some(source_tx) = self.source_tx.as_ref() {
+            source_tx.send(PlayerRequest::Stop)?;
         }
-        self.receiver.take();
+        Ok(())
     }
 
     pub fn set_volume(&self, volume: f32) {
@@ -95,10 +97,10 @@ impl PlayerStream {
         queue_tx: &queue::SourcesQueueInput<f32>,
         path: &Path,
     ) -> DiziResult<mpsc::Receiver<()>> {
-        self.stop();
-
         const POLL_RATE: Duration = Duration::from_millis(200);
         const UPDATE_RATE: Duration = Duration::from_secs(1);
+
+        self.stop()?;
 
         let mut duration_played = Duration::from_secs(0);
         let mut update_tracker = Duration::from_secs(0);
@@ -114,9 +116,9 @@ impl PlayerStream {
 
         let mut paused = false;
         let source = Decoder::new(buffer)?
-            .stoppable()
             .amplify(1.0)
             .pausable(false)
+            .stoppable()
             .periodic_access(POLL_RATE, move |source| {
                 if !paused {
                     update_tracker += POLL_RATE;
@@ -130,24 +132,26 @@ impl PlayerStream {
                 if let Ok(msg) = source_rx.try_recv() {
                     match msg {
                         PlayerRequest::Pause => {
-                            source.set_paused(true);
+                            source.inner_mut().set_paused(true);
                             paused = true;
                         }
                         PlayerRequest::Resume => {
-                            source.set_paused(false);
+                            source.inner_mut().set_paused(false);
                             paused = false;
                         }
                         PlayerRequest::SetVolume(volume) => {
-                            source.inner_mut().set_factor(volume);
+                            source.inner_mut().inner_mut().set_factor(volume);
                         }
                         PlayerRequest::Stop => {
-                            source.inner_mut().inner_mut().stop();
+                            source.stop();
+                            paused = true;
                         }
                         _ => {}
                     }
                 }
             })
             .convert_samples();
+
         self.source_tx = Some(source_tx);
         let finish_signal = queue_tx.append_with_signal(source);
         Ok(finish_signal)
@@ -181,6 +185,7 @@ pub fn player_stream(
                     Ok(mut vec) => vec.clear(),
                     _ => {}
                 }
+
                 match player_stream.play(&queue_tx, song.file_path()) {
                     Ok(receiver) => {
                         // wait for previous listener (if any) to finish sending messages to listeners

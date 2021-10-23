@@ -1,129 +1,173 @@
 use dizi_lib::error::DiziResult;
 
+use crate::config::option::WidgetType;
 use crate::context::AppContext;
 use crate::ui::TuiBackend;
 
-pub fn cursor_move(new_index: usize, context: &mut AppContext) {
+pub fn safe_subtract(a: usize, b: usize) -> usize {
+    if a > b {
+        a - b
+    } else {
+        0
+    }
+}
+
+pub fn cursor_move(context: &mut AppContext, widget: WidgetType, new_index: usize) {
+    match widget {
+        WidgetType::FileBrowser => set_curr_dirlist_index(context, new_index),
+        WidgetType::Playlist => set_playlist_index(context, new_index),
+        _ => {}
+    }
+}
+
+pub fn cursor_index(context: &mut AppContext, widget: WidgetType) -> Option<usize> {
+    match widget {
+        WidgetType::FileBrowser => get_curr_dirlist_index(context),
+        WidgetType::Playlist => get_playlist_index(context),
+        _ => None,
+    }
+}
+
+fn get_curr_dirlist_index(context: &AppContext) -> Option<usize> {
+    context.curr_list_ref().and_then(|list| list.index)
+}
+fn get_curr_dirlist_len(context: &AppContext) -> Option<usize> {
+    context.curr_list_ref().map(|list| list.len())
+}
+fn set_curr_dirlist_index(context: &mut AppContext, new_index: usize) {
     let mut new_index = new_index;
     if let Some(curr_list) = context.curr_list_mut() {
-        if !curr_list.is_empty() {
-            let dir_len = curr_list.len();
-            if new_index >= dir_len {
-                new_index = dir_len - 1;
-            }
+        if curr_list.is_empty() {
+            return;
+        }
+        let dir_len = curr_list.len();
+        if dir_len <= new_index {
+            curr_list.index = Some(safe_subtract(dir_len, 1));
+        } else {
             curr_list.index = Some(new_index);
         }
     }
 }
 
-pub fn up(context: &mut AppContext, u: usize) -> DiziResult<()> {
-    let movement = match context.curr_list_ref() {
-        Some(curr_list) => curr_list.index.map(|idx| if idx > u { idx - u } else { 0 }),
-        None => None,
-    };
+fn get_playlist_index(context: &AppContext) -> Option<usize> {
+    context
+        .server_state_ref()
+        .player_state_ref()
+        .playlist_ref()
+        .get_index()
+}
+fn get_playlist_len(context: &AppContext) -> usize {
+    context
+        .server_state_ref()
+        .player_state_ref()
+        .playlist_ref()
+        .len()
+}
+fn set_playlist_index(context: &mut AppContext, new_index: usize) {
+    let playlist_len = context
+        .server_state_ref()
+        .player_state_ref()
+        .playlist_ref()
+        .len();
+    if playlist_len <= new_index {
+        context
+            .server_state_mut()
+            .player_state_mut()
+            .playlist_mut()
+            .set_index(safe_subtract(playlist_len, 1));
+    } else {
+        context
+            .server_state_mut()
+            .player_state_mut()
+            .playlist_mut()
+            .set_index(new_index);
+    }
+}
 
-    if let Some(s) = movement {
-        cursor_move(s, context);
+pub fn up(context: &mut AppContext, u: usize) -> DiziResult<()> {
+    let widget = context.get_view_widget();
+    let index = cursor_index(context, widget);
+
+    if let Some(index) = index {
+        let new_index = safe_subtract(index, u);
+        cursor_move(context, widget, new_index);
     }
     Ok(())
 }
 
 pub fn down(context: &mut AppContext, u: usize) -> DiziResult<()> {
-    let movement = match context.curr_list_ref() {
-        Some(curr_list) => curr_list.index.map(|idx| idx + u),
-        None => None,
-    };
-    if let Some(s) = movement {
-        cursor_move(s, context);
+    let widget = context.get_view_widget();
+    let index = cursor_index(context, widget);
+
+    if let Some(index) = index {
+        let new_index = index + u;
+        cursor_move(context, widget, new_index);
     }
     Ok(())
 }
 
 pub fn home(context: &mut AppContext) -> DiziResult<()> {
-    let movement: Option<usize> = match context.curr_list_ref() {
-        Some(curr_list) => {
-            let len = curr_list.len();
-            if len == 0 {
-                None
-            } else {
-                Some(0)
-            }
-        }
-        None => None,
-    };
+    let widget = context.get_view_widget();
+    let index = cursor_index(context, widget);
 
-    if let Some(s) = movement {
-        cursor_move(s, context);
+    match index {
+        Some(index) if index > 0 => {
+            cursor_move(context, widget, 0);
+        }
+        _ => {}
     }
     Ok(())
 }
 
 pub fn end(context: &mut AppContext) -> DiziResult<()> {
-    let movement: Option<usize> = match context.curr_list_ref() {
-        Some(curr_list) => {
-            let len = curr_list.len();
-            if len == 0 {
-                None
-            } else {
-                Some(len - 1)
-            }
-        }
-        None => None,
+    let widget = context.get_view_widget();
+    let index = match widget {
+        WidgetType::FileBrowser => get_curr_dirlist_index(context),
+        WidgetType::Playlist => get_playlist_index(context),
+        _ => None,
     };
 
-    if let Some(s) = movement {
-        cursor_move(s, context);
+    let len = match widget {
+        WidgetType::FileBrowser => get_curr_dirlist_len(context),
+        WidgetType::Playlist => Some(get_playlist_len(context)),
+        _ => None,
+    };
+
+    match (index, len) {
+        (Some(index), Some(len)) if index < len - 1 => {
+            cursor_move(context, widget, len - 1);
+        }
+        _ => {}
     }
     Ok(())
 }
 
 fn get_page_size(context: &AppContext, backend: &TuiBackend) -> Option<usize> {
-    let config = context.config_ref();
-    let rect = backend.terminal.as_ref().map(|t| t.size())?.ok()?;
-
-    let rect_height = rect.height as usize;
-    if rect_height >= 2 {
-        Some(rect_height - 2)
-    } else {
-        None
-    }
+    Some(10)
 }
 
 pub fn page_up(context: &mut AppContext, backend: &mut TuiBackend) -> DiziResult<()> {
+    let widget = context.get_view_widget();
+    let index = cursor_index(context, widget);
+
     let page_size = get_page_size(context, backend).unwrap_or(10);
 
-    let movement = match context.curr_list_ref() {
-        Some(curr_list) => curr_list
-            .index
-            .map(|idx| if idx > page_size { idx - page_size } else { 0 }),
-        None => None,
-    };
-
-    if let Some(s) = movement {
-        cursor_move(s, context);
+    if let Some(index) = index {
+        let new_index = safe_subtract(index, page_size);
+        cursor_move(context, widget, new_index);
     }
     Ok(())
 }
 
 pub fn page_down(context: &mut AppContext, backend: &mut TuiBackend) -> DiziResult<()> {
+    let widget = context.get_view_widget();
+    let index = cursor_index(context, widget);
+
     let page_size = get_page_size(context, backend).unwrap_or(10);
 
-    let movement = match context.curr_list_ref() {
-        Some(curr_list) => {
-            let dir_len = curr_list.len();
-            curr_list.index.map(|idx| {
-                if idx + page_size > dir_len - 1 {
-                    dir_len - 1
-                } else {
-                    idx + page_size
-                }
-            })
-        }
-        None => None,
-    };
-
-    if let Some(s) = movement {
-        cursor_move(s, context);
+    if let Some(index) = index {
+        let new_index = index + page_size;
+        cursor_move(context, widget, new_index);
     }
     Ok(())
 }

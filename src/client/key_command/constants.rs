@@ -24,3 +24,4 @@ pub const CMD_SELECT_FILES: &str = "select";
 pub const CMD_SORT: &str = "sort";
 pub const CMD_SORT_REVERSE: &str = "sort reverse";
 pub const CMD_TOGGLE_HIDDEN: &str = "toggle_hidden";
+pub const CMD_TOGGLE_VIEW: &str = "toggle_view";

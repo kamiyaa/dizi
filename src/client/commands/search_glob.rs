@@ -32,15 +32,19 @@ pub fn search_glob_rev(curr_list: &DirList, glob: &GlobMatcher) -> Option<usize>
 }
 
 pub fn search_glob(context: &mut AppContext, pattern: &str) -> DiziResult<()> {
+    let widget = context.get_view_widget();
     let glob = GlobBuilder::new(pattern)
         .case_insensitive(true)
         .build()?
         .compile_matcher();
 
-    let index = search_glob_fwd(context.curr_list_ref().unwrap(), &glob);
+    let index = cursor_move::cursor_index(context, widget);
     if let Some(index) = index {
-        let _ = cursor_move::cursor_move(index, context);
+        let index = search_glob_fwd(context.curr_list_ref().unwrap(), &glob);
+        if let Some(index) = index {
+            cursor_move::cursor_move(context, widget, index);
+        }
+        context.set_search_context(SearchPattern::Glob(glob));
     }
-    context.set_search_context(SearchPattern::Glob(glob));
     Ok(())
 }

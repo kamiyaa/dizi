@@ -1,7 +1,5 @@
 use serde_derive::Deserialize;
 
-use crate::config::option::PlayerOption;
-
 const fn default_true() -> bool {
     true
 }
@@ -12,7 +10,7 @@ pub struct PlayerOptionCrude {
     pub shuffle: bool,
     #[serde(default = "default_true")]
     pub repeat: bool,
-    #[serde(default)]
+    #[serde(default = "default_true")]
     pub next: bool,
     #[serde(default)]
     pub on_song_change: Option<String>,
@@ -36,6 +34,25 @@ impl From<PlayerOptionCrude> for PlayerOption {
             repeat: crude.repeat,
             next: crude.next,
             on_song_change: crude.on_song_change,
+        }
+    }
+}
+
+#[derive(Clone, Debug)]
+pub struct PlayerOption {
+    pub shuffle: bool,
+    pub repeat: bool,
+    pub next: bool,
+    pub on_song_change: Option<String>,
+}
+
+impl std::default::Default for PlayerOption {
+    fn default() -> Self {
+        Self {
+            shuffle: false,
+            repeat: true,
+            next: true,
+            on_song_change: None,
         }
     }
 }

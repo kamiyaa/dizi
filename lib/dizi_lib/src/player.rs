@@ -69,6 +69,12 @@ impl PlayerState {
     pub fn set_player_status(&mut self, status: PlayerStatus) {
         self.status = status;
     }
+    pub fn get_playlist_status(&self) -> PlaylistStatus {
+        self.playlist_status
+    }
+    pub fn set_playlist_status(&mut self, status: PlaylistStatus) {
+        self.playlist_status = status;
+    }
 
     pub fn get_volume(&self) -> usize {
         self.volume

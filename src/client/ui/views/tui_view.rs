@@ -33,6 +33,11 @@ pub fn render_widget(
     area: Rect,
     buf: &mut Buffer,
 ) {
+    let focused_panel_style = Style::default().fg(Color::Blue);
+    let unfocused_panel_style = Style::default();
+
+    let current_view_widget = context.get_view_widget();
+
     match layout {
         LayoutComposition::Simple {
             widget,
@@ -40,10 +45,15 @@ pub fn render_widget(
             border,
             title,
         } => {
-            let focused_panel_style = Style::default().fg(Color::Blue);
+            let border_style = if current_view_widget == *widget {
+                focused_panel_style
+            } else {
+                unfocused_panel_style
+            };
+
             let rect = if *border {
                 let block = Block::default()
-                    .border_style(focused_panel_style)
+                    .border_style(border_style)
                     .borders(Borders::ALL);
                 let inner = block.inner(area);
                 block.render(area, buf);

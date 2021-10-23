@@ -68,6 +68,10 @@ pub fn process_server_event(context: &mut AppContext, s: &str) -> DiziResult<()>
                 .server_state_mut()
                 .player_state_mut()
                 .set_player_status(PlayerStatus::Playing);
+            context
+                .server_state_mut()
+                .player_state_mut()
+                .set_playlist_status(PlaylistStatus::DirectoryListing);
         }
         ServerBroadcastEvent::PlayerPause => {
             context
@@ -118,6 +122,26 @@ pub fn process_server_event(context: &mut AppContext, s: &str) -> DiziResult<()>
                 .player_state_mut()
                 .playlist_mut()
                 .remove_song(index);
+        }
+        ServerBroadcastEvent::PlaylistPlay { index } => {
+            let song = context
+                .server_state_ref()
+                .player_state_ref()
+                .playlist_ref()
+                .list_ref()[index]
+                .clone();
+            context
+                .server_state_mut()
+                .player_state_mut()
+                .set_song(Some(song));
+            context
+                .server_state_mut()
+                .player_state_mut()
+                .set_player_status(PlayerStatus::Playing);
+            context
+                .server_state_mut()
+                .player_state_mut()
+                .set_playlist_status(PlaylistStatus::PlaylistFile);
         }
         s => {
             context

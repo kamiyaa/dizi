@@ -6,6 +6,7 @@ use std::sync::mpsc;
 use dizi_lib::utils;
 
 use crate::config;
+use crate::config::option::WidgetType;
 use crate::context::{MessageQueue, ServerState};
 use crate::event::{AppEvent, Events};
 use crate::fs::DirList;
@@ -25,6 +26,7 @@ pub struct AppContext {
     pub events: Events,
     // server unix socket
     pub stream: UnixStream,
+    pub view_widget: WidgetType,
     // app config
     config: config::AppConfig,
 
@@ -47,6 +49,7 @@ impl AppContext {
             quit: QuitType::DoNot,
             config,
             stream,
+            view_widget: WidgetType::FileBrowser,
             events,
             _cwd: cwd,
             history: History::new(),
@@ -123,5 +126,12 @@ impl AppContext {
     }
     pub fn curr_list_mut(&mut self) -> Option<&mut DirList> {
         self.history.get_mut(self._cwd.as_path())
+    }
+
+    pub fn get_view_widget(&self) -> WidgetType {
+        self.view_widget
+    }
+    pub fn set_view_widget(&mut self, widget: WidgetType) {
+        self.view_widget = widget;
     }
 }

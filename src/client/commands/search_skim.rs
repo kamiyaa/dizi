@@ -69,6 +69,7 @@ pub fn search_skim(context: &mut AppContext, backend: &mut TuiBackend) -> DiziRe
     let _ = thread.join();
 
     if let Some(skim_output) = skim_output {
+        let widget = context.get_view_widget();
         if skim_output.final_key == Key::ESC {
             return Ok(());
         }
@@ -83,7 +84,7 @@ pub fn search_skim(context: &mut AppContext, backend: &mut TuiBackend) -> DiziRe
 
             match item {
                 Some(item) => {
-                    cursor_move::cursor_move(item.idx, context);
+                    cursor_move::cursor_move(context, widget, item.idx);
                 }
                 None => {
                     return Err(DiziError::new(

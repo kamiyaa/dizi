@@ -1,8 +1,9 @@
+use std::convert::From;
 use std::path;
 
 use serde_derive::Deserialize;
 
-use crate::config::{parse_to_config_file, ConfigStructure, Flattenable};
+use super::{PlayerOption, PlayerOptionCrude};
 
 fn default_socket_path() -> path::PathBuf {
     path::PathBuf::from("/tmp/dizi-server-socket")
@@ -25,30 +26,21 @@ fn str_to_cpal_hostid(s: &str) -> Option<cpal::HostId> {
 }
 
 #[derive(Clone, Debug, Deserialize)]
-pub struct RawServerConfig {
+pub struct ServerConfigCrude {
     #[serde(default = "default_socket_path")]
     pub socket: path::PathBuf,
     #[serde(default = "default_audio_system_string")]
     pub audio_system: String,
+    #[serde(default)]
+    pub player: PlayerOptionCrude,
 }
 
-impl std::default::Default for RawServerConfig {
+impl std::default::Default for ServerConfigCrude {
     fn default() -> Self {
         Self {
             socket: default_socket_path(),
             audio_system: default_audio_system_string(),
-        }
-    }
-}
-
-impl Flattenable<ServerConfig> for RawServerConfig {
-    fn flatten(self) -> ServerConfig {
-        let audio_system =
-            str_to_cpal_hostid(&self.audio_system).unwrap_or_else(default_audio_system);
-
-        ServerConfig {
-            socket: path::PathBuf::from(self.socket),
-            audio_system,
+            player: PlayerOptionCrude::default(),
         }
     }
 }
@@ -57,6 +49,16 @@ impl Flattenable<ServerConfig> for RawServerConfig {
 pub struct ServerConfig {
     pub socket: path::PathBuf,
     pub audio_system: cpal::HostId,
+    pub player: PlayerOption,
+}
+
+impl ServerConfig {
+    pub fn socket_ref(&self) -> &path::Path {
+        self.socket.as_path()
+    }
+    pub fn player_ref(&self) -> &PlayerOption {
+        &self.player
+    }
 }
 
 impl std::default::Default for ServerConfig {
@@ -64,13 +66,20 @@ impl std::default::Default for ServerConfig {
         Self {
             socket: default_socket_path(),
             audio_system: default_audio_system(),
+            player: PlayerOption::default(),
         }
     }
 }
 
-impl ConfigStructure for ServerConfig {
-    fn get_config(file_name: &str) -> Self {
-        parse_to_config_file::<RawServerConfig, ServerConfig>(file_name)
-            .unwrap_or_else(Self::default)
+impl From<ServerConfigCrude> for ServerConfig {
+    fn from(crude: ServerConfigCrude) -> Self {
+        let audio_system =
+            str_to_cpal_hostid(&crude.audio_system).unwrap_or_else(default_audio_system);
+
+        Self {
+            socket: path::PathBuf::from(crude.socket),
+            audio_system,
+            player: PlayerOption::from(crude.player),
+        }
     }
 }

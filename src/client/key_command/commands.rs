@@ -36,6 +36,7 @@ pub enum Command {
     Sort(SortType),
     SortReverse,
 
+    ToggleView,
     ToggleHiddenFiles,
 
     Request(ClientRequest),

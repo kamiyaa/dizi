@@ -10,7 +10,7 @@ use dizi_lib::error::DiziResult;
 use dizi_lib::response::server::ServerBroadcastEvent;
 
 use crate::client;
-use crate::config::default::AppConfig;
+use crate::config::AppConfig;
 use crate::context::{AppContext, QuitType};
 use crate::events::{AppEvent, ServerEvent, ServerEventSender};
 use crate::server_command::run_command;

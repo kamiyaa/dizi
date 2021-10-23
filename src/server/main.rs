@@ -14,7 +14,7 @@ use structopt::StructOpt;
 
 use dizi_lib::error::DiziResult;
 
-use crate::config::{AppConfig, ConfigStructure};
+use crate::config::{AppConfig, TomlConfigFile};
 
 const PROGRAM_NAME: &str = "dizi";
 const CONFIG_FILE: &str = "server.toml";

@@ -1,5 +1,5 @@
 use dizi_lib::error::DiziResult;
-use dizi_lib::player::PlayerStatus;
+use dizi_lib::player::{PlayerStatus, PlaylistStatus};
 use dizi_lib::request::client::ClientRequest;
 use dizi_lib::response::server::ServerBroadcastEvent;
 use dizi_lib::song::Song;
@@ -53,26 +53,6 @@ pub fn run_command(context: &mut AppContext, event: ClientRequest) -> DiziResult
                 .events
                 .broadcast_event(ServerBroadcastEvent::PlayerResume);
         }
-        ClientRequest::PlayerPlayNext => {
-            player_play_next(context)?;
-
-            if let Some(song) = context.player_context_ref().player_ref().current_song_ref() {
-                let song = song.clone();
-                context
-                    .events
-                    .broadcast_event(ServerBroadcastEvent::PlayerFilePlay { song });
-            }
-        }
-        ClientRequest::PlayerPlayPrevious => {
-            player_play_previous(context)?;
-
-            if let Some(song) = context.player_context_ref().player_ref().current_song_ref() {
-                let song = song.clone();
-                context
-                    .events
-                    .broadcast_event(ServerBroadcastEvent::PlayerFilePlay { song });
-            }
-        }
         ClientRequest::PlayerGetVolume => {
             eprintln!(
                 "Error: '{:?}' not implemented",
@@ -111,6 +91,35 @@ pub fn run_command(context: &mut AppContext, event: ClientRequest) -> DiziResult
                 }
             }
         }
+        ClientRequest::PlayerPlayNext => {
+            player_play_next(context)?;
+            send_latest_song_info(context);
+        }
+        ClientRequest::PlayerPlayPrevious => {
+            player_play_previous(context)?;
+            send_latest_song_info(context);
+        }
+        ClientRequest::PlaylistAppend { path } => {
+            let song = playlist::playlist_append(context, &path)?;
+            context
+                .events
+                .broadcast_event(ServerBroadcastEvent::PlaylistAppend { song });
+        }
+        ClientRequest::PlaylistRemove { index } => {
+            playlist::playlist_remove(context, index)?;
+            context
+                .events
+                .broadcast_event(ServerBroadcastEvent::PlaylistRemove { index });
+        }
+        ClientRequest::PlaylistMoveUp { .. } => {}
+        ClientRequest::PlaylistMoveDown { .. } => {}
+        ClientRequest::PlaylistPlay { index } => {
+            playlist::playlist_play(context, index)?;
+            context
+                .events
+                .broadcast_event(ServerBroadcastEvent::PlaylistPlay { index });
+        }
+        ClientRequest::PlaylistOpen { .. } => {}
         ClientRequest::PlayerToggleNext => {
             let enabled = context.player_context_ref().player_ref().next_enabled();
             context.player_context_mut().player_mut().set_next(!enabled);
@@ -138,24 +147,34 @@ pub fn run_command(context: &mut AppContext, event: ClientRequest) -> DiziResult
                 .events
                 .broadcast_event(ServerBroadcastEvent::PlayerShuffle { on: !enabled });
         }
-        ClientRequest::PlaylistAppend { path } => {
-            let song = playlist::playlist_append(context, &path)?;
-            context
-                .events
-                .broadcast_event(ServerBroadcastEvent::PlaylistAppend { song });
-        }
-        ClientRequest::PlaylistRemove { index } => {
-            playlist::playlist_remove(context, index)?;
-            context
-                .events
-                .broadcast_event(ServerBroadcastEvent::PlaylistRemove { index });
-        }
-        ClientRequest::PlaylistMoveUp { .. } => {}
-        ClientRequest::PlaylistMoveDown { .. } => {}
-        ClientRequest::PlaylistPlay { .. } => {}
-        ClientRequest::PlaylistOpen { .. } => {}
         s => {
             eprintln!("Error: '{:?}' not implemented", s);
+        }
+    }
+    Ok(())
+}
+
+pub fn send_latest_song_info(context: &mut AppContext) -> DiziResult<()> {
+    match context.player_context_ref().player_ref().playlist_status() {
+        PlaylistStatus::DirectoryListing => {
+            if let Some(song) = context.player_context_ref().player_ref().current_song_ref() {
+                let song = song.clone();
+                context
+                    .events
+                    .broadcast_event(ServerBroadcastEvent::PlayerFilePlay { song });
+            }
+        }
+        PlaylistStatus::PlaylistFile => {
+            if let Some(index) = context
+                .player_context_ref()
+                .player_ref()
+                .playlist_ref()
+                .get_index()
+            {
+                context
+                    .events
+                    .broadcast_event(ServerBroadcastEvent::PlaylistPlay { index });
+            }
         }
     }
     Ok(())

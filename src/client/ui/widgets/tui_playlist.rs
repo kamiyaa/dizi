@@ -30,9 +30,6 @@ impl<'a> TuiPlaylist<'a> {
 
 impl<'a> Widget for TuiPlaylist<'a> {
     fn render(self, area: Rect, buf: &mut Buffer) {
-        if area.height <= 8 {
-            return;
-        }
         if area.width < 4 || area.height < 1 {
             return;
         }
@@ -46,7 +43,7 @@ impl<'a> Widget for TuiPlaylist<'a> {
             .playlist_ref()
             .first_index_for_viewport(drawing_width);
 
-        let curr_index = self.player.playlist_ref().index;
+        let curr_index = self.player.playlist_ref().get_index();
 
         // draw every entry
         self.player
@@ -61,24 +58,25 @@ impl<'a> Widget for TuiPlaylist<'a> {
                 print_entry(buf, entry, style, (x + 1, y + i as u16), drawing_width - 1);
             });
 
-        // draw selected entry in a different style
-        let screen_index = curr_index % area.height as usize;
+        if let Some(curr_index) = curr_index {
+            let song = &self.player.playlist_ref().list_ref()[curr_index];
 
-        /*
-                let entry = self.dirlist.curr_entry_ref().unwrap();
-                let style = style::entry_style(entry).add_modifier(Modifier::REVERSED);
+            // draw selected entry in a different style
+            let screen_index = curr_index % area.height as usize;
 
-                let space_fill = " ".repeat(drawing_width);
-                buf.set_string(x, y + screen_index as u16, space_fill.as_str(), style);
+            let style = Style::default().add_modifier(Modifier::REVERSED);
 
-                print_entry(
-                    buf,
-                    entry,
-                    style,
-                    (x + 1, y + screen_index as u16),
-                    drawing_width - 1,
-                );
-        */
+            let space_fill = " ".repeat(drawing_width);
+            buf.set_string(x, y + screen_index as u16, space_fill.as_str(), style);
+
+            print_entry(
+                buf,
+                song,
+                style,
+                (x + 1, y + screen_index as u16),
+                drawing_width - 1,
+            );
+        }
     }
 }
 

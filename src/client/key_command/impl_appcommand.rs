@@ -34,6 +34,7 @@ impl AppCommand for Command {
             Self::SortReverse => CMD_SORT_REVERSE,
 
             Self::ToggleHiddenFiles => CMD_TOGGLE_HIDDEN,
+            Self::ToggleView => CMD_TOGGLE_VIEW,
 
             Self::Request(request) => request.api_path(),
         }

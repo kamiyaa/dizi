@@ -31,3 +31,11 @@ pub fn playlist_remove(context: &mut AppContext, index: usize) -> DiziResult<()>
     }
     Ok(())
 }
+
+pub fn playlist_play(context: &mut AppContext, index: usize) -> DiziResult<()> {
+    context
+        .player_context_mut()
+        .player_mut()
+        .play_from_playlist(index)?;
+    Ok(())
+}

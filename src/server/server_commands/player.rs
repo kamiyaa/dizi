@@ -1,12 +1,16 @@
 use std::path::Path;
 
 use dizi_lib::error::DiziResult;
-use dizi_lib::player::PlayerStatus;
+use dizi_lib::player::{PlayerStatus, PlaylistStatus};
+use dizi_lib::song::Song;
 
 use crate::context::AppContext;
 
 pub fn player_play(context: &mut AppContext, path: &Path) -> DiziResult<()> {
-    context.player_context_mut().player_mut().play_file(path)
+    context
+        .player_context_mut()
+        .player_mut()
+        .play_from_directory(path)
 }
 
 pub fn player_pause(context: &mut AppContext) -> DiziResult<()> {
@@ -67,11 +71,86 @@ pub fn player_volume_decrease(context: &mut AppContext, amount: usize) -> DiziRe
 }
 
 pub fn player_play_next(context: &mut AppContext) -> DiziResult<()> {
-    context.player_context_mut().player_mut().play_next()?;
+    eprintln!("player_play_next");
+    let playlist_status = context.player_context_ref().player_ref().playlist_status();
+    match playlist_status {
+        PlaylistStatus::DirectoryListing => {
+            let song = {
+                let playlist = context
+                    .player_context_ref()
+                    .player_ref()
+                    .dirlist_playlist_ref();
+                let index = playlist.index;
+                let len = playlist.len();
+
+                let new_index = if index + 1 >= len { 0 } else { index + 1 };
+                let next_song_path = &playlist.list_ref()[new_index];
+
+                Song::new(next_song_path)?
+            };
+            context.player_context_mut().player_mut().play(&song)?;
+        }
+        PlaylistStatus::PlaylistFile => {
+            let index = context
+                .player_context_ref()
+                .player_ref()
+                .playlist_ref()
+                .get_index();
+            let len = context
+                .player_context_ref()
+                .player_ref()
+                .playlist_ref()
+                .len();
+            if let Some(index) = index {
+                let new_index = if index + 1 >= len { 0 } else { index + 1 };
+                context
+                    .player_context_mut()
+                    .player_mut()
+                    .play_from_playlist(new_index);
+            }
+        }
+    }
     Ok(())
 }
 
 pub fn player_play_previous(context: &mut AppContext) -> DiziResult<()> {
-    context.player_context_mut().player_mut().play_previous()?;
+    let playlist_status = context.player_context_ref().player_ref().playlist_status();
+    match playlist_status {
+        PlaylistStatus::DirectoryListing => {
+            let song = {
+                let playlist = context
+                    .player_context_ref()
+                    .player_ref()
+                    .dirlist_playlist_ref();
+                let index = playlist.index;
+                let len = playlist.len();
+
+                let new_index = if index == 0 { len - 1 } else { index - 1 };
+                let next_song_path = &playlist.list_ref()[new_index];
+
+                Song::new(next_song_path)?
+            };
+            context.player_context_mut().player_mut().play(&song)?;
+        }
+        PlaylistStatus::PlaylistFile => {
+            let index = context
+                .player_context_ref()
+                .player_ref()
+                .playlist_ref()
+                .get_index();
+            let len = context
+                .player_context_ref()
+                .player_ref()
+                .playlist_ref()
+                .len();
+            if let Some(index) = index {
+                let new_index = if index == 0 { len - 1 } else { index - 1 };
+                context
+                    .player_context_mut()
+                    .player_mut()
+                    .play_from_playlist(new_index);
+            }
+        }
+    }
     Ok(())
 }

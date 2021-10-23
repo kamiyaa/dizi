@@ -3,10 +3,9 @@ use std::path::PathBuf;
 
 use serde_derive::Deserialize;
 
-use crate::config::option::{DisplayOption, PlayerOption};
+use crate::config::option::DisplayOption;
 
 use super::display_crude::DisplayOptionCrude;
-use super::player_crude::PlayerOptionCrude;
 
 const fn default_true() -> bool {
     true
@@ -21,8 +20,6 @@ pub struct ClientConfigCrude {
 
     #[serde(default, rename = "display")]
     pub display_options: DisplayOptionCrude,
-    #[serde(default, rename = "player")]
-    pub player_options: PlayerOptionCrude,
 }
 
 impl std::default::Default for ClientConfigCrude {
@@ -31,7 +28,6 @@ impl std::default::Default for ClientConfigCrude {
             socket: "".to_string(),
             home_dir: "".to_string(),
             display_options: DisplayOptionCrude::default(),
-            player_options: PlayerOptionCrude::default(),
         }
     }
 }
@@ -42,7 +38,6 @@ impl From<ClientConfigCrude> for ClientConfig {
             socket: PathBuf::from(crude.socket),
             home_dir: PathBuf::from(crude.home_dir),
             display_options: DisplayOption::from(crude.display_options),
-            player_options: PlayerOption::from(crude.player_options),
         }
     }
 }
@@ -52,7 +47,6 @@ pub struct ClientConfig {
     pub socket: PathBuf,
     pub home_dir: PathBuf,
     pub display_options: DisplayOption,
-    pub player_options: PlayerOption,
 }
 
 impl ClientConfig {
@@ -67,7 +61,6 @@ impl std::default::Default for ClientConfig {
             socket: PathBuf::from(""),
             home_dir: PathBuf::from(""),
             display_options: DisplayOption::default(),
-            player_options: PlayerOption::default(),
         }
     }
 }

@@ -8,6 +8,7 @@ use super::search_glob;
 use super::search_string;
 
 pub fn search_next(context: &mut AppContext) -> DiziResult<()> {
+    let widget = context.get_view_widget();
     if let Some(search_context) = context.get_search_context() {
         let index = match search_context {
             SearchPattern::Glob(s) => {
@@ -18,13 +19,14 @@ pub fn search_next(context: &mut AppContext) -> DiziResult<()> {
             }
         };
         if let Some(index) = index {
-            let _ = cursor_move::cursor_move(index, context);
+            cursor_move::cursor_move(context, widget, index);
         }
     }
     Ok(())
 }
 
 pub fn search_prev(context: &mut AppContext) -> DiziResult<()> {
+    let widget = context.get_view_widget();
     if let Some(search_context) = context.get_search_context() {
         let index = match search_context {
             SearchPattern::Glob(s) => {
@@ -35,7 +37,7 @@ pub fn search_prev(context: &mut AppContext) -> DiziResult<()> {
             }
         };
         if let Some(index) = index {
-            let _ = cursor_move::cursor_move(index, context);
+            cursor_move::cursor_move(context, widget, index);
         }
     }
     Ok(())
