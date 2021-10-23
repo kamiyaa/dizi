@@ -20,11 +20,12 @@ const ELLIPSIS: &str = "…";
 
 pub struct TuiPlaylist<'a> {
     player: &'a PlayerState,
+    focused: bool,
 }
 
 impl<'a> TuiPlaylist<'a> {
-    pub fn new(player: &'a PlayerState) -> Self {
-        Self { player }
+    pub fn new(player: &'a PlayerState, focused: bool) -> Self {
+        Self { player, focused }
     }
 }
 
@@ -43,7 +44,7 @@ impl<'a> Widget for TuiPlaylist<'a> {
             .playlist_ref()
             .first_index_for_viewport(drawing_width);
 
-        let curr_index = self.player.playlist_ref().get_index();
+        let curr_index = self.player.playlist_ref().get_cursor_index();
 
         // draw every entry
         self.player
@@ -58,24 +59,26 @@ impl<'a> Widget for TuiPlaylist<'a> {
                 print_entry(buf, entry, style, (x + 1, y + i as u16), drawing_width - 1);
             });
 
-        if let Some(curr_index) = curr_index {
-            let song = &self.player.playlist_ref().list_ref()[curr_index];
+        if self.focused {
+            if let Some(curr_index) = curr_index {
+                let song = &self.player.playlist_ref().list_ref()[curr_index];
 
-            // draw selected entry in a different style
-            let screen_index = curr_index % area.height as usize;
+                // draw selected entry in a different style
+                let screen_index = curr_index % area.height as usize;
 
-            let style = Style::default().add_modifier(Modifier::REVERSED);
+                let style = Style::default().add_modifier(Modifier::REVERSED);
 
-            let space_fill = " ".repeat(drawing_width);
-            buf.set_string(x, y + screen_index as u16, space_fill.as_str(), style);
+                let space_fill = " ".repeat(drawing_width);
+                buf.set_string(x, y + screen_index as u16, space_fill.as_str(), style);
 
-            print_entry(
-                buf,
-                song,
-                style,
-                (x + 1, y + screen_index as u16),
-                drawing_width - 1,
-            );
+                print_entry(
+                    buf,
+                    song,
+                    style,
+                    (x + 1, y + screen_index as u16),
+                    drawing_width - 1,
+                );
+            }
         }
     }
 }

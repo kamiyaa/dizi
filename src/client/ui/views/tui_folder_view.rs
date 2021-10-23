@@ -11,13 +11,15 @@ const TAB_VIEW_WIDTH: u16 = 15;
 pub struct TuiFolderView<'a> {
     pub context: &'a AppContext,
     pub show_bottom_status: bool,
+    pub focused: bool,
 }
 
 impl<'a> TuiFolderView<'a> {
-    pub fn new(context: &'a AppContext) -> Self {
+    pub fn new(context: &'a AppContext, focused: bool) -> Self {
         Self {
             context,
             show_bottom_status: true,
+            focused,
         }
     }
 }
@@ -29,7 +31,7 @@ impl<'a> Widget for TuiFolderView<'a> {
 
         // render current view
         if let Some(list) = curr_list.as_ref() {
-            TuiDirListDetailed::new(list).render(area, buf);
+            TuiDirListDetailed::new(list, self.focused).render(area, buf);
             let rect = Rect {
                 x: 0,
                 y: area.height - 1,

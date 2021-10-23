@@ -54,7 +54,7 @@ fn get_playlist_index(context: &AppContext) -> Option<usize> {
         .server_state_ref()
         .player_state_ref()
         .playlist_ref()
-        .get_index()
+        .get_cursor_index()
 }
 fn get_playlist_len(context: &AppContext) -> usize {
     context
@@ -74,13 +74,13 @@ fn set_playlist_index(context: &mut AppContext, new_index: usize) {
             .server_state_mut()
             .player_state_mut()
             .playlist_mut()
-            .set_index(safe_subtract(playlist_len, 1));
+            .set_cursor_index(Some(safe_subtract(playlist_len, 1)));
     } else {
         context
             .server_state_mut()
             .player_state_mut()
             .playlist_mut()
-            .set_index(new_index);
+            .set_cursor_index(Some(new_index));
     }
 }
 

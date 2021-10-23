@@ -149,7 +149,7 @@ impl Player {
         Ok(())
     }
 
-    pub fn play_from_directory(&mut self, path: &Path) -> DiziResult<()> {
+    pub fn play_entire_directory(&mut self, path: &Path) -> DiziResult<()> {
         let song = Song::new(path)?;
 
         let dirlist_playlist = match song.file_path().parent() {
@@ -183,6 +183,21 @@ impl Player {
         Ok(())
     }
 
+    pub fn play_from_directory(&mut self, index: usize) -> DiziResult<()> {
+        if index >= self.dirlist_playlist_ref().len() {
+            return Err(DiziError::new(
+                DiziErrorKind::InvalidParameters,
+                "index out of bounds".to_string(),
+            ));
+        }
+        let path = self.dirlist_playlist_ref().list_ref()[index].clone();
+        let song = Song::new(path.as_path())?;
+        self.play(&song)?;
+        self.dirlist_playlist_mut().set_playing_index(index);
+        self._playlist_status = PlaylistStatus::DirectoryListing;
+        Ok(())
+    }
+
     pub fn play_from_playlist(&mut self, index: usize) -> DiziResult<()> {
         if index >= self.playlist.len() {
             return Err(DiziError::new(
@@ -192,7 +207,7 @@ impl Player {
         }
         let song = self.playlist.list_ref()[index].clone();
         self.play(&song)?;
-        self.playlist_mut().set_index(index);
+        self.playlist_mut().set_playing_index(Some(index));
         self._playlist_status = PlaylistStatus::PlaylistFile;
         Ok(())
     }

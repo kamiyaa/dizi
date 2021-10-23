@@ -15,11 +15,12 @@ const ELLIPSIS: &str = "…";
 
 pub struct TuiDirListDetailed<'a> {
     dirlist: &'a DirList,
+    focused: bool,
 }
 
 impl<'a> TuiDirListDetailed<'a> {
-    pub fn new(dirlist: &'a DirList) -> Self {
-        Self { dirlist }
+    pub fn new(dirlist: &'a DirList, focused: bool) -> Self {
+        Self { dirlist, focused }
     }
 }
 
@@ -54,22 +55,24 @@ impl<'a> Widget for TuiDirListDetailed<'a> {
                 print_entry(buf, entry, style, (x + 1, y + i as u16), drawing_width - 1);
             });
 
-        // draw selected entry in a different style
-        let screen_index = curr_index % area.height as usize;
+        if self.focused {
+            // draw selected entry in a different style
+            let screen_index = curr_index % area.height as usize;
 
-        let entry = self.dirlist.curr_entry_ref().unwrap();
-        let style = style::entry_style(entry).add_modifier(Modifier::REVERSED);
+            let entry = self.dirlist.curr_entry_ref().unwrap();
+            let style = style::entry_style(entry).add_modifier(Modifier::REVERSED);
 
-        let space_fill = " ".repeat(drawing_width);
-        buf.set_string(x, y + screen_index as u16, space_fill.as_str(), style);
+            let space_fill = " ".repeat(drawing_width);
+            buf.set_string(x, y + screen_index as u16, space_fill.as_str(), style);
 
-        print_entry(
-            buf,
-            entry,
-            style,
-            (x + 1, y + screen_index as u16),
-            drawing_width - 1,
-        );
+            print_entry(
+                buf,
+                entry,
+                style,
+                (x + 1, y + screen_index as u16),
+                drawing_width - 1,
+            );
+        }
     }
 }
 

@@ -187,7 +187,7 @@ pub fn send_latest_song_info(context: &mut AppContext) -> DiziResult<()> {
                 .player_context_ref()
                 .player_ref()
                 .playlist_ref()
-                .get_index()
+                .get_playing_index()
             {
                 context
                     .events

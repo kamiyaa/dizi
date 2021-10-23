@@ -95,28 +95,28 @@ pub fn execute_request(context: &mut AppContext, request: &ClientRequest) -> Diz
         } => {}
         ClientRequest::PlaylistPlay { index: None } => {
             let playlist = context.server_state_ref().player_state_ref().playlist_ref();
-            if let Some(index) = playlist.get_index() {
+            if let Some(index) = playlist.get_cursor_index() {
                 let request = ClientRequest::PlaylistPlay { index: Some(index) };
                 send_client_request(context, &request)?;
             }
         }
         ClientRequest::PlaylistRemove { index: None } => {
             let playlist = context.server_state_ref().player_state_ref().playlist_ref();
-            if let Some(index) = playlist.get_index() {
+            if let Some(index) = playlist.get_cursor_index() {
                 let request = ClientRequest::PlaylistRemove { index: Some(index) };
                 send_client_request(context, &request)?;
             }
         }
         ClientRequest::PlaylistMoveUp { index: None } => {
             let playlist = context.server_state_ref().player_state_ref().playlist_ref();
-            if let Some(index) = playlist.get_index() {
+            if let Some(index) = playlist.get_cursor_index() {
                 let request = ClientRequest::PlaylistMoveUp { index: Some(index) };
                 send_client_request(context, &request)?;
             }
         }
-        ClientRequest::PlaylistMoveDown { index: Noe } => {
+        ClientRequest::PlaylistMoveDown { index: None } => {
             let playlist = context.server_state_ref().player_state_ref().playlist_ref();
-            if let Some(index) = playlist.get_index() {
+            if let Some(index) = playlist.get_cursor_index() {
                 let request = ClientRequest::PlaylistMoveDown { index: Some(index) };
                 send_client_request(context, &request)?;
             }

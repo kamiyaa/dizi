@@ -11,7 +11,8 @@ use crate::song::Song;
 pub struct Playlist {
     #[serde(rename = "list")]
     _list: Vec<Song>,
-    index: usize,
+    cursor_index: Option<usize>,
+    playing_index: Option<usize>,
 }
 
 impl Playlist {
@@ -20,7 +21,7 @@ impl Playlist {
     }
 
     pub fn first_index_for_viewport(&self, viewport_height: usize) -> usize {
-        match self.get_index() {
+        match self.get_cursor_index() {
             Some(index) => index / viewport_height as usize * viewport_height as usize,
             None => 0,
         }
@@ -37,26 +38,35 @@ impl Playlist {
     pub fn remove_song(&mut self, index: usize) -> Song {
         let song = self.list_mut().remove(index);
         if self.list_ref().is_empty() {
-            self.index = 0;
-        } else if self.index >= self.list_ref().len() {
-            self.index = self.list_ref().len() - 1;
+            self.cursor_index = None;
+        } else if let Some(index) = self.get_cursor_index() {
+            if index >= self.list_ref().len() {
+                self.set_cursor_index(Some(self.list_ref().len() - 1));
+            }
         }
         song
     }
 
-    pub fn get_index(&self) -> Option<usize> {
-        if self.list_ref().is_empty() {
-            None
-        } else {
-            Some(self.index)
-        }
+    pub fn get_cursor_index(&self) -> Option<usize> {
+        self.cursor_index
     }
-    pub fn set_index(&mut self, index: usize) {
-        self.index = index;
+    pub fn set_cursor_index(&mut self, index: Option<usize>) {
+        self.cursor_index = index;
+    }
+
+    pub fn get_playing_index(&self) -> Option<usize> {
+        self.playing_index
+    }
+    pub fn set_playing_index(&mut self, index: Option<usize>) {
+        self.playing_index = index;
     }
 
     pub fn len(&self) -> usize {
         self._list.len()
+    }
+
+    pub fn is_empty(&self) -> bool {
+        self._list.is_empty()
     }
 
     pub fn list_ref(&self) -> &Vec<Song> {
@@ -71,7 +81,8 @@ impl std::default::Default for Playlist {
     fn default() -> Self {
         Self {
             _list: Vec::new(),
-            index: 0,
+            cursor_index: None,
+            playing_index: None,
         }
     }
 }
@@ -152,6 +163,13 @@ impl DirlistPlaylist {
             _list: results,
             index: 0,
         })
+    }
+
+    pub fn set_playing_index(&mut self, index: usize) {
+        self.index = index;
+    }
+    pub fn get_playing_index(&self) -> usize {
+        self.index
     }
 
     pub fn len(&self) -> usize {

@@ -45,7 +45,9 @@ pub fn render_widget(
             border,
             title,
         } => {
-            let border_style = if current_view_widget == *widget {
+            let focused = current_view_widget == *widget;
+
+            let border_style = if focused {
                 focused_panel_style
             } else {
                 unfocused_panel_style
@@ -62,12 +64,12 @@ pub fn render_widget(
                 area
             };
             match widget {
-                WidgetType::FileBrowser => TuiFolderView::new(context).render(rect, buf),
+                WidgetType::FileBrowser => TuiFolderView::new(context, focused).render(rect, buf),
                 WidgetType::MusicPlayer => {
                     TuiPlayer::new(context.server_state_ref().player_state_ref()).render(rect, buf)
                 }
                 WidgetType::Playlist => {
-                    TuiPlaylist::new(context.server_state_ref().player_state_ref())
+                    TuiPlaylist::new(context.server_state_ref().player_state_ref(), focused)
                         .render(rect, buf)
                 }
             }

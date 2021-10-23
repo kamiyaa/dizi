@@ -38,7 +38,7 @@ pub fn playlist_open(context: &mut AppContext) -> DiziResult<()> {
         .server_state_ref()
         .player_state_ref()
         .playlist_ref()
-        .get_index()
+        .get_cursor_index()
     {
         let request = ClientRequest::PlaylistPlay { index: Some(index) };
         send_client_request(context, &request)?;
