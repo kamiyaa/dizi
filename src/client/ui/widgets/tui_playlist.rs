@@ -38,30 +38,36 @@ impl<'a> Widget for TuiPlaylist<'a> {
         let x = area.left();
         let y = area.top();
 
-        let drawing_width = area.width as usize;
-        let skip_dist = self
-            .player
-            .playlist_ref()
-            .first_index_for_viewport(drawing_width);
+        let playlist = self.player.playlist_ref();
 
-        let curr_index = self.player.playlist_ref().get_cursor_index();
+        let curr_index = playlist.get_cursor_index();
+
+        let drawing_width = area.width as usize;
+        let skip_dist = playlist.first_index_for_viewport(area.height as usize);
 
         // draw every entry
-        self.player
-            .playlist_ref()
+        playlist
             .list_ref()
             .iter()
+            .enumerate()
             .skip(skip_dist)
             .enumerate()
             .take(area.height as usize)
-            .for_each(|(i, entry)| {
+            .for_each(|(offset, (i, entry))| {
                 let style = Style::default();
-                print_entry(buf, entry, style, (x + 1, y + i as u16), drawing_width - 1);
+                print_entry(
+                    buf,
+                    entry,
+                    i,
+                    style,
+                    (x + 1, y + offset as u16),
+                    drawing_width - 1,
+                );
             });
 
         if self.focused {
             if let Some(curr_index) = curr_index {
-                let song = &self.player.playlist_ref().list_ref()[curr_index];
+                let song = &playlist.list_ref()[curr_index];
 
                 // draw selected entry in a different style
                 let screen_index = curr_index % area.height as usize;
@@ -74,6 +80,7 @@ impl<'a> Widget for TuiPlaylist<'a> {
                 print_entry(
                     buf,
                     song,
+                    curr_index,
                     style,
                     (x + 1, y + screen_index as u16),
                     drawing_width - 1,
@@ -86,15 +93,16 @@ impl<'a> Widget for TuiPlaylist<'a> {
 fn print_entry(
     buf: &mut Buffer,
     entry: &Song,
+    index: usize,
     style: Style,
     (x, y): (u16, u16),
     drawing_width: usize,
 ) {
-    let left_label_original = entry.file_name();
+    let left_label_original = format!("{} {}", index + 1, entry.file_name());
     let right_label_original = "";
 
     let (left_label, right_label) =
-        factor_labels_for_entry(left_label_original, right_label_original, drawing_width);
+        factor_labels_for_entry(&left_label_original, right_label_original, drawing_width);
 
     let right_width = right_label.width();
     buf.set_stringn(x, y, left_label, drawing_width, style);
