@@ -1,4 +1,5 @@
-use std::path::Path;
+use std::io;
+use std::path::{Path, PathBuf};
 use std::sync::mpsc;
 use std::thread;
 use std::time;
@@ -14,6 +15,23 @@ use dizi_lib::song::Song;
 use crate::audio::{player_stream, PlayerRequest};
 use crate::config;
 use crate::events::ServerEventSender;
+
+pub fn read_playlist(path: &Path) -> io::Result<Playlist> {
+    let mut reader = m3u::Reader::open(path)?;
+    let read_playlist: Vec<_> = reader.entries().map(|entry| entry.unwrap()).collect();
+    let mut playlist = Playlist::new();
+    for entry in &read_playlist {
+        match entry {
+            m3u::Entry::Path(p) => {
+                if let Ok(song) = Song::new(&p) {
+                    playlist.append_song(song);
+                }
+            }
+            _ => {}
+        }
+    }
+    Ok(playlist)
+}
 
 #[derive(Debug)]
 pub struct Player {
@@ -52,7 +70,11 @@ impl Player {
             player_stream(config_t2, player_res_tx, player_req_rx, event_tx2)
         });
 
-        let player_config = config_t.server_ref().player_ref();
+        let server_config = config_t.server_ref();
+        let player_config = server_config.player_ref();
+
+        let playlist =
+            read_playlist(server_config.playlist_ref()).unwrap_or_else(|_| Playlist::new());
 
         Self {
             current_song: None,
@@ -68,7 +90,7 @@ impl Player {
 
             event_tx,
 
-            playlist: Playlist::new(),
+            playlist,
             dirlist_playlist: DirlistPlaylist::new(),
             player_handle,
             player_req_tx,

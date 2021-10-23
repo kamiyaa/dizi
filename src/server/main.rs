@@ -49,6 +49,8 @@ lazy_static! {
         }
         config_dirs
     };
+
+    static ref HOME_DIR: Option<PathBuf> = dirs_next::home_dir();
 }
 
 #[derive(Clone, Debug, StructOpt)]
@@ -76,10 +78,7 @@ fn main() {
     let res = run_server(args);
 
     match res {
-        Ok(_) => {
-            println!("TODO: saving playlist...");
-            println!("Exiting server");
-        }
+        Ok(_) => {}
         Err(e) => eprintln!("Error: {}", e),
     }
 }

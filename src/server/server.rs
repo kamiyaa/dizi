@@ -51,6 +51,18 @@ pub fn serve(config: AppConfig) -> DiziResult<()> {
         }
     }
 
+    let playlist_path = context.config_ref().server_ref().playlist_ref();
+    let playlist = context.player_context_ref().player_ref().playlist_ref();
+
+    println!("Saving playlist to '{}'", playlist_path.to_string_lossy());
+    let mut file = std::fs::File::create(playlist_path)?;
+    let mut writer = m3u::Writer::new(&mut file);
+    for song in playlist.list_ref() {
+        let entry = m3u::Entry::Path(song.file_path().to_path_buf());
+        writer.write_entry(&entry)?;
+    }
+    println!("Playlist saved!");
+
     Ok(())
 }
 
