@@ -38,7 +38,7 @@ whenever mocp is playing music, other audio/video apps stop working and vice ver
 
 ### Server-side
  - [x] play/pause support
- - [ ] get audio duration
+ - [ ] get audio duration (requires [rodio](https://github.com/RustAudio/rodio) and [symphonia](https://github.com/pdeljanov/Symphonia) to work together on this)
  - [x] volume support
  - [x] directory playing
    - [x] shuffle
