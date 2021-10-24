@@ -11,6 +11,7 @@ whenever mocp is playing music, other audio/video apps stop working and vice ver
 ## Dependencies
  - [cargo](https://github.com/rust-lang/cargo/)
  - [rustc](https://www.rust-lang.org/)
+ - Jack or Alsa or any other audio system [cpal](https://github.com/RustAudio/cpal) supports
 
 ## Building
 ```
@@ -37,21 +38,26 @@ whenever mocp is playing music, other audio/video apps stop working and vice ver
 
 ### Server-side
  - [x] play/pause support
+ - [ ] get audio duration
  - [x] volume support
  - [x] directory playing
    - [x] shuffle
    - [x] repeat
    - [x] next
- - [ ] playlist support
-   - [ ] add/delete/update songs
+   - [ ] sorting
+ - [x] playlist support
+   - [x] add/delete/update songs
    - [ ] shuffle
-   - [ ] repeat
-   - [ ] next
+   - [x] repeat
+   - [x] next
+   - [x] loading
+   - [x] clearing
+   - [x] save on exit
  - [x] show music progress
  - [x] configurable audio system
    - [x] ALSA support
    - [x] JACK support (current default)
-   - [ ] Pipewire support
+   - [ ] Pipewire support (requires [cpal](https://github.com/RustAudio/cpal) to support it)
 
 ### Client-side
  - [x] show hidden files
@@ -60,12 +66,13 @@ whenever mocp is playing music, other audio/video apps stop working and vice ver
    - [x] case-insensitive search
    - [x] skim search (fzf)
  - [x] show player progression
- - [ ] playlist support
+ - [x] playlist support
    - [x] show playlist
-   - [ ] add/delete/update songs
-   - [ ] shuffle
-   - [ ] repeat
-   - [ ] next
+   - [x] add/delete/update songs
+   - [x] shuffle
+   - [x] repeat
+   - [x] next
+   - [x] clearing
  - [ ] show audio metadata
- - [ ] theming support
+ - [x] theming support
  - [x] custom layout support
