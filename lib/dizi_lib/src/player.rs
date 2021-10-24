@@ -1,3 +1,4 @@
+use std::string::ToString;
 use std::time;
 use serde_derive::{Deserialize, Serialize};
 
@@ -9,6 +10,16 @@ pub enum PlayerStatus {
     Playing,
     Paused,
     Stopped,
+}
+
+impl ToString for PlayerStatus {
+    fn to_string(&self) -> String {
+        match *self {
+            Self::Playing => "playing".to_string(),
+            Self::Paused => "paused".to_string(),
+            Self::Stopped => "stopped".to_string(),
+        }
+    }
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize)]

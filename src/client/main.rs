@@ -25,7 +25,6 @@ use crate::config::{
 };
 use crate::context::AppContext;
 use crate::history::DirectoryHistory;
-use crate::run::{run_query, run_ui};
 
 const PROGRAM_NAME: &str = "dizi";
 const CONFIG_FILE: &str = "client.toml";
@@ -71,10 +70,27 @@ lazy_static! {
 
 #[derive(Clone, Debug, StructOpt)]
 pub struct Args {
+    // version
     #[structopt(short = "v", long = "version")]
     version: bool,
+
+    // query
     #[structopt(short = "q", long = "query")]
     query: Option<String>,
+
+    // controls
+    #[structopt(long = "exit")]
+    exit: bool,
+    #[structopt(long = "next")]
+    next: bool,
+    #[structopt(long = "previous")]
+    previous: bool,
+    #[structopt(long = "pause")]
+    pause: bool,
+    #[structopt(long = "resume")]
+    resume: bool,
+    #[structopt(long = "toggle-pause")]
+    toggle_play: bool,
 }
 
 fn run_app(args: Args) -> DiziResult<()> {
@@ -104,25 +120,32 @@ fn run_app(args: Args) -> DiziResult<()> {
 
     // query
     if let Some(query) = args.query {
-        run_query(&mut context, query)?;
+        run::run_query(&mut context, query)?;
         return Ok(());
+    } else if args.exit
+        || args.next
+        || args.previous
+        || args.pause
+        || args.resume
+        || args.toggle_play
+    {
+        run::run_control(&mut context, &args);
+    } else {
+        let keymap = AppKeyMapping::get_config(KEYMAP_FILE);
+        // eprintln!("keymap: {:#?}", keymap);
+
+        let display_options = context
+            .config_ref()
+            .client_ref()
+            .display_options_ref()
+            .clone();
+        context
+            .history_mut()
+            .populate_to_root(cwd.as_path(), &display_options)?;
+
+        let mut backend: ui::TuiBackend = ui::TuiBackend::new()?;
+        run::run_ui(&mut backend, &mut context, keymap)?;
     }
-
-    let keymap = AppKeyMapping::get_config(KEYMAP_FILE);
-    // eprintln!("keymap: {:#?}", keymap);
-
-    let display_options = context
-        .config_ref()
-        .client_ref()
-        .display_options_ref()
-        .clone();
-    context
-        .history_mut()
-        .populate_to_root(cwd.as_path(), &display_options)?;
-
-    let mut backend: ui::TuiBackend = ui::TuiBackend::new()?;
-    run_ui(&mut backend, &mut context, keymap)?;
-
     Ok(())
 }
 

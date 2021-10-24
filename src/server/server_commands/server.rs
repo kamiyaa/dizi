@@ -20,6 +20,10 @@ pub fn query(context: &mut AppContext, query: &str) -> DiziResult<String> {
         .clone_player_state();
 
     if let Some(song) = player_state.get_song() {
+        vars.insert(
+            "player_status".to_string(),
+            player_state.get_player_status().to_string(),
+        );
         vars.insert("file_name".to_string(), song.file_name().to_string());
         vars.insert(
             "file_path".to_string(),
