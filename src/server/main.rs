@@ -10,6 +10,7 @@ mod server_commands;
 use std::path::PathBuf;
 
 use lazy_static::lazy_static;
+use log::{debug, error, info, log_enabled, Level};
 use structopt::StructOpt;
 
 use dizi_lib::error::DiziResult;
@@ -68,12 +69,15 @@ fn run_server(args: Args) -> DiziResult<()> {
 
     let config = AppConfig::get_config(CONFIG_FILE);
 
-    eprintln!("{:#?}", config);
-
+    if log_enabled!(Level::Debug) {
+        debug!("{:#?}", config);
+    }
     server::serve(config)
 }
 
 fn main() {
+    env_logger::init();
+
     let args = Args::from_args();
     let res = run_server(args);
 

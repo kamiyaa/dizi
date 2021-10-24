@@ -5,6 +5,7 @@ use std::process::Command;
 use std::sync::mpsc;
 use std::thread;
 
+use log::{debug, log_enabled, Level};
 use uuid::Uuid;
 
 use dizi_lib::error::DiziResult;
@@ -46,7 +47,9 @@ pub fn serve(config: AppConfig) -> DiziResult<()> {
             AppEvent::Client(event) => {
                 let res = process_client_request(&mut context, event);
                 if let Err(err) = res {
-                    eprintln!("Error: {:?}", err);
+                    if log_enabled!(Level::Debug) {
+                        debug!("Error: {:?}", err);
+                    }
                     context
                         .events
                         .broadcast_event(ServerBroadcastEvent::ServerError {
@@ -56,8 +59,10 @@ pub fn serve(config: AppConfig) -> DiziResult<()> {
             }
             AppEvent::Server(event) => {
                 let res = process_server_event(&mut context, event);
-                if let Err(err) = res {
-                    eprintln!("Error: {:?}", err);
+                if log_enabled!(Level::Debug) {
+                    if let Err(err) = res {
+                        debug!("Error: {:?}", err);
+                    }
                 }
             }
         }
@@ -66,15 +71,19 @@ pub fn serve(config: AppConfig) -> DiziResult<()> {
     let playlist_path = context.config_ref().server_ref().playlist_ref();
     let playlist = context.player_context_ref().player_ref().playlist_ref();
 
-    println!("Saving playlist to '{}'", playlist_path.to_string_lossy());
+    if log_enabled!(Level::Debug) {
+        debug!("Saving playlist to '{}'", playlist_path.to_string_lossy());
+    }
+
     let mut file = std::fs::File::create(playlist_path)?;
     let mut writer = m3u::Writer::new(&mut file);
     for song in playlist.list_ref() {
         let entry = m3u::Entry::Path(song.file_path().to_path_buf());
         writer.write_entry(&entry)?;
     }
-    println!("Playlist saved!");
-
+    if log_enabled!(Level::Debug) {
+        debug!("Playlist saved!");
+    }
     Ok(())
 }
 
@@ -124,8 +133,6 @@ pub fn process_done_song(context: &mut AppContext) -> DiziResult<()> {
         if repeat_enabled {
             player_play_again(context)?;
             send_latest_song_info(context)?;
-        } else {
-            eprintln!("Done playing song!");
         }
     } else {
         let len1 = context

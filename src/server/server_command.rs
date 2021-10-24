@@ -5,11 +5,15 @@ use dizi_lib::request::client::ClientRequest;
 use dizi_lib::response::server::ServerBroadcastEvent;
 use dizi_lib::song::Song;
 
+use log::{debug, log_enabled, Level};
+
 use crate::context::AppContext;
 use crate::server_commands::*;
 
 pub fn process_client_request(context: &mut AppContext, event: ClientRequest) -> DiziResult<()> {
-    eprintln!("request: {:?}", event);
+    if log_enabled!(Level::Debug) {
+        debug!("request: {:?}", event);
+    }
     match event {
         ClientRequest::ServerQuit => {
             server::quit_server(context)?;
@@ -59,12 +63,6 @@ pub fn process_client_request(context: &mut AppContext, event: ClientRequest) ->
             context
                 .events
                 .broadcast_event(ServerBroadcastEvent::PlayerResume);
-        }
-        ClientRequest::PlayerGetVolume => {
-            eprintln!(
-                "Error: '{:?}' not implemented",
-                ClientRequest::PlayerGetVolume
-            );
         }
         ClientRequest::PlayerVolumeUp { amount } => {
             let volume = player_volume_increase(context, amount)?;
@@ -207,7 +205,9 @@ pub fn process_client_request(context: &mut AppContext, event: ClientRequest) ->
                 .broadcast_event(ServerBroadcastEvent::PlayerShuffle { on: !enabled });
         }
         s => {
-            eprintln!("Error: '{:?}' not implemented", s);
+            if log_enabled!(Level::Debug) {
+                debug!("'{:?}' not implemented", s);
+            }
         }
     }
     Ok(())

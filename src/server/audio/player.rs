@@ -4,6 +4,8 @@ use std::sync::mpsc;
 use std::thread;
 use std::time;
 
+use log::{debug, log_enabled, Level};
+
 use rand::seq::SliceRandom;
 use rand::thread_rng;
 
@@ -78,7 +80,11 @@ impl Player {
             let res = player_stream(config_t2, player_res_tx, player_req_rx, event_tx2);
             match res.as_ref() {
                 Ok(_) => {}
-                Err(e) => eprintln!("PlayerStream: {:?}", e),
+                Err(e) => {
+                    if log_enabled!(Level::Debug) {
+                        debug!("PlayerStream: {:?}", e);
+                    }
+                }
             }
             res
         });

@@ -8,6 +8,8 @@ use std::time::Duration;
 
 use cpal::traits::HostTrait;
 
+use log::{debug, log_enabled, Level};
+
 use rodio::queue;
 use rodio::source::{Amplify, Pausable, PeriodicAccess, Source, Stoppable};
 use rodio::{Decoder, OutputStream};
@@ -232,7 +234,9 @@ pub fn player_stream(
                 player_stream.player_res().send(Ok(()))?;
             }
             s => {
-                eprintln!("Not implemented '{:?}'", s);
+                if log_enabled!(Level::Debug) {
+                    debug!("Not implemented '{:?}'", s);
+                }
             }
         }
     }
@@ -240,11 +244,12 @@ pub fn player_stream(
 }
 
 pub fn get_default_output_device(host_id: cpal::HostId) -> cpal::Device {
-    eprintln!("Available audio systems:");
-    for host in cpal::available_hosts() {
-        eprintln!("host: {:?}", host);
+    if log_enabled!(Level::Debug) {
+        debug!("Available audio systems:");
+        for host in cpal::available_hosts() {
+            debug!("host: {:?}", host);
+        }
     }
-
     let host = cpal::host_from_id(
         cpal::available_hosts()
             .into_iter()

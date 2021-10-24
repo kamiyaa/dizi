@@ -3,6 +3,8 @@ use std::sync::mpsc;
 use std::thread;
 use std::time;
 
+use log::{debug, log_enabled, Level};
+
 use dizi_lib::request::client::ClientRequest;
 use dizi_lib::response::server::ServerBroadcastEvent;
 
@@ -103,11 +105,13 @@ impl Events {
     }
 
     pub fn broadcast_event(&mut self, event: ServerBroadcastEvent) {
-        eprintln!(
-            "Server broadcast: {:?} to {} clients",
-            event,
-            self.server_broadcast_listeners.len()
-        );
+        if log_enabled!(Level::Debug) {
+            debug!(
+                "Server broadcast: {:?} to {} clients",
+                event,
+                self.server_broadcast_listeners.len()
+            );
+        }
         for (_, server_tx) in self.server_broadcast_listeners.iter() {
             let _ = server_tx.send(event.clone());
         }
