@@ -112,7 +112,7 @@ pub fn process_client_request(context: &mut AppContext, event: ClientRequest) ->
                 .len();
 
             let len = if len1 < len2 { len2 } else { len1 };
-            for i in (1..len) {
+            for i in 1..len {
                 if player_play_next(context, i).is_err() {
                     continue;
                 }

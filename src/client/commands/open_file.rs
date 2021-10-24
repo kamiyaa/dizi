@@ -64,7 +64,3 @@ pub fn playlist_open(context: &mut AppContext) -> DiziResult<()> {
     }
     Ok(())
 }
-
-pub fn playlist_load(context: &mut AppContext) -> DiziResult<()> {
-    Ok(())
-}

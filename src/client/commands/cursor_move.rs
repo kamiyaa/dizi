@@ -35,7 +35,7 @@ fn get_curr_dirlist_len(context: &AppContext) -> Option<usize> {
     context.curr_list_ref().map(|list| list.len())
 }
 fn set_curr_dirlist_index(context: &mut AppContext, new_index: usize) {
-    let mut new_index = new_index;
+    let new_index = new_index;
     if let Some(curr_list) = context.curr_list_mut() {
         if curr_list.is_empty() {
             return;
@@ -134,7 +134,7 @@ pub fn end(context: &mut AppContext) -> DiziResult<()> {
     Ok(())
 }
 
-fn get_page_size(context: &AppContext, backend: &TuiBackend) -> Option<usize> {
+fn get_page_size(_context: &AppContext, _backend: &TuiBackend) -> Option<usize> {
     Some(10)
 }
 

@@ -4,13 +4,11 @@ use std::io::Write;
 use termion::raw::{IntoRawMode, RawTerminal};
 use termion::screen::AlternateScreen;
 use tui::backend::TermionBackend;
-use tui::layout::{Constraint, Direction, Layout, Rect};
-use tui::widgets::{Block, Borders, Widget};
+
+use tui::widgets::Widget;
 
 #[cfg(feature = "mouse")]
 use termion::input::MouseTerminal;
-
-use crate::config::option::DisplayOption;
 
 trait New {
     fn new() -> std::io::Result<Self>

@@ -5,7 +5,6 @@ use serde_derive::Deserialize;
 use shellexpand::tilde_with_context;
 
 use super::{PlayerOption, PlayerOptionCrude};
-use crate::HOME_DIR;
 
 fn default_socket_string() -> String {
     "/tmp/dizi-server-socket".to_string()

@@ -1,11 +1,7 @@
-use globset::Glob;
-
-use dizi_lib::error::{DiziError, DiziErrorKind, DiziResult};
+use dizi_lib::error::DiziResult;
 
 use crate::config::option::SelectOption;
 use crate::context::AppContext;
-
-use super::cursor_move;
 
 pub fn select_files(
     context: &mut AppContext,
@@ -19,14 +15,14 @@ pub fn select_files(
     }
 }
 
-fn select_without_pattern(context: &mut AppContext, options: &SelectOption) -> DiziResult<()> {
+fn select_without_pattern(_context: &mut AppContext, _options: &SelectOption) -> DiziResult<()> {
     Ok(())
 }
 
 fn select_with_pattern(
-    context: &mut AppContext,
-    pattern: &str,
-    options: &SelectOption,
+    _context: &mut AppContext,
+    _pattern: &str,
+    _options: &SelectOption,
 ) -> DiziResult<()> {
     Ok(())
 }

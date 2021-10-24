@@ -14,7 +14,7 @@ pub fn soft_reload(context: &mut AppContext) -> std::io::Result<()> {
 
     if !paths.is_empty() {
         let options = context.config_ref().display_options_ref().clone();
-        let mut history = context.history_mut();
+        let history = context.history_mut();
         for path in paths {
             let new_dirlist = create_dirlist_with_history(history, path.as_path(), &options)?;
             history.insert(path, new_dirlist);
@@ -31,7 +31,7 @@ pub fn reload(context: &mut AppContext) -> std::io::Result<()> {
 
     if !paths.is_empty() {
         let options = context.config_ref().display_options_ref().clone();
-        let mut history = context.history_mut();
+        let history = context.history_mut();
         for path in paths {
             let new_dirlist = create_dirlist_with_history(history, path.as_path(), &options)?;
             history.insert(path, new_dirlist);

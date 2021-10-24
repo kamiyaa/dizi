@@ -1,12 +1,7 @@
 use serde_derive::Deserialize;
 use std::convert::From;
-use std::str::FromStr;
 
-use tui::layout::Direction;
-
-use dizi_lib::error::{DiziError, DiziErrorKind, DiziResult};
-
-use crate::config::option::{LayoutComposition, WidgetType};
+use crate::config::option::LayoutComposition;
 use crate::config::{parse_json_to_config, JsonConfigFile};
 
 #[derive(Clone, Debug, Deserialize)]

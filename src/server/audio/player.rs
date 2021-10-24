@@ -150,7 +150,7 @@ impl Player {
     pub fn play(&mut self, song: &Song) -> DiziResult<()> {
         self.player_stream_req()
             .send(PlayerRequest::Play(song.clone()))?;
-        let resp = self.player_stream_res().recv()??;
+        let _resp = self.player_stream_res().recv()??;
 
         self.status = PlayerStatus::Playing;
         self.current_song = Some(song.clone());

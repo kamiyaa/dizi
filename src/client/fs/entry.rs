@@ -14,10 +14,10 @@ pub struct DirEntry {
 }
 
 impl DirEntry {
-    pub fn from(direntry: &fs::DirEntry, options: &DisplayOption) -> io::Result<Self> {
+    pub fn from(direntry: &fs::DirEntry, _options: &DisplayOption) -> io::Result<Self> {
         let path = direntry.path();
 
-        let mut metadata = Metadata::from(&path)?;
+        let metadata = Metadata::from(&path)?;
         let name = direntry
             .file_name()
             .as_os_str()

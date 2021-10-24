@@ -39,7 +39,7 @@ pub fn search_glob(context: &mut AppContext, pattern: &str) -> DiziResult<()> {
         .compile_matcher();
 
     let index = cursor_move::cursor_index(context, widget);
-    if let Some(index) = index {
+    if index.is_some() {
         let index = search_glob_fwd(context.curr_list_ref().unwrap(), &glob);
         if let Some(index) = index {
             cursor_move::cursor_move(context, widget, index);

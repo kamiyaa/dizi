@@ -1,6 +1,6 @@
 use tui::buffer::Buffer;
 use tui::layout::Rect;
-use tui::style::{Color, Style};
+
 use tui::widgets::Widget;
 
 use crate::context::AppContext;
@@ -27,12 +27,12 @@ impl<'a> TuiFolderView<'a> {
 impl<'a> Widget for TuiFolderView<'a> {
     fn render(self, area: Rect, buf: &mut Buffer) {
         let curr_list = self.context.curr_list_ref();
-        let curr_entry = curr_list.and_then(|c| c.curr_entry_ref());
+        let _curr_entry = curr_list.and_then(|c| c.curr_entry_ref());
 
         // render current view
         if let Some(list) = curr_list.as_ref() {
             TuiDirListDetailed::new(list, self.focused).render(area, buf);
-            let rect = Rect {
+            let _rect = Rect {
                 x: 0,
                 y: area.height - 1,
                 width: area.width,

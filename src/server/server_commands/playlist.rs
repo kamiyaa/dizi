@@ -1,7 +1,7 @@
 use std::path::Path;
 
 use dizi_lib::error::{DiziError, DiziErrorKind, DiziResult};
-use dizi_lib::player::PlayerStatus;
+
 use dizi_lib::song::Song;
 
 use crate::audio::read_playlist;
@@ -19,7 +19,7 @@ pub fn playlist_play(context: &mut AppContext, index: usize) -> DiziResult<()> {
 }
 
 pub fn playlist_load(context: &mut AppContext, cwd: &Path, path: &Path) -> DiziResult<()> {
-    let mut playlist = context.player_context_mut().player_mut().playlist_mut();
+    let playlist = context.player_context_mut().player_mut().playlist_mut();
     if !playlist.is_empty() {
         return Err(DiziError::new(
             DiziErrorKind::InvalidParameters,
@@ -33,7 +33,7 @@ pub fn playlist_load(context: &mut AppContext, cwd: &Path, path: &Path) -> DiziR
 }
 
 pub fn playlist_clear(context: &mut AppContext) -> DiziResult<()> {
-    let mut playlist = context.player_context_mut().player_mut().playlist_mut();
+    let playlist = context.player_context_mut().player_mut().playlist_mut();
     playlist.clear();
     Ok(())
 }
@@ -72,7 +72,7 @@ pub fn playlist_move_up(context: &mut AppContext, index: usize) -> DiziResult<()
         ));
     }
 
-    let mut playlist = context.player_context_mut().player_mut().playlist_mut();
+    let playlist = context.player_context_mut().player_mut().playlist_mut();
 
     if index >= playlist.len() {
         return Err(DiziError::new(

@@ -2,7 +2,6 @@ use serde_derive::Deserialize;
 
 use std::collections::{hash_map::Entry, HashMap};
 use std::convert::{AsMut, AsRef, From};
-use std::str::FromStr;
 
 use termion::event::Event;
 #[cfg(feature = "mouse")]

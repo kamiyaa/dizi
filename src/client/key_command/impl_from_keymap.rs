@@ -1,11 +1,9 @@
 use std::path;
-use std::time;
 
 use dirs_next::home_dir;
 use shellexpand::tilde_with_context;
 
 use dizi_lib::error::{DiziError, DiziErrorKind, DiziResult};
-use dizi_lib::request::client::ClientRequest;
 
 use crate::config::keymap::CommandKeymap;
 use crate::config::option::SelectOption;

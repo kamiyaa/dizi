@@ -1,6 +1,6 @@
 use tui::buffer::Buffer;
 use tui::layout::{Constraint, Direction, Layout, Rect};
-use tui::style::{Color, Modifier, Style};
+use tui::style::{Color, Style};
 use tui::symbols::line::{HORIZONTAL_DOWN, HORIZONTAL_UP};
 use tui::text::Span;
 use tui::widgets::{Block, Borders, Paragraph, Widget, Wrap};
@@ -41,9 +41,9 @@ pub fn render_widget(
     match layout {
         LayoutComposition::Simple {
             widget,
-            ratio,
+            ratio: _,
             border,
-            title,
+            title: _,
         } => {
             let focused = current_view_widget == *widget;
 
@@ -77,7 +77,7 @@ pub fn render_widget(
         LayoutComposition::Composite {
             direction,
             widgets,
-            ratio,
+            ratio: _,
         } => {
             let widget_sizes: Vec<usize> = widgets.iter().map(|w| w.ratio()).collect();
             let widget_size_sum = widget_sizes.iter().map(|n| *n as u32).sum();
@@ -100,7 +100,7 @@ pub fn render_widget(
 impl<'a> Widget for TuiView<'a> {
     fn render(self, area: Rect, buf: &mut Buffer) {
         let default_layout = [Constraint::Ratio(1, 1)];
-        let mut layout_rect = Layout::default()
+        let layout_rect = Layout::default()
             .direction(Direction::Horizontal)
             .vertical_margin(1)
             .constraints(default_layout)

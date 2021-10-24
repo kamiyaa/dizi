@@ -53,7 +53,7 @@ pub fn run_ui(
         };
 
         match event {
-            AppEvent::Termion(Event::Mouse(event)) => {
+            AppEvent::Termion(Event::Mouse(_event)) => {
                 context.flush_event();
             }
             AppEvent::Termion(key) => {
@@ -173,7 +173,7 @@ fn query_local(context: &AppContext, query: &str) -> DiziResult<String> {
 
     match strfmt(&query, &vars) {
         Ok(s) => Ok(s),
-        Err(e) => Err(DiziError::new(
+        Err(_e) => Err(DiziError::new(
             DiziErrorKind::InvalidParameters,
             "Failed to process query".to_string(),
         )),

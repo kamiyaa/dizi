@@ -1,17 +1,13 @@
-use std::path::Path;
-use std::time;
-
 use tui::buffer::Buffer;
 use tui::layout::Rect;
 use tui::style::{Color, Modifier, Style};
-use tui::widgets::{Paragraph, Widget};
+use tui::widgets::Widget;
 
 use unicode_width::UnicodeWidthStr;
 
-use dizi_lib::player::{PlayerState, PlayerStatus};
+use dizi_lib::player::PlayerState;
 use dizi_lib::song::Song;
 
-use crate::util::format;
 use crate::util::string::UnicodeTruncate;
 
 const MIN_LEFT_LABEL_WIDTH: i32 = 15;

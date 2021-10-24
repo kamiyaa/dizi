@@ -1,5 +1,5 @@
 use signal_hook::consts::signal;
-use termion::event::{Event, Key, MouseButton, MouseEvent};
+use termion::event::{Event, Key};
 
 use dizi_lib::error::DiziResult;
 use dizi_lib::player::PlayerStatus;
@@ -13,7 +13,6 @@ use crate::fs::DirList;
 use crate::key_command::{Command, CommandKeybind};
 use crate::ui;
 use crate::ui::views::TuiCommandMenu;
-use crate::util::format;
 
 pub fn get_input_while_composite<'a>(
     backend: &mut ui::TuiBackend,
@@ -108,12 +107,12 @@ pub fn process_server_event(context: &mut AppContext, s: &str) -> DiziResult<()>
             context.server_state_mut().player_mut().set_elapsed(elapsed);
         }
         ServerBroadcastEvent::PlaylistSwapMove { index1, index2 } => {
-            let mut playlist = context.server_state_mut().player_mut().playlist_mut();
+            let playlist = context.server_state_mut().player_mut().playlist_mut();
             playlist.list_mut().swap(index1, index2);
             playlist.set_cursor_index(Some(index2));
         }
         ServerBroadcastEvent::PlaylistClear => {
-            let mut playlist = context.server_state_mut().player_mut().playlist_mut();
+            let playlist = context.server_state_mut().player_mut().playlist_mut();
             playlist.clear();
             playlist.set_cursor_index(None);
         }
@@ -163,7 +162,7 @@ pub fn process_server_event(context: &mut AppContext, s: &str) -> DiziResult<()>
                 .playlist_ref()
                 .list_ref()[index]
                 .clone();
-            let mut player = context.server_state_mut().player_mut();
+            let player = context.server_state_mut().player_mut();
             player.set_song(Some(song));
             player.set_player_status(PlayerStatus::Playing);
             player.set_playlist_status(PlaylistStatus::PlaylistFile);

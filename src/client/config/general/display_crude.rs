@@ -1,10 +1,6 @@
 use std::convert::From;
-use std::path;
 
 use serde_derive::Deserialize;
-use serde_json::Value;
-
-use tui::layout::Constraint;
 
 use crate::config::option::DisplayOption;
 

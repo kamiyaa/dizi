@@ -58,7 +58,7 @@ impl RawAppStyle {
             "light_cyan" => style::Color::LightCyan,
             "white" => style::Color::White,
             "reset" => style::Color::Reset,
-            s => style::Color::Reset,
+            _s => style::Color::Reset,
         }
     }
 }

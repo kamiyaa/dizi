@@ -85,7 +85,6 @@ pub fn player_play_again(context: &mut AppContext) -> DiziResult<()> {
                     .player_ref()
                     .dirlist_playlist_ref();
                 let index = playlist.index;
-                let len = playlist.len();
                 let next_song_path = &playlist.list_ref()[index];
                 Song::new(next_song_path)?
             };
@@ -97,11 +96,6 @@ pub fn player_play_again(context: &mut AppContext) -> DiziResult<()> {
                 .player_ref()
                 .playlist_ref()
                 .get_playing_index();
-            let len = context
-                .player_context_ref()
-                .player_ref()
-                .playlist_ref()
-                .len();
             if let Some(index) = index {
                 context
                     .player_context_mut()

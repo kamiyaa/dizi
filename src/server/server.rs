@@ -141,7 +141,7 @@ pub fn process_done_song(context: &mut AppContext) -> DiziResult<()> {
             .len();
 
         let len = if len1 < len2 { len2 } else { len1 };
-        for i in (1..len) {
+        for i in 1..len {
             if player_play_next(context, i).is_err() {
                 continue;
             }

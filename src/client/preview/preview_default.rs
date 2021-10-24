@@ -7,7 +7,7 @@ use crate::ui::TuiBackend;
 
 pub fn load_preview_path(
     context: &mut AppContext,
-    backend: &mut TuiBackend,
+    _backend: &mut TuiBackend,
     p: path::PathBuf,
     metadata: Metadata,
 ) {
