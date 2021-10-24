@@ -62,6 +62,7 @@ pub fn process_server_event(context: &mut AppContext, s: &str) -> DiziResult<()>
                 .message_queue_mut()
                 .push_error(format!("Server: {}", msg));
         }
+        ServerBroadcastEvent::ServerQuery { .. } => {}
         ServerBroadcastEvent::PlayerState { mut state } => {
             if !state.playlist_ref().is_empty() {
                 state.playlist_mut().set_cursor_index(Some(0));
@@ -171,7 +172,7 @@ pub fn process_server_event(context: &mut AppContext, s: &str) -> DiziResult<()>
         s => {
             context
                 .message_queue_mut()
-                .push_error(format!("Unknown command: {:?}", s));
+                .push_error(format!("Unimplemented command: {:?}", s));
         }
     }
     Ok(())

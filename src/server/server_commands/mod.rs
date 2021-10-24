@@ -1,7 +1,7 @@
 pub mod player;
 pub mod playlist;
-pub mod quit;
+pub mod server;
 
 pub use self::player::*;
 pub use self::playlist::*;
-pub use self::quit::*;
+pub use self::server::*;

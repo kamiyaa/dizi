@@ -8,12 +8,15 @@ use crate::error::{DiziError, DiziErrorKind, DiziResult};
 #[derive(Clone, Debug, Deserialize, Serialize)]
 #[serde(tag = "request")]
 pub enum ClientRequest {
-    // quit
-    #[serde(rename = "/client/leave")]
-    Leave { uuid: String },
     // quit server
     #[serde(rename = "/server/quit")]
     ServerQuit,
+    #[serde(rename = "/server/query")]
+    ServerQuery { query: String },
+
+    // client left
+    #[serde(rename = "/client/leave")]
+    ClientLeave { uuid: String },
 
     // player requests
     #[serde(rename = "/player/state")]
@@ -75,8 +78,9 @@ pub enum ClientRequest {
 impl ClientRequest {
     pub fn api_path(&self) -> &'static str {
         match &*self {
-            Self::Leave { .. } => "/client/leave",
+            Self::ClientLeave { .. } => "/client/leave",
             Self::ServerQuit => "/server/quit",
+            Self::ServerQuery { .. } => "/server/query",
 
             Self::PlayerState => "/player/state",
             Self::PlayerFilePlay { .. } => "/player/play/file",
@@ -109,9 +113,10 @@ impl ClientRequest {
 
     pub fn parse_str(s: &str, args: &str) -> DiziResult<Self> {
         match s {
-            "/client/leave" => Ok(Self::Leave { uuid: "".to_string() } ),
-
             "/server/quit" => Ok(Self::ServerQuit),
+            "/server/query" => Ok(Self::ServerQuery { query: "".to_string() } ),
+
+            "/client/leave" => Ok(Self::ClientLeave { uuid: "".to_string() } ),
 
             "/player/state" => Ok(Self::PlayerState),
             "/player/play/file" => Ok(Self::PlayerFilePlay { path: None }),

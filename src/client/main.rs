@@ -25,7 +25,7 @@ use crate::config::{
 };
 use crate::context::AppContext;
 use crate::history::DirectoryHistory;
-use crate::run::run;
+use crate::run::{run_query, run_ui};
 
 const PROGRAM_NAME: &str = "dizi";
 const CONFIG_FILE: &str = "client.toml";
@@ -73,9 +73,12 @@ lazy_static! {
 pub struct Args {
     #[structopt(short = "v", long = "version")]
     version: bool,
+    #[structopt(short = "q", long = "query")]
+    query: Option<String>,
 }
 
 fn run_app(args: Args) -> DiziResult<()> {
+    // print version
     if args.version {
         let version = env!("CARGO_PKG_VERSION");
         println!("{}", version);
@@ -83,10 +86,6 @@ fn run_app(args: Args) -> DiziResult<()> {
     }
 
     let config = AppConfig::get_config(CONFIG_FILE);
-    let keymap = AppKeyMapping::get_config(KEYMAP_FILE);
-
-    // eprintln!("keymap: {:#?}", keymap);
-
     if UnixStream::connect(&config.client_ref().socket).is_err() {
         println!("Server is not running");
         return Ok(()); // don't start server, still need to iron things out
@@ -103,6 +102,15 @@ fn run_app(args: Args) -> DiziResult<()> {
     let cwd = std::env::current_dir()?;
     let mut context = AppContext::new(config, cwd.clone(), stream);
 
+    // query
+    if let Some(query) = args.query {
+        run_query(&mut context, query)?;
+        return Ok(());
+    }
+
+    let keymap = AppKeyMapping::get_config(KEYMAP_FILE);
+    // eprintln!("keymap: {:#?}", keymap);
+
     let display_options = context
         .config_ref()
         .client_ref()
@@ -113,7 +121,7 @@ fn run_app(args: Args) -> DiziResult<()> {
         .populate_to_root(cwd.as_path(), &display_options)?;
 
     let mut backend: ui::TuiBackend = ui::TuiBackend::new()?;
-    run(&mut backend, &mut context, keymap)?;
+    run_ui(&mut backend, &mut context, keymap)?;
 
     Ok(())
 }

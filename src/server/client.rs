@@ -48,7 +48,7 @@ pub fn handle_client(
             }
         }
 
-        let response = ClientRequest::Leave {
+        let response = ClientRequest::ClientLeave {
             uuid: uuid.to_string(),
         };
         let json = serde_json::to_string(&response).unwrap();

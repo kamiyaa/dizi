@@ -12,9 +12,15 @@ pub fn process_client_request(context: &mut AppContext, event: ClientRequest) ->
     eprintln!("request: {:?}", event);
     match event {
         ClientRequest::ServerQuit => {
-            quit::quit_server(context)?;
+            server::quit_server(context)?;
         }
-        ClientRequest::Leave { uuid } => {
+        ClientRequest::ServerQuery { query } => {
+            let res = server::query(context, &query)?;
+            context
+                .events
+                .broadcast_event(ServerBroadcastEvent::ServerQuery { query: res });
+        }
+        ClientRequest::ClientLeave { uuid } => {
             let index = context
                 .events
                 .server_broadcast_listeners

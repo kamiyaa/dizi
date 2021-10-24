@@ -11,6 +11,7 @@ pub enum ServerBroadcastEvent {
     // server is shutting down
     ServerQuit,
     ServerError { msg: String },
+    ServerQuery { query: String },
 
     // player status updates
     PlayerState { state: PlayerState },
