@@ -58,6 +58,11 @@ whenever mocp is playing music, other audio/video apps stop working and vice ver
    - [x] ALSA support
    - [x] JACK support (current default)
    - [ ] Pipewire support (requires [cpal](https://github.com/RustAudio/cpal) to support it)
+ - [ ] querying
+   - [x] file name
+   - [x] file path
+   - [ ] song name
+ - [ ] on song change hook
 
 ### Client-side
  - [x] show hidden files
