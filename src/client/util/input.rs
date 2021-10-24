@@ -57,6 +57,11 @@ pub fn process_server_event(context: &mut AppContext, s: &str) -> DiziResult<()>
         ServerBroadcastEvent::ServerQuit => {
             context.quit = QuitType::Server;
         }
+        ServerBroadcastEvent::ServerError { msg } => {
+            context
+                .message_queue_mut()
+                .push_error(format!("Server: {}", msg));
+        }
         ServerBroadcastEvent::PlayerState { mut state } => {
             if !state.playlist_ref().is_empty() {
                 state.playlist_mut().set_cursor_index(Some(0));

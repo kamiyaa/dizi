@@ -11,7 +11,7 @@ pub enum DiziErrorKind {
 
     // parse error
     ParseError,
-    SerdeJson(serde_json::Error),
+    SerdeJson,
     ClipboardError,
 
     Glob,
@@ -69,8 +69,8 @@ impl From<rodio::decoder::DecoderError> for DiziErrorKind {
 }
 
 impl From<serde_json::Error> for DiziErrorKind {
-    fn from(err: serde_json::Error) -> Self {
-        Self::SerdeJson(err)
+    fn from(_: serde_json::Error) -> Self {
+        Self::SerdeJson
     }
 }
 

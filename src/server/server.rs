@@ -46,6 +46,11 @@ pub fn serve(config: AppConfig) -> DiziResult<()> {
                 let res = process_client_request(&mut context, event);
                 if let Err(err) = res {
                     eprintln!("Error: {:?}", err);
+                    context
+                        .events
+                        .broadcast_event(ServerBroadcastEvent::ServerError {
+                            msg: err.to_string(),
+                        });
                 }
             }
             AppEvent::Server(event) => {

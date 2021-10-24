@@ -2,6 +2,7 @@ use std::time;
 
 use serde_derive::{Deserialize, Serialize};
 
+use crate::error::DiziError;
 use crate::player::PlayerState;
 use crate::song::Song;
 
@@ -9,6 +10,7 @@ use crate::song::Song;
 pub enum ServerBroadcastEvent {
     // server is shutting down
     ServerQuit,
+    ServerError { msg: String },
 
     // player status updates
     PlayerState { state: PlayerState },
