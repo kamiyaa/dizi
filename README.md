@@ -3,7 +3,9 @@ Server-client music player written in Rust
 
 The goal of this project is to create a modern version of [mocp](http://moc.daper.net/) in Rust.
 
-## Why?
+![Alt text](screenshot.png?raw=true "dizi")
+
+## Motivation
 mocp currently interfaces with ALSA to play audio.
 This doesn't play well with [pipewire](https://pipewire.org/)'s pipewire-alsa plugin;
 whenever mocp is playing music, other audio/video apps stop working and vice versa.
@@ -31,7 +33,8 @@ whenever mocp is playing music, other audio/video apps stop working and vice ver
 
 ## Usage
 ```
-~ $ dizi
+~ $ dizi-server     # starts server
+~ $ dizi            # starts server if not already started
 ```
 
 ## TODOs
