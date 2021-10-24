@@ -52,33 +52,25 @@ fn set_curr_dirlist_index(context: &mut AppContext, new_index: usize) {
 fn get_playlist_index(context: &AppContext) -> Option<usize> {
     context
         .server_state_ref()
-        .player_state_ref()
+        .player_ref()
         .playlist_ref()
         .get_cursor_index()
 }
 fn get_playlist_len(context: &AppContext) -> usize {
-    context
-        .server_state_ref()
-        .player_state_ref()
-        .playlist_ref()
-        .len()
+    context.server_state_ref().player_ref().playlist_ref().len()
 }
 fn set_playlist_index(context: &mut AppContext, new_index: usize) {
-    let playlist_len = context
-        .server_state_ref()
-        .player_state_ref()
-        .playlist_ref()
-        .len();
+    let playlist_len = context.server_state_ref().player_ref().playlist_ref().len();
     if playlist_len <= new_index {
         context
             .server_state_mut()
-            .player_state_mut()
+            .player_mut()
             .playlist_mut()
             .set_cursor_index(Some(safe_subtract(playlist_len, 1)));
     } else {
         context
             .server_state_mut()
-            .player_state_mut()
+            .player_mut()
             .playlist_mut()
             .set_cursor_index(Some(new_index));
     }

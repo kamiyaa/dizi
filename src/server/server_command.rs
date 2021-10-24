@@ -129,8 +129,24 @@ pub fn run_command(context: &mut AppContext, event: ClientRequest) -> DiziResult
                 .events
                 .broadcast_event(ServerBroadcastEvent::PlaylistRemove { index });
         }
-        ClientRequest::PlaylistMoveUp { index: Some(index) } => {}
-        ClientRequest::PlaylistMoveDown { index: Some(index) } => {}
+        ClientRequest::PlaylistMoveUp { index: Some(index) } => {
+            playlist::playlist_move_up(context, index)?;
+            context
+                .events
+                .broadcast_event(ServerBroadcastEvent::PlaylistSwapMove {
+                    index1: index,
+                    index2: index - 1,
+                });
+        }
+        ClientRequest::PlaylistMoveDown { index: Some(index) } => {
+            playlist::playlist_move_down(context, index)?;
+            context
+                .events
+                .broadcast_event(ServerBroadcastEvent::PlaylistSwapMove {
+                    index1: index,
+                    index2: index + 1,
+                });
+        }
         ClientRequest::PlaylistPlay { index: Some(index) } => {
             playlist::playlist_play(context, index)?;
             context

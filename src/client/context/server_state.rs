@@ -16,15 +16,15 @@ impl ServerState {
         }
     }
 
-    pub fn set_player_state(&mut self, player: PlayerState) {
+    pub fn set_player(&mut self, player: PlayerState) {
         self.player = player;
     }
 
-    pub fn player_state_ref(&self) -> &PlayerState {
+    pub fn player_ref(&self) -> &PlayerState {
         &self.player
     }
 
-    pub fn player_state_mut(&mut self) -> &mut PlayerState {
+    pub fn player_mut(&mut self) -> &mut PlayerState {
         &mut self.player
     }
 }

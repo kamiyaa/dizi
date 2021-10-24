@@ -71,7 +71,6 @@ pub fn player_volume_decrease(context: &mut AppContext, amount: usize) -> DiziRe
 }
 
 pub fn player_play_again(context: &mut AppContext) -> DiziResult<()> {
-    eprintln!("player_play_again");
     let playlist_status = context.player_context_ref().player_ref().playlist_status();
     match playlist_status {
         PlaylistStatus::DirectoryListing => {
@@ -110,7 +109,6 @@ pub fn player_play_again(context: &mut AppContext) -> DiziResult<()> {
 }
 
 pub fn player_play_next(context: &mut AppContext, skip_amount: usize) -> DiziResult<()> {
-    eprintln!("player_play_next amount: {}", skip_amount);
     let playlist_status = context.player_context_ref().player_ref().playlist_status();
     match playlist_status {
         PlaylistStatus::DirectoryListing => {
@@ -121,7 +119,6 @@ pub fn player_play_next(context: &mut AppContext, skip_amount: usize) -> DiziRes
                     .dirlist_playlist_ref();
                 let index = playlist.get_playing_index();
                 let len = playlist.len();
-                eprintln!("index: {}, len: {}", index, len);
 
                 let new_index = if index + skip_amount >= len {
                     (index + skip_amount) % len
@@ -147,13 +144,11 @@ pub fn player_play_next(context: &mut AppContext, skip_amount: usize) -> DiziRes
                 .playlist_ref()
                 .len();
             if let Some(index) = index {
-                eprintln!("index: {}, len: {}", index, len);
                 let new_index = if index + skip_amount >= len {
                     (index + skip_amount) % len
                 } else {
                     index + skip_amount
                 };
-                eprintln!("player_play_next: {}", new_index);
                 context
                     .player_context_mut()
                     .player_mut()

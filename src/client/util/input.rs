@@ -60,74 +60,75 @@ pub fn process_server_event(context: &mut AppContext, s: &str) -> DiziResult<()>
             if !state.playlist_ref().is_empty() {
                 state.playlist_mut().set_cursor_index(Some(0));
             }
-            context.server_state_mut().set_player_state(state);
+            context.server_state_mut().set_player(state);
         }
         ServerBroadcastEvent::PlayerFilePlay { song } => {
+            context.server_state_mut().player_mut().set_song(Some(song));
             context
                 .server_state_mut()
-                .player_state_mut()
-                .set_song(Some(song));
-            context
-                .server_state_mut()
-                .player_state_mut()
+                .player_mut()
                 .set_player_status(PlayerStatus::Playing);
             context
                 .server_state_mut()
-                .player_state_mut()
+                .player_mut()
                 .set_playlist_status(PlaylistStatus::DirectoryListing);
         }
         ServerBroadcastEvent::PlayerPause => {
             context
                 .server_state_mut()
-                .player_state_mut()
+                .player_mut()
                 .set_player_status(PlayerStatus::Paused);
         }
         ServerBroadcastEvent::PlayerResume => {
             context
                 .server_state_mut()
-                .player_state_mut()
+                .player_mut()
                 .set_player_status(PlayerStatus::Playing);
         }
         ServerBroadcastEvent::PlayerShuffle { on } => {
-            context
-                .server_state_mut()
-                .player_state_mut()
-                .set_shuffle(on);
+            context.server_state_mut().player_mut().set_shuffle(on);
         }
         ServerBroadcastEvent::PlayerRepeat { on } => {
-            context.server_state_mut().player_state_mut().set_repeat(on);
+            context.server_state_mut().player_mut().set_repeat(on);
         }
         ServerBroadcastEvent::PlayerNext { on } => {
-            context.server_state_mut().player_state_mut().set_next(on);
+            context.server_state_mut().player_mut().set_next(on);
         }
         ServerBroadcastEvent::PlayerVolumeUpdate { volume } => {
-            context
-                .server_state_mut()
-                .player_state_mut()
-                .set_volume(volume);
+            context.server_state_mut().player_mut().set_volume(volume);
         }
         ServerBroadcastEvent::PlayerProgressUpdate { elapsed } => {
+            context.server_state_mut().player_mut().set_elapsed(elapsed);
+        }
+        ServerBroadcastEvent::PlaylistSwapMove { index1, index2 } => {
             context
                 .server_state_mut()
-                .player_state_mut()
-                .set_elapsed(elapsed);
+                .player_mut()
+                .playlist_mut()
+                .list_mut()
+                .swap(index1, index2);
+            context
+                .server_state_mut()
+                .player_mut()
+                .playlist_mut()
+                .set_cursor_index(Some(index2));
         }
         ServerBroadcastEvent::PlaylistAppend { song } => {
             context
                 .server_state_mut()
-                .player_state_mut()
+                .player_mut()
                 .playlist_mut()
                 .append_song(song);
             if context
                 .server_state_ref()
-                .player_state_ref()
+                .player_ref()
                 .playlist_ref()
                 .get_cursor_index()
                 .is_none()
             {
                 context
                     .server_state_mut()
-                    .player_state_mut()
+                    .player_mut()
                     .playlist_mut()
                     .set_cursor_index(Some(0));
             }
@@ -135,18 +136,18 @@ pub fn process_server_event(context: &mut AppContext, s: &str) -> DiziResult<()>
         ServerBroadcastEvent::PlaylistRemove { index } => {
             context
                 .server_state_mut()
-                .player_state_mut()
+                .player_mut()
                 .playlist_mut()
                 .remove_song(index);
             if context
                 .server_state_ref()
-                .player_state_ref()
+                .player_ref()
                 .playlist_ref()
                 .is_empty()
             {
                 context
                     .server_state_mut()
-                    .player_state_mut()
+                    .player_mut()
                     .playlist_mut()
                     .set_cursor_index(None);
             }
@@ -154,21 +155,18 @@ pub fn process_server_event(context: &mut AppContext, s: &str) -> DiziResult<()>
         ServerBroadcastEvent::PlaylistPlay { index } => {
             let song = context
                 .server_state_ref()
-                .player_state_ref()
+                .player_ref()
                 .playlist_ref()
                 .list_ref()[index]
                 .clone();
+            context.server_state_mut().player_mut().set_song(Some(song));
             context
                 .server_state_mut()
-                .player_state_mut()
-                .set_song(Some(song));
-            context
-                .server_state_mut()
-                .player_state_mut()
+                .player_mut()
                 .set_player_status(PlayerStatus::Playing);
             context
                 .server_state_mut()
-                .player_state_mut()
+                .player_mut()
                 .set_playlist_status(PlaylistStatus::PlaylistFile);
         }
         s => {

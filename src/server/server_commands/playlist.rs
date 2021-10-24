@@ -1,6 +1,6 @@
 use std::path::Path;
 
-use dizi_lib::error::DiziResult;
+use dizi_lib::error::{DiziError, DiziErrorKind, DiziResult};
 use dizi_lib::player::PlayerStatus;
 use dizi_lib::song::Song;
 
@@ -37,5 +37,42 @@ pub fn playlist_play(context: &mut AppContext, index: usize) -> DiziResult<()> {
         .player_context_mut()
         .player_mut()
         .play_from_playlist(index)?;
+    Ok(())
+}
+
+pub fn playlist_move_up(context: &mut AppContext, index: usize) -> DiziResult<()> {
+    if index == 0 {
+        return Err(DiziError::new(
+            DiziErrorKind::InvalidParameters,
+            "song is already at the start of playlist".to_string(),
+        ));
+    }
+
+    let mut playlist = context.player_context_mut().player_mut().playlist_mut();
+
+    if index >= playlist.len() {
+        return Err(DiziError::new(
+            DiziErrorKind::InvalidParameters,
+            "index out of range".to_string(),
+        ));
+    }
+
+    playlist.list_mut().swap(index, index - 1);
+
+    Ok(())
+}
+
+pub fn playlist_move_down(context: &mut AppContext, index: usize) -> DiziResult<()> {
+    let playlist = context.player_context_mut().player_mut().playlist_mut();
+
+    if index + 1 >= playlist.len() {
+        return Err(DiziError::new(
+            DiziErrorKind::InvalidParameters,
+            "song is already at the end of playlist".to_string(),
+        ));
+    }
+
+    playlist.list_mut().swap(index, index + 1);
+
     Ok(())
 }
