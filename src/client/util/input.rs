@@ -101,17 +101,9 @@ pub fn process_server_event(context: &mut AppContext, s: &str) -> DiziResult<()>
             context.server_state_mut().player_mut().set_elapsed(elapsed);
         }
         ServerBroadcastEvent::PlaylistSwapMove { index1, index2 } => {
-            context
-                .server_state_mut()
-                .player_mut()
-                .playlist_mut()
-                .list_mut()
-                .swap(index1, index2);
-            context
-                .server_state_mut()
-                .player_mut()
-                .playlist_mut()
-                .set_cursor_index(Some(index2));
+            let mut playlist = context.server_state_mut().player_mut().playlist_mut();
+            playlist.list_mut().swap(index1, index2);
+            playlist.set_cursor_index(Some(index2));
         }
         ServerBroadcastEvent::PlaylistAppend { song } => {
             context
@@ -159,15 +151,11 @@ pub fn process_server_event(context: &mut AppContext, s: &str) -> DiziResult<()>
                 .playlist_ref()
                 .list_ref()[index]
                 .clone();
-            context.server_state_mut().player_mut().set_song(Some(song));
-            context
-                .server_state_mut()
-                .player_mut()
-                .set_player_status(PlayerStatus::Playing);
-            context
-                .server_state_mut()
-                .player_mut()
-                .set_playlist_status(PlaylistStatus::PlaylistFile);
+            let mut player = context.server_state_mut().player_mut();
+            player.set_song(Some(song));
+            player.set_player_status(PlayerStatus::Playing);
+            player.set_playlist_status(PlaylistStatus::PlaylistFile);
+            player.playlist_mut().set_playing_index(Some(index));
         }
         s => {
             context

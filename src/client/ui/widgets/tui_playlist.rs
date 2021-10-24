@@ -45,6 +45,8 @@ impl<'a> Widget for TuiPlaylist<'a> {
         let drawing_width = area.width as usize;
         let skip_dist = playlist.first_index_for_viewport(area.height as usize);
 
+        let style = Style::default().fg(Color::Magenta);
+
         // draw every entry
         playlist
             .list_ref()
@@ -54,7 +56,6 @@ impl<'a> Widget for TuiPlaylist<'a> {
             .enumerate()
             .take(area.height as usize)
             .for_each(|(offset, (i, entry))| {
-                let style = Style::default();
                 print_entry(
                     buf,
                     entry,
@@ -72,7 +73,7 @@ impl<'a> Widget for TuiPlaylist<'a> {
                 // draw selected entry in a different style
                 let screen_index = curr_index % area.height as usize;
 
-                let style = Style::default().add_modifier(Modifier::REVERSED);
+                let style = style.add_modifier(Modifier::REVERSED);
 
                 let space_fill = " ".repeat(drawing_width);
                 buf.set_string(x, y + screen_index as u16, space_fill.as_str(), style);
@@ -81,6 +82,32 @@ impl<'a> Widget for TuiPlaylist<'a> {
                     buf,
                     song,
                     curr_index,
+                    style,
+                    (x + 1, y + screen_index as u16),
+                    drawing_width - 1,
+                );
+            }
+        }
+
+        if let Some(playing_index) = playlist.get_playing_index() {
+            if playing_index >= skip_dist && playing_index <= skip_dist + area.height as usize {
+                let song = &playlist.list_ref()[playing_index];
+
+                // draw selected entry in a different style
+                let screen_index = playing_index % area.height as usize;
+
+                let style = Style::default()
+                    .bg(Color::Black)
+                    .fg(Color::Yellow)
+                    .add_modifier(Modifier::BOLD);
+
+                let space_fill = " ".repeat(drawing_width);
+                buf.set_string(x, y + screen_index as u16, space_fill.as_str(), style);
+
+                print_entry(
+                    buf,
+                    song,
+                    playing_index,
                     style,
                     (x + 1, y + screen_index as u16),
                     drawing_width - 1,
