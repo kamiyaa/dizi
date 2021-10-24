@@ -1,7 +1,7 @@
 use std::time;
 use serde_derive::{Deserialize, Serialize};
 
-use crate::playlist::Playlist;
+use crate::playlist::{Playlist, PlaylistStatus};
 use crate::song::Song;
 
 #[derive(Copy, Clone, Debug, PartialEq, Serialize, Deserialize)]
@@ -9,12 +9,6 @@ pub enum PlayerStatus {
     Playing,
     Paused,
     Stopped,
-}
-
-#[derive(Copy, Clone, Debug, PartialEq, Serialize, Deserialize)]
-pub enum PlaylistStatus {
-    DirectoryListing,
-    PlaylistFile,
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize)]

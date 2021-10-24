@@ -2,7 +2,8 @@ use signal_hook::consts::signal;
 use termion::event::{Event, Key, MouseButton, MouseEvent};
 
 use dizi_lib::error::DiziResult;
-use dizi_lib::player::*;
+use dizi_lib::player::PlayerStatus;
+use dizi_lib::playlist::PlaylistStatus;
 use dizi_lib::response::server::ServerBroadcastEvent;
 
 use crate::config::AppKeyMapping;
@@ -104,6 +105,11 @@ pub fn process_server_event(context: &mut AppContext, s: &str) -> DiziResult<()>
             let mut playlist = context.server_state_mut().player_mut().playlist_mut();
             playlist.list_mut().swap(index1, index2);
             playlist.set_cursor_index(Some(index2));
+        }
+        ServerBroadcastEvent::PlaylistClear => {
+            let mut playlist = context.server_state_mut().player_mut().playlist_mut();
+            playlist.clear();
+            playlist.set_cursor_index(None);
         }
         ServerBroadcastEvent::PlaylistAppend { song } => {
             context

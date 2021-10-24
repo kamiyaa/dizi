@@ -1,5 +1,6 @@
 use dizi_lib::error::DiziResult;
-use dizi_lib::player::{PlayerStatus, PlaylistStatus};
+use dizi_lib::player::PlayerStatus;
+use dizi_lib::playlist::PlaylistStatus;
 use dizi_lib::request::client::ClientRequest;
 use dizi_lib::response::server::ServerBroadcastEvent;
 use dizi_lib::song::Song;
@@ -7,7 +8,7 @@ use dizi_lib::song::Song;
 use crate::context::AppContext;
 use crate::server_commands::*;
 
-pub fn run_command(context: &mut AppContext, event: ClientRequest) -> DiziResult<()> {
+pub fn process_client_request(context: &mut AppContext, event: ClientRequest) -> DiziResult<()> {
     eprintln!("request: {:?}", event);
     match event {
         ClientRequest::ServerQuit => {
@@ -129,6 +130,12 @@ pub fn run_command(context: &mut AppContext, event: ClientRequest) -> DiziResult
                 .events
                 .broadcast_event(ServerBroadcastEvent::PlaylistRemove { index });
         }
+        ClientRequest::PlaylistClear => {
+            playlist::playlist_clear(context)?;
+            context
+                .events
+                .broadcast_event(ServerBroadcastEvent::PlaylistClear);
+        }
         ClientRequest::PlaylistMoveUp { index: Some(index) } => {
             playlist::playlist_move_up(context, index)?;
             context
@@ -153,7 +160,19 @@ pub fn run_command(context: &mut AppContext, event: ClientRequest) -> DiziResult
                 .events
                 .broadcast_event(ServerBroadcastEvent::PlaylistPlay { index });
         }
-        ClientRequest::PlaylistOpen { .. } => {}
+        ClientRequest::PlaylistOpen {
+            cwd: Some(cwd),
+            path: Some(path),
+        } => {
+            playlist::playlist_load(context, &cwd, &path)?;
+            let state = context
+                .player_context_ref()
+                .player_ref()
+                .clone_player_state();
+            context
+                .events
+                .broadcast_event(ServerBroadcastEvent::PlayerState { state });
+        }
         ClientRequest::PlayerToggleNext => {
             let enabled = context.player_context_ref().player_ref().next_enabled();
             context.player_context_mut().player_mut().set_next(!enabled);

@@ -8,23 +8,31 @@ use rand::seq::SliceRandom;
 use rand::thread_rng;
 
 use dizi_lib::error::{DiziError, DiziErrorKind, DiziResult};
-use dizi_lib::player::{PlayerState, PlayerStatus, PlaylistStatus};
-use dizi_lib::playlist::{DirlistPlaylist, Playlist};
+use dizi_lib::player::{PlayerState, PlayerStatus};
+use dizi_lib::playlist::{DirlistPlaylist, Playlist, PlaylistStatus};
 use dizi_lib::song::Song;
 
 use crate::audio::{player_stream, PlayerRequest};
 use crate::config;
 use crate::events::ServerEventSender;
 
-pub fn read_playlist(path: &Path) -> io::Result<Playlist> {
+pub fn read_playlist(cwd: &Path, path: &Path) -> io::Result<Playlist> {
     let mut reader = m3u::Reader::open(path)?;
     let read_playlist: Vec<_> = reader.entries().map(|entry| entry.unwrap()).collect();
     let mut playlist = Playlist::new();
     for entry in &read_playlist {
         match entry {
             m3u::Entry::Path(p) => {
-                if let Ok(song) = Song::new(&p) {
-                    playlist.append_song(song);
+                if p.is_absolute() {
+                    if let Ok(song) = Song::new(&p) {
+                        playlist.append_song(song);
+                    }
+                } else {
+                    let mut new_path = cwd.to_path_buf();
+                    new_path.push(p);
+                    if let Ok(song) = Song::new(&new_path) {
+                        playlist.append_song(song);
+                    }
                 }
             }
             _ => {}
@@ -78,8 +86,8 @@ impl Player {
         let server_config = config_t.server_ref();
         let player_config = server_config.player_ref();
 
-        let playlist =
-            read_playlist(server_config.playlist_ref()).unwrap_or_else(|_| Playlist::new());
+        let playlist = read_playlist(&PathBuf::from("/"), server_config.playlist_ref())
+            .unwrap_or_else(|_| Playlist::new());
 
         Self {
             current_song: None,

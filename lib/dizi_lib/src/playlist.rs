@@ -7,6 +7,12 @@ use serde_derive::{Deserialize, Serialize};
 
 use crate::song::Song;
 
+#[derive(Copy, Clone, Debug, PartialEq, Serialize, Deserialize)]
+pub enum PlaylistStatus {
+    DirectoryListing,
+    PlaylistFile,
+}
+
 #[derive(Clone, Debug, Deserialize, Serialize)]
 pub struct Playlist {
     #[serde(rename = "list")]
@@ -29,6 +35,10 @@ impl Playlist {
 
     pub fn playlist(&self) -> &[Song] {
         self._list.as_slice()
+    }
+
+    pub fn clear(&mut self) {
+        self._list.clear();
     }
 
     pub fn append_song(&mut self, s: Song) {

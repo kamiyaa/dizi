@@ -24,10 +24,29 @@ pub fn file_browser_open(context: &mut AppContext) -> DiziResult<()> {
             let path = entry.file_path().to_path_buf();
             change_directory::cd(path.as_path(), context)?;
         } else {
-            let request = ClientRequest::PlayerFilePlay {
-                path: Some(entry.file_path().to_path_buf()),
-            };
-            send_client_request(context, &request)?;
+            match entry.file_path().extension() {
+                Some(s) => {
+                    let s = s.to_string_lossy();
+                    if s.as_ref().starts_with("m3u") {
+                        let request = ClientRequest::PlaylistOpen {
+                            cwd: Some(context.cwd().to_path_buf()),
+                            path: Some(entry.file_path().to_path_buf()),
+                        };
+                        send_client_request(context, &request)?;
+                    } else {
+                        let request = ClientRequest::PlayerFilePlay {
+                            path: Some(entry.file_path().to_path_buf()),
+                        };
+                        send_client_request(context, &request)?;
+                    }
+                }
+                None => {
+                    let request = ClientRequest::PlayerFilePlay {
+                        path: Some(entry.file_path().to_path_buf()),
+                    };
+                    send_client_request(context, &request)?;
+                }
+            }
         }
     }
     Ok(())

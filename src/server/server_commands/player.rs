@@ -1,7 +1,8 @@
 use std::path::Path;
 
 use dizi_lib::error::DiziResult;
-use dizi_lib::player::{PlayerStatus, PlaylistStatus};
+use dizi_lib::player::PlayerStatus;
+use dizi_lib::playlist::PlaylistStatus;
 use dizi_lib::song::Song;
 
 use crate::context::AppContext;
@@ -101,7 +102,7 @@ pub fn player_play_again(context: &mut AppContext) -> DiziResult<()> {
                 context
                     .player_context_mut()
                     .player_mut()
-                    .play_from_playlist(index);
+                    .play_from_playlist(index)?;
             }
         }
     }
@@ -152,7 +153,7 @@ pub fn player_play_next(context: &mut AppContext, skip_amount: usize) -> DiziRes
                 context
                     .player_context_mut()
                     .player_mut()
-                    .play_from_playlist(new_index);
+                    .play_from_playlist(new_index)?;
             }
         }
     }
@@ -194,7 +195,7 @@ pub fn player_play_previous(context: &mut AppContext) -> DiziResult<()> {
                 context
                     .player_context_mut()
                     .player_mut()
-                    .play_from_playlist(new_index);
+                    .play_from_playlist(new_index)?;
             }
         }
     }

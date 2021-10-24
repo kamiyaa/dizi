@@ -64,6 +64,8 @@ pub enum ClientRequest {
     PlaylistAppend { path: Option<PathBuf> },
     #[serde(rename = "/playlist/remove")]
     PlaylistRemove { index: Option<usize> },
+    #[serde(rename = "/playlist/clear")]
+    PlaylistClear,
     #[serde(rename = "/playlist/move_up")]
     PlaylistMoveUp { index: Option<usize> },
     #[serde(rename = "/playlist/move_down")]
@@ -98,6 +100,8 @@ impl ClientRequest {
 
             Self::PlaylistAppend { .. } => "/playlist/append",
             Self::PlaylistRemove { .. } => "/playlist/remove",
+            Self::PlaylistClear => "/playlist/clear",
+
             Self::PlaylistMoveUp { .. } => "/playlist/move_up",
             Self::PlaylistMoveDown { .. } => "/playlist/move_down"
         }
@@ -136,6 +140,8 @@ impl ClientRequest {
 
             "/playlist/append" => Ok(Self::PlaylistAppend { path: None }),
             "/playlist/remove" => Ok(Self::PlaylistRemove { index: None }),
+            "/playlist/clear" => Ok(Self::PlaylistClear),
+
             "/playlist/move_up" => Ok(Self::PlaylistMoveUp { index: None }),
             "/playlist/move_down" => Ok(Self::PlaylistMoveDown { index: None }),
 

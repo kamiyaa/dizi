@@ -13,7 +13,7 @@ use crate::client;
 use crate::config::AppConfig;
 use crate::context::{AppContext, QuitType};
 use crate::events::{AppEvent, ServerEvent, ServerEventSender};
-use crate::server_command::{run_command, send_latest_song_info};
+use crate::server_command::{process_client_request, send_latest_song_info};
 use crate::server_commands::player::*;
 
 pub fn setup_socket(config: &AppConfig) -> DiziResult<UnixListener> {
@@ -43,10 +43,16 @@ pub fn serve(config: AppConfig) -> DiziResult<()> {
 
         match event {
             AppEvent::Client(event) => {
-                let _ = run_command(&mut context, event);
+                let res = process_client_request(&mut context, event);
+                if let Err(err) = res {
+                    eprintln!("Error: {:?}", err);
+                }
             }
             AppEvent::Server(event) => {
-                process_server_event(&mut context, event);
+                let res = process_server_event(&mut context, event);
+                if let Err(err) = res {
+                    eprintln!("Error: {:?}", err);
+                }
             }
         }
     }
@@ -66,7 +72,7 @@ pub fn serve(config: AppConfig) -> DiziResult<()> {
     Ok(())
 }
 
-pub fn process_server_event(context: &mut AppContext, event: ServerEvent) {
+pub fn process_server_event(context: &mut AppContext, event: ServerEvent) -> DiziResult<()> {
     match event {
         ServerEvent::NewClient(stream) => {
             let client_tx2 = context.events.client_request_sender().clone();
@@ -91,11 +97,10 @@ pub fn process_server_event(context: &mut AppContext, event: ServerEvent) {
                 .broadcast_event(ServerBroadcastEvent::PlayerProgressUpdate { elapsed });
         }
         ServerEvent::PlayerDone => {
-            if let Err(e) = process_done_song(context) {
-                eprintln!("ServerEvent::PlayerDone: {:?}", e);
-            }
+            process_done_song(context)?;
         }
     }
+    Ok(())
 }
 
 pub fn listen_for_clients(listener: UnixListener, event_tx: ServerEventSender) -> DiziResult<()> {
