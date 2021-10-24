@@ -114,6 +114,9 @@ fn run_app(args: Args) -> DiziResult<()> {
     }
     let stream = UnixStream::connect(&config.client_ref().socket)?;
 
+    if let Some(home_dir) = config.client_ref().home_dir.as_ref() {
+        std::env::set_current_dir(home_dir)?;
+    }
     let cwd = std::env::current_dir()?;
     let mut context = AppContext::new(config, cwd.clone(), stream);
 

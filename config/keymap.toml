@@ -188,6 +188,11 @@ command = "server_request"
 json.request = "/playlist/remove"
 
 [[keymap]]
+keys = [ "C" ]
+command = "server_request"
+json.request = "/playlist/clear"
+
+[[keymap]]
 keys = [ "w" ]
 command = "server_request"
 json.request = "/playlist/move_up"

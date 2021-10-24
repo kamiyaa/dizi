@@ -1,32 +1,34 @@
 {
-    "type": "composite"
-    "direction": "horizontal"
-    "ratio": 1
-    "widgets": [
-        {
-            "type": "simple"
-            "widget": "file_browser"
-            "ratio": 1
-            "border": true
-        },
-        {
-            "type": "composite"
-            "direction": "vertical"
-            "ratio": 1
-            "widgets": [
-                {
-                    "type": "simple"
-                    "widget": "music_player"
-                    "ratio": 2
-                    "border": true
-                },
-                {
-                    "type": "simple"
-                    "widget": "playlist"
-                    "ratio": 3
-                    "border": true
-                }
-            ]
-        }
-    ]
+    "layout": {
+        "type": "composite",
+        "direction": "horizontal",
+        "ratio": 1,
+        "widgets": [
+            {
+                "type": "simple",
+                "widget": "file_browser",
+                "ratio": 1,
+                "border": true
+            },
+            {
+                "type": "composite",
+                "direction": "vertical",
+                "ratio": 1,
+                "widgets": [
+                    {
+                        "type": "simple",
+                        "widget": "music_player",
+                        "ratio": 2,
+                        "border": true
+                    },
+                    {
+                        "type": "simple",
+                        "widget": "playlist",
+                        "ratio": 3,
+                        "border": true
+                    }
+                ]
+            }
+        ]
+    }
 }
