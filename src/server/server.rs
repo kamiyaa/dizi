@@ -1,6 +1,7 @@
 use std::fs;
 use std::os::unix::net::UnixListener;
 use std::path::Path;
+use std::process::Command;
 use std::sync::mpsc;
 use std::thread;
 
@@ -149,4 +150,11 @@ pub fn process_done_song(context: &mut AppContext) -> DiziResult<()> {
         }
     }
     Ok(())
+}
+
+pub fn run_on_song_change(context: &AppContext) {
+    let server_config = context.config_ref().server_ref();
+    if let Some(path) = server_config.on_song_change.as_ref() {
+        Command::new(path).spawn();
+    }
 }

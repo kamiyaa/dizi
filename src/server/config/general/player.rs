@@ -12,8 +12,6 @@ pub struct PlayerOptionCrude {
     pub repeat: bool,
     #[serde(default = "default_true")]
     pub next: bool,
-    #[serde(default)]
-    pub on_song_change: Option<String>,
 }
 
 impl std::default::Default for PlayerOptionCrude {
@@ -22,7 +20,6 @@ impl std::default::Default for PlayerOptionCrude {
             shuffle: false,
             repeat: true,
             next: true,
-            on_song_change: None,
         }
     }
 }
@@ -33,7 +30,6 @@ impl From<PlayerOptionCrude> for PlayerOption {
             shuffle: crude.shuffle,
             repeat: crude.repeat,
             next: crude.next,
-            on_song_change: crude.on_song_change,
         }
     }
 }
@@ -43,7 +39,6 @@ pub struct PlayerOption {
     pub shuffle: bool,
     pub repeat: bool,
     pub next: bool,
-    pub on_song_change: Option<String>,
 }
 
 impl std::default::Default for PlayerOption {
@@ -52,7 +47,6 @@ impl std::default::Default for PlayerOption {
             shuffle: false,
             repeat: true,
             next: true,
-            on_song_change: None,
         }
     }
 }

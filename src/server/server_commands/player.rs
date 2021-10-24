@@ -6,12 +6,16 @@ use dizi_lib::playlist::PlaylistStatus;
 use dizi_lib::song::Song;
 
 use crate::context::AppContext;
+use crate::server::run_on_song_change;
 
 pub fn player_play(context: &mut AppContext, path: &Path) -> DiziResult<()> {
     context
         .player_context_mut()
         .player_mut()
-        .play_entire_directory(path)
+        .play_entire_directory(path)?;
+
+    run_on_song_change(context);
+    Ok(())
 }
 
 pub fn player_pause(context: &mut AppContext) -> DiziResult<()> {
@@ -106,6 +110,8 @@ pub fn player_play_again(context: &mut AppContext) -> DiziResult<()> {
             }
         }
     }
+
+    run_on_song_change(context);
     Ok(())
 }
 
@@ -157,6 +163,8 @@ pub fn player_play_next(context: &mut AppContext, skip_amount: usize) -> DiziRes
             }
         }
     }
+
+    run_on_song_change(context);
     Ok(())
 }
 
@@ -199,5 +207,7 @@ pub fn player_play_previous(context: &mut AppContext) -> DiziResult<()> {
             }
         }
     }
+
+    run_on_song_change(context);
     Ok(())
 }

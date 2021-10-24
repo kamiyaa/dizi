@@ -1,5 +1,5 @@
 use std::convert::From;
-use std::path;
+use std::path::{Path, PathBuf};
 
 use serde_derive::Deserialize;
 use shellexpand::tilde_with_context;
@@ -15,12 +15,12 @@ fn default_playlist_string() -> String {
     "/tmp/dizi-playlist.m3u".to_string()
 }
 
-fn default_socket_path() -> path::PathBuf {
-    path::PathBuf::from(default_socket_string())
+fn default_socket_path() -> PathBuf {
+    PathBuf::from(default_socket_string())
 }
 
-fn default_playlist_path() -> path::PathBuf {
-    path::PathBuf::from(default_playlist_string())
+fn default_playlist_path() -> PathBuf {
+    PathBuf::from(default_playlist_string())
 }
 
 fn default_audio_system() -> cpal::HostId {
@@ -48,6 +48,8 @@ pub struct ServerConfigCrude {
     #[serde(default = "default_audio_system_string")]
     pub audio_system: String,
     #[serde(default)]
+    pub on_song_change: Option<String>,
+    #[serde(default)]
     pub player: PlayerOptionCrude,
 }
 
@@ -57,6 +59,7 @@ impl std::default::Default for ServerConfigCrude {
             socket: default_socket_string(),
             playlist: default_playlist_string(),
             audio_system: default_audio_system_string(),
+            on_song_change: None,
             player: PlayerOptionCrude::default(),
         }
     }
@@ -64,17 +67,18 @@ impl std::default::Default for ServerConfigCrude {
 
 #[derive(Clone, Debug)]
 pub struct ServerConfig {
-    pub socket: path::PathBuf,
-    pub playlist: path::PathBuf,
+    pub socket: PathBuf,
+    pub playlist: PathBuf,
     pub audio_system: cpal::HostId,
+    pub on_song_change: Option<PathBuf>,
     pub player: PlayerOption,
 }
 
 impl ServerConfig {
-    pub fn socket_ref(&self) -> &path::Path {
+    pub fn socket_ref(&self) -> &Path {
         self.socket.as_path()
     }
-    pub fn playlist_ref(&self) -> &path::Path {
+    pub fn playlist_ref(&self) -> &Path {
         self.playlist.as_path()
     }
     pub fn player_ref(&self) -> &PlayerOption {
@@ -88,6 +92,7 @@ impl std::default::Default for ServerConfig {
             socket: default_socket_path(),
             playlist: default_playlist_path(),
             audio_system: default_audio_system(),
+            on_song_change: None,
             player: PlayerOption::default(),
         }
     }
@@ -100,11 +105,18 @@ impl From<ServerConfigCrude> for ServerConfig {
 
         let socket = tilde_with_context(&crude.socket, dirs_next::home_dir);
         let playlist = tilde_with_context(&crude.playlist, dirs_next::home_dir);
+        let on_song_change = match crude.on_song_change {
+            Some(path) => Some(PathBuf::from(
+                tilde_with_context(&path, dirs_next::home_dir).as_ref(),
+            )),
+            None => None,
+        };
 
         Self {
-            socket: path::PathBuf::from(socket.as_ref()),
-            playlist: path::PathBuf::from(playlist.as_ref()),
+            socket: PathBuf::from(socket.as_ref()),
+            playlist: PathBuf::from(playlist.as_ref()),
             audio_system,
+            on_song_change,
             player: PlayerOption::from(crude.player),
         }
     }

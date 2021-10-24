@@ -6,12 +6,15 @@ use dizi_lib::song::Song;
 
 use crate::audio::read_playlist;
 use crate::context::AppContext;
+use crate::server::run_on_song_change;
 
 pub fn playlist_play(context: &mut AppContext, index: usize) -> DiziResult<()> {
     context
         .player_context_mut()
         .player_mut()
         .play_from_playlist(index)?;
+
+    run_on_song_change(context);
     Ok(())
 }
 
