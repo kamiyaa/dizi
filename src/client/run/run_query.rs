@@ -4,7 +4,7 @@ use std::thread;
 
 use strfmt::strfmt;
 
-use dizi_lib::error::DiziResult;
+use dizi_lib::error::{DiziError, DiziErrorKind, DiziResult};
 use dizi_lib::request::client::ClientRequest;
 use dizi_lib::response::server::ServerBroadcastEvent;
 
