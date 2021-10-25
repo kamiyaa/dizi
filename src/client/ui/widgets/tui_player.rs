@@ -20,7 +20,7 @@ impl<'a> TuiPlayer<'a> {
 
 impl<'a> Widget for TuiPlayer<'a> {
     fn render(self, area: Rect, buf: &mut Buffer) {
-        if area.height <= 8 {
+        if area.height <= 5 {
             return;
         }
 
