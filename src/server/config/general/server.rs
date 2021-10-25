@@ -30,12 +30,23 @@ fn default_audio_system_string() -> String {
     "jack".to_string()
 }
 
+#[cfg(any(target_os = "linux", target_os = "dragonfly", target_os = "freebsd"))]
 fn str_to_cpal_hostid(s: &str) -> Option<cpal::HostId> {
     match s {
         "jack" => Some(cpal::HostId::Jack),
         "alsa" => Some(cpal::HostId::Alsa),
         _ => None,
     }
+}
+
+#[cfg(any(target_os = "macos", target_os = "ios"))]
+fn str_to_cpal_hostid(s: &str) -> Option<cpal::HostId> {
+    Some(cpal::HostId::CoreAudio)
+}
+
+#[cfg(target_os = "windows")]
+fn str_to_cpal_hostid(s: &str) -> Option<cpal::HostId> {
+    Some(cpal::HostId::Asio)
 }
 
 #[derive(Clone, Debug, Deserialize)]

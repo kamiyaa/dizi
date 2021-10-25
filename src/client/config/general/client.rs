@@ -35,10 +35,11 @@ impl std::default::Default for ClientConfigCrude {
 
 impl From<ClientConfigCrude> for ClientConfig {
     fn from(crude: ClientConfigCrude) -> Self {
-
         let socket = PathBuf::from(tilde_with_context(&crude.socket, dirs_next::home_dir).as_ref());
         let home_dir = if let Some(home_dir) = crude.home_dir {
-            Some(PathBuf::from(tilde_with_context(&home_dir, dirs_next::home_dir).as_ref()))
+            Some(PathBuf::from(
+                tilde_with_context(&home_dir, dirs_next::home_dir).as_ref(),
+            ))
         } else {
             None
         };
