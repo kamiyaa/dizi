@@ -8,7 +8,6 @@ use crate::config::option::SortType;
 #[derive(Clone, Debug)]
 pub enum Command {
     Close,
-    Quit,
 
     ChangeDirectory(path::PathBuf),
     CommandLine(String, String),

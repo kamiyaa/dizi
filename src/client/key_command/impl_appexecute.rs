@@ -35,7 +35,6 @@ impl AppExecute for Command {
             Self::ParentDirectory => parent_directory::parent_directory(context)?,
 
             Self::Close => quit::close(context)?,
-            Self::Quit => quit::server_quit(context)?,
 
             Self::ReloadDirList => reload::reload_dirlist(context)?,
 

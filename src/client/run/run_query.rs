@@ -3,22 +3,14 @@ use std::io::{BufRead, BufReader};
 use std::thread;
 
 use strfmt::strfmt;
-use termion::event::Event;
 
-use dizi_lib::error::{DiziError, DiziErrorKind, DiziResult};
+use dizi_lib::error::DiziResult;
 use dizi_lib::request::client::ClientRequest;
 use dizi_lib::response::server::ServerBroadcastEvent;
 
-use crate::config::AppKeyMapping;
-use crate::context::{AppContext, QuitType};
+use crate::context::AppContext;
 use crate::event::AppEvent;
-use crate::key_command::{AppExecute, CommandKeybind};
-use crate::preview::preview_default;
-use crate::ui::views::TuiView;
-use crate::ui::TuiBackend;
-use crate::util::input;
 use crate::util::request::send_client_request;
-use crate::util::to_string::ToString;
 
 pub fn run_query(context: &mut AppContext, query: String) -> DiziResult<()> {
     // server listener

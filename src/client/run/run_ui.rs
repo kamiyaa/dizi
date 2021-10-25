@@ -1,13 +1,10 @@
-use std::collections::HashMap;
 use std::io::{BufRead, BufReader};
 use std::thread;
 
-use strfmt::strfmt;
 use termion::event::Event;
 
 use dizi_lib::error::{DiziError, DiziErrorKind, DiziResult};
 use dizi_lib::request::client::ClientRequest;
-use dizi_lib::response::server::ServerBroadcastEvent;
 
 use crate::config::AppKeyMapping;
 use crate::context::{AppContext, QuitType};

@@ -1,7 +1,6 @@
 pub const CMD_HELP: &str = "help";
 
 pub const CMD_CLOSE: &str = "close";
-pub const CMD_QUIT: &str = "quit";
 
 pub const CMD_CHANGE_DIRECTORY: &str = "cd";
 pub const CMD_COMMAND_LINE: &str = ":";

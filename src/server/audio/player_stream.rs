@@ -11,7 +11,7 @@ use cpal::traits::HostTrait;
 use log::{debug, log_enabled, Level};
 
 use rodio::queue;
-use rodio::source::{Amplify, Pausable, PeriodicAccess, Source, Stoppable};
+use rodio::source::Source;
 use rodio::{Decoder, OutputStream};
 
 use dizi_lib::error::DiziResult;
@@ -30,13 +30,6 @@ pub enum PlayerRequest {
     //    AddListener(ServerEventSender),
     //    ClearListeners,
 }
-
-/*
-type RodioSource = Decoder<BufReader<File>>;
-type RodioControllableSource = Stoppable<Pausable<Amplify<RodioSource>>>;
-pub type RodioDecoder =
-    PeriodicAccess<RodioControllableSource, dyn FnMut(&mut RodioControllableSource)>;
-*/
 
 pub struct PlayerStream {
     pub event_tx: ServerEventSender,

@@ -5,7 +5,6 @@ impl AppCommand for Command {
     fn command(&self) -> &'static str {
         match self {
             Self::Close => CMD_CLOSE,
-            Self::Quit => CMD_QUIT,
 
             Self::ChangeDirectory(_) => CMD_CHANGE_DIRECTORY,
             Self::CommandLine(_, _) => CMD_COMMAND_LINE,
