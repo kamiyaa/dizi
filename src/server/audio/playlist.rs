@@ -19,6 +19,9 @@ impl PlayerPlaylist {
     pub fn get_status(&self) -> PlaylistStatus {
         self.status
     }
+    pub fn set_status(&mut self, status: PlaylistStatus) {
+        self.status = status;
+    }
 
     pub fn file_playlist_ref(&self) -> &PlayerFilePlaylist {
         &self.file_playlist

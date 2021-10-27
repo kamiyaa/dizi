@@ -152,7 +152,7 @@ impl Player {
             }
             self.play(&song)?;
             self.playlist.directory_playlist = directory_playlist;
-            self.playlist.status = PlaylistStatus::DirectoryListing;
+            self.playlist.set_status(PlaylistStatus::DirectoryListing);
         }
         Ok(())
     }
@@ -164,6 +164,7 @@ impl Player {
         if let Some(song_index) = playlist.get_song_index() {
             let song = playlist.songs_ref()[song_index].clone();
             self.play(&song)?;
+            self.playlist.set_status(PlaylistStatus::PlaylistFile);
         }
         Ok(())
     }
@@ -175,6 +176,7 @@ impl Player {
         if let Some(song_index) = playlist.get_song_index() {
             let song = playlist.songs_ref()[song_index].clone();
             self.play(&song)?;
+            self.playlist.set_status(PlaylistStatus::DirectoryListing);
         }
         Ok(())
     }
