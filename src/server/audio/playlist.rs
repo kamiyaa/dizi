@@ -2,21 +2,11 @@ use std::fs;
 use std::io;
 use std::path::{Path, PathBuf};
 
-
-
-
-
-
 use rand::seq::SliceRandom;
 use rand::thread_rng;
 
-
 use dizi_lib::playlist::{FilePlaylist, PlaylistStatus};
 use dizi_lib::song::Song;
-
-
-
-
 
 #[derive(Clone, Debug)]
 pub struct PlayerPlaylist {
@@ -175,7 +165,7 @@ impl PlayerFilePlaylist {
         self._order_index = index;
     }
 
-    pub fn set_order_index_next(&mut self) -> Option<usize> {
+    pub fn increment_order_index(&mut self) -> Option<usize> {
         let order_index = self.get_order_index()?;
         let new_order_index = if order_index + 1 < self.len() {
             order_index + 1
@@ -185,7 +175,7 @@ impl PlayerFilePlaylist {
         self.set_order_index(Some(new_order_index));
         Some(new_order_index)
     }
-    pub fn set_order_index_previous(&mut self) -> Option<usize> {
+    pub fn decrement_order_index(&mut self) -> Option<usize> {
         let order_index = self.get_order_index()?;
         let new_order_index = if order_index > 1 {
             order_index - 1
@@ -299,7 +289,7 @@ impl PlayerDirectoryPlaylist {
         self._order_index = index;
     }
 
-    pub fn set_order_index_next(&mut self) -> Option<usize> {
+    pub fn increment_order_index(&mut self) -> Option<usize> {
         let order_index = self.get_order_index()?;
         let new_order_index = if order_index + 1 < self.len() {
             order_index + 1
@@ -309,7 +299,7 @@ impl PlayerDirectoryPlaylist {
         self.set_order_index(Some(new_order_index));
         Some(new_order_index)
     }
-    pub fn set_order_index_previous(&mut self) -> Option<usize> {
+    pub fn decrement_order_index(&mut self) -> Option<usize> {
         let order_index = self.get_order_index()?;
         let new_order_index = if order_index > 1 {
             order_index - 1

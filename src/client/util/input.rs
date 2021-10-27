@@ -114,7 +114,6 @@ pub fn process_server_event(context: &mut AppContext, s: &str) -> DiziResult<()>
         ServerBroadcastEvent::PlaylistClear => {
             let playlist = context.server_state_mut().player_mut().playlist_mut();
             playlist.clear();
-            playlist.set_cursor_index(None);
         }
         ServerBroadcastEvent::PlaylistAppend { song } => {
             context

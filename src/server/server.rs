@@ -123,6 +123,10 @@ pub fn listen_for_clients(listener: UnixListener, event_tx: ServerEventSender) -
 }
 
 pub fn process_done_song(context: &mut AppContext) -> DiziResult<()> {
+    if log_enabled!(Level::Debug) {
+        debug!("Processing done song trigger");
+    }
+
     let next_enabled = context.player_ref().next_enabled();
     let repeat_enabled = context.player_ref().repeat_enabled();
 

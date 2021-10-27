@@ -3,7 +3,7 @@ use std::thread;
 
 use termion::event::Event;
 
-use dizi_lib::error::{DiziResult};
+use dizi_lib::error::DiziResult;
 use dizi_lib::request::client::ClientRequest;
 
 use crate::config::AppKeyMapping;

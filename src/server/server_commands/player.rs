@@ -5,8 +5,6 @@ use log::{debug, log_enabled, Level};
 use dizi_lib::error::DiziResult;
 use dizi_lib::player::PlayerStatus;
 
-
-
 use crate::context::AppContext;
 use crate::server::run_on_song_change;
 

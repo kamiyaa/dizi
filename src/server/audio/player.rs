@@ -1,4 +1,3 @@
-
 use std::path::{Path, PathBuf};
 use std::sync::mpsc;
 use std::thread;
@@ -8,8 +7,7 @@ use log::{debug, log_enabled, Level};
 
 use rand::seq::SliceRandom;
 
-
-use dizi_lib::error::{DiziResult};
+use dizi_lib::error::DiziResult;
 use dizi_lib::player::{PlayerState, PlayerStatus};
 use dizi_lib::playlist::PlaylistStatus;
 use dizi_lib::song::Song;
@@ -207,7 +205,7 @@ impl Player {
         match self.playlist_ref().status {
             PlaylistStatus::PlaylistFile => {
                 let playlist = self.playlist_mut().file_playlist_mut();
-                playlist.set_order_index_next();
+                playlist.increment_order_index();
                 if let Some(song_index) = playlist.get_song_index() {
                     let song = playlist.songs_ref()[song_index].clone();
                     self.play(&song)?;
@@ -215,7 +213,7 @@ impl Player {
             }
             PlaylistStatus::DirectoryListing => {
                 let playlist = self.playlist_mut().directory_playlist_mut();
-                playlist.set_order_index_next();
+                playlist.increment_order_index();
                 if let Some(song_index) = playlist.get_song_index() {
                     let path = &playlist.songs_ref()[song_index];
                     let song = Song::new(path)?;
@@ -230,7 +228,7 @@ impl Player {
         match self.playlist_ref().status {
             PlaylistStatus::PlaylistFile => {
                 let playlist = self.playlist_mut().file_playlist_mut();
-                playlist.set_order_index_previous();
+                playlist.decrement_order_index();
                 if let Some(song_index) = playlist.get_song_index() {
                     let song = playlist.songs_ref()[song_index].clone();
                     self.play(&song)?;
@@ -238,7 +236,7 @@ impl Player {
             }
             PlaylistStatus::DirectoryListing => {
                 let playlist = self.playlist_mut().directory_playlist_mut();
-                playlist.set_order_index_previous();
+                playlist.decrement_order_index();
                 if let Some(song_index) = playlist.get_song_index() {
                     let path = &playlist.songs_ref()[song_index];
                     let song = Song::new(path)?;

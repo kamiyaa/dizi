@@ -39,6 +39,8 @@ impl FilePlaylist {
 
     pub fn clear(&mut self) {
         self.list_mut().clear();
+        self.cursor_index = None;
+        self.playing_index = None;
     }
 
     pub fn append_song(&mut self, s: Song) {
