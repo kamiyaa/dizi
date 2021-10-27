@@ -189,14 +189,14 @@ impl PlayerFilePlaylist {
 
 #[derive(Clone, Debug)]
 pub struct PlayerDirectoryPlaylist {
-    _songs: Vec<PathBuf>,
+    _songs: Vec<Song>,
     _order: Vec<usize>,
     _order_index: Option<usize>,
     _shuffle: bool,
 }
 
 impl PlayerDirectoryPlaylist {
-    pub fn new(songs: Vec<PathBuf>) -> Self {
+    pub fn new(songs: Vec<Song>) -> Self {
         let songs_count = songs.len();
         Self {
             _songs: songs,
@@ -207,15 +207,18 @@ impl PlayerDirectoryPlaylist {
     }
 
     pub fn from_path(path: &Path) -> io::Result<Self> {
-        let results: Vec<PathBuf> = fs::read_dir(path)?
+        // only process regular files
+        // if we can't read it, then don't play it
+        let songs: Vec<Song> = fs::read_dir(path)?
             .filter_map(|entry| entry.ok())
             .map(|entry| entry.path())
             .filter(|p| p.is_file())
+            .filter_map(|path| Song::new(&path).ok())
             .collect();
 
-        let len = results.len();
+        let len = songs.len();
         Ok(Self {
-            _songs: results,
+            _songs: songs,
             _order: (0..len).collect(),
             _order_index: None,
             _shuffle: false,
@@ -228,26 +231,15 @@ impl PlayerDirectoryPlaylist {
     pub fn len(&self) -> usize {
         self._songs.len()
     }
-    pub fn push(&mut self, song: PathBuf) {
-        self._songs.push(song);
-    }
-    pub fn remove(&mut self, index: usize) {
-        self._songs.remove(index);
-    }
-    pub fn clear(&mut self) {
-        self._songs.clear();
-        self._order = vec![];
-        self._order_index = None;
-    }
 
     pub fn set_shuffle(&mut self, shuffle: bool) {
         self._shuffle = shuffle;
     }
 
-    pub fn songs_ref(&self) -> &Vec<PathBuf> {
+    pub fn songs_ref(&self) -> &Vec<Song> {
         &self._songs
     }
-    pub fn songs_mut(&mut self) -> &mut Vec<PathBuf> {
+    pub fn songs_mut(&mut self) -> &mut Vec<Song> {
         &mut self._songs
     }
 

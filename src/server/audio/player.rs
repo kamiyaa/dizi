@@ -145,7 +145,7 @@ impl Player {
                 .songs_ref()
                 .iter()
                 .enumerate()
-                .find(|(_, p)| p.as_path() == path)
+                .find(|(_, p)| p.file_path() == path)
                 .map(|(i, _)| i);
             if let Some(index) = index {
                 directory_playlist.set_song_index(index);
@@ -173,8 +173,7 @@ impl Player {
 
         playlist.set_song_index(index);
         if let Some(song_index) = playlist.get_song_index() {
-            let path = &playlist.songs_ref()[song_index];
-            let song = Song::new(path)?;
+            let song = playlist.songs_ref()[song_index].clone();
             self.play(&song)?;
         }
         Ok(())
@@ -192,8 +191,7 @@ impl Player {
             PlaylistStatus::DirectoryListing => {
                 let playlist = self.playlist_mut().directory_playlist_mut();
                 if let Some(song_index) = playlist.get_song_index() {
-                    let path = &playlist.songs_ref()[song_index];
-                    let song = Song::new(path)?;
+                    let song = playlist.songs_ref()[song_index].clone();
                     self.play(&song)?;
                 }
             }
@@ -215,8 +213,7 @@ impl Player {
                 let playlist = self.playlist_mut().directory_playlist_mut();
                 playlist.increment_order_index();
                 if let Some(song_index) = playlist.get_song_index() {
-                    let path = &playlist.songs_ref()[song_index];
-                    let song = Song::new(path)?;
+                    let song = playlist.songs_ref()[song_index].clone();
                     self.play(&song)?;
                 }
             }
@@ -238,8 +235,7 @@ impl Player {
                 let playlist = self.playlist_mut().directory_playlist_mut();
                 playlist.decrement_order_index();
                 if let Some(song_index) = playlist.get_song_index() {
-                    let path = &playlist.songs_ref()[song_index];
-                    let song = Song::new(path)?;
+                    let song = playlist.songs_ref()[song_index].clone();
                     self.play(&song)?;
                 }
             }
