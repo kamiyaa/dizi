@@ -1,4 +1,4 @@
-use std::io;
+
 use std::path::{Path, PathBuf};
 use std::sync::mpsc;
 use std::thread;
@@ -7,41 +7,18 @@ use std::time;
 use log::{debug, log_enabled, Level};
 
 use rand::seq::SliceRandom;
-use rand::thread_rng;
 
-use dizi_lib::error::{DiziError, DiziErrorKind, DiziResult};
+
+use dizi_lib::error::{DiziResult};
 use dizi_lib::player::{PlayerState, PlayerStatus};
-use dizi_lib::playlist::{DirlistPlaylist, Playlist, PlaylistStatus};
+use dizi_lib::playlist::PlaylistStatus;
 use dizi_lib::song::Song;
 
-use crate::audio::{player_stream, PlayerRequest};
+use crate::audio::{
+    player_stream, PlayerDirectoryPlaylist, PlayerFilePlaylist, PlayerPlaylist, PlayerRequest,
+};
 use crate::config;
 use crate::events::ServerEventSender;
-
-pub fn read_playlist(cwd: &Path, path: &Path) -> io::Result<Playlist> {
-    let mut reader = m3u::Reader::open(path)?;
-    let read_playlist: Vec<_> = reader.entries().map(|entry| entry.unwrap()).collect();
-    let mut playlist = Playlist::new();
-    for entry in &read_playlist {
-        match entry {
-            m3u::Entry::Path(p) => {
-                if p.is_absolute() {
-                    if let Ok(song) = Song::new(&p) {
-                        playlist.append_song(song);
-                    }
-                } else {
-                    let mut new_path = cwd.to_path_buf();
-                    new_path.push(p);
-                    if let Ok(song) = Song::new(&new_path) {
-                        playlist.append_song(song);
-                    }
-                }
-            }
-            _ => {}
-        }
-    }
-    Ok(playlist)
-}
 
 #[derive(Debug)]
 pub struct Player {
@@ -49,7 +26,6 @@ pub struct Player {
     elapsed: time::Duration,
 
     status: PlayerStatus,
-    _playlist_status: PlaylistStatus,
 
     volume: f32,
 
@@ -57,16 +33,13 @@ pub struct Player {
     repeat: bool,
     next: bool,
 
-    playlist: Playlist,
-
-    dirlist_playlist: DirlistPlaylist,
+    playlist: PlayerPlaylist,
 
     event_tx: ServerEventSender,
 
     player_handle: thread::JoinHandle<DiziResult<()>>,
     player_req_tx: mpsc::Sender<PlayerRequest>,
     player_res_rx: mpsc::Receiver<DiziResult<()>>,
-    // event_tx: mpsc::Sender<PlayerResponse>,
 }
 
 impl Player {
@@ -92,25 +65,26 @@ impl Player {
         let server_config = config_t.server_ref();
         let player_config = server_config.player_ref();
 
-        let playlist = read_playlist(&PathBuf::from("/"), server_config.playlist_ref())
-            .unwrap_or_else(|_| Playlist::new());
+        let mut playlist = PlayerPlaylist::default();
+        playlist.file_playlist =
+            PlayerFilePlaylist::from_file(&PathBuf::from("/"), server_config.playlist_ref())
+                .unwrap_or_else(|_| PlayerFilePlaylist::new(Vec::new()));
 
         Self {
             current_song: None,
             elapsed: time::Duration::from_secs(0),
 
             status: PlayerStatus::Stopped,
-            _playlist_status: PlaylistStatus::PlaylistFile,
             volume: 0.5,
 
             shuffle: player_config.shuffle,
             repeat: player_config.repeat,
             next: player_config.next,
 
+            playlist,
+
             event_tx,
 
-            playlist,
-            dirlist_playlist: DirlistPlaylist::new(),
             player_handle,
             player_req_tx,
             player_res_rx,
@@ -121,13 +95,13 @@ impl Player {
         let song = self.current_song_ref().map(|s| s.clone());
         let elapsed = self.get_elapsed();
         let status = self.play_status();
-        let playlist_status = self.playlist_status();
+        let playlist_status = self.playlist_ref().status;
         let volume: usize = (self.get_volume() * 100.0) as usize;
         let shuffle = self.shuffle_enabled();
         let next = self.next_enabled();
         let repeat = self.repeat_enabled();
 
-        let playlist = self.playlist_ref().clone();
+        let playlist = self.playlist_ref().file_playlist.clone_file_playlist();
 
         PlayerState {
             song,
@@ -166,63 +140,112 @@ impl Player {
     pub fn play_entire_directory(&mut self, path: &Path) -> DiziResult<()> {
         let song = Song::new(path)?;
 
-        let dirlist_playlist = match song.file_path().parent() {
-            Some(parent) => {
-                // make the playlist and make sure the first song is the current song
-                let mut playlist = DirlistPlaylist::from(parent)?;
-                // sort alphabetically or randomly if shuffle is enabled
-                if !self.shuffle_enabled() {
-                    playlist.list_mut().sort();
-                } else {
-                    playlist.list_mut().shuffle(&mut thread_rng());
-                }
-
-                let index = playlist
-                    .list_mut()
-                    .iter()
-                    .enumerate()
-                    .find(|(_, p)| p.as_path() == path)
-                    .map(|(i, _)| i);
-                if let Some(index) = index {
-                    playlist.index = index;
-                }
-                playlist
+        if let Some(parent) = song.file_path().parent() {
+            let mut directory_playlist = PlayerDirectoryPlaylist::from_path(parent)?;
+            directory_playlist.set_shuffle(self.shuffle_enabled());
+            let index = directory_playlist
+                .songs_ref()
+                .iter()
+                .enumerate()
+                .find(|(_, p)| p.as_path() == path)
+                .map(|(i, _)| i);
+            if let Some(index) = index {
+                directory_playlist.set_song_index(index);
             }
-            None => DirlistPlaylist::new(),
-        };
-
-        self.play(&song)?;
-        self.dirlist_playlist = dirlist_playlist;
-        self._playlist_status = PlaylistStatus::DirectoryListing;
-        Ok(())
-    }
-
-    pub fn play_from_directory(&mut self, index: usize) -> DiziResult<()> {
-        if index >= self.dirlist_playlist_ref().len() {
-            return Err(DiziError::new(
-                DiziErrorKind::InvalidParameters,
-                "index out of bounds".to_string(),
-            ));
+            self.play(&song)?;
+            self.playlist.directory_playlist = directory_playlist;
+            self.playlist.status = PlaylistStatus::DirectoryListing;
         }
-        let path = self.dirlist_playlist_ref().list_ref()[index].clone();
-        let song = Song::new(path.as_path())?;
-        self.play(&song)?;
-        self.dirlist_playlist_mut().set_playing_index(index);
-        self._playlist_status = PlaylistStatus::DirectoryListing;
         Ok(())
     }
 
     pub fn play_from_playlist(&mut self, index: usize) -> DiziResult<()> {
-        if index >= self.playlist.len() {
-            return Err(DiziError::new(
-                DiziErrorKind::InvalidParameters,
-                "index out of bounds".to_string(),
-            ));
+        let playlist = self.playlist_mut().file_playlist_mut();
+
+        playlist.set_song_index(index);
+        if let Some(song_index) = playlist.get_song_index() {
+            let song = playlist.songs_ref()[song_index].clone();
+            self.play(&song)?;
         }
-        let song = self.playlist.list_ref()[index].clone();
-        self.play(&song)?;
-        self.playlist_mut().set_playing_index(Some(index));
-        self._playlist_status = PlaylistStatus::PlaylistFile;
+        Ok(())
+    }
+
+    pub fn play_from_directory(&mut self, index: usize) -> DiziResult<()> {
+        let playlist = self.playlist_mut().directory_playlist_mut();
+
+        playlist.set_song_index(index);
+        if let Some(song_index) = playlist.get_song_index() {
+            let path = &playlist.songs_ref()[song_index];
+            let song = Song::new(path)?;
+            self.play(&song)?;
+        }
+        Ok(())
+    }
+
+    pub fn play_again(&mut self) -> DiziResult<()> {
+        match self.playlist_ref().status {
+            PlaylistStatus::PlaylistFile => {
+                let playlist = self.playlist_mut().file_playlist_mut();
+                if let Some(song_index) = playlist.get_song_index() {
+                    let song = playlist.songs_ref()[song_index].clone();
+                    self.play(&song)?;
+                }
+            }
+            PlaylistStatus::DirectoryListing => {
+                let playlist = self.playlist_mut().directory_playlist_mut();
+                if let Some(song_index) = playlist.get_song_index() {
+                    let path = &playlist.songs_ref()[song_index];
+                    let song = Song::new(path)?;
+                    self.play(&song)?;
+                }
+            }
+        }
+        Ok(())
+    }
+
+    pub fn play_next(&mut self) -> DiziResult<()> {
+        match self.playlist_ref().status {
+            PlaylistStatus::PlaylistFile => {
+                let playlist = self.playlist_mut().file_playlist_mut();
+                playlist.set_order_index_next();
+                if let Some(song_index) = playlist.get_song_index() {
+                    let song = playlist.songs_ref()[song_index].clone();
+                    self.play(&song)?;
+                }
+            }
+            PlaylistStatus::DirectoryListing => {
+                let playlist = self.playlist_mut().directory_playlist_mut();
+                playlist.set_order_index_next();
+                if let Some(song_index) = playlist.get_song_index() {
+                    let path = &playlist.songs_ref()[song_index];
+                    let song = Song::new(path)?;
+                    self.play(&song)?;
+                }
+            }
+        }
+        Ok(())
+    }
+
+    pub fn play_previous(&mut self) -> DiziResult<()> {
+        match self.playlist_ref().status {
+            PlaylistStatus::PlaylistFile => {
+                let playlist = self.playlist_mut().file_playlist_mut();
+                playlist.set_order_index_previous();
+                if let Some(song_index) = playlist.get_song_index() {
+                    let song = playlist.songs_ref()[song_index].clone();
+                    self.play(&song)?;
+                }
+            }
+            PlaylistStatus::DirectoryListing => {
+                let playlist = self.playlist_mut().directory_playlist_mut();
+                playlist.set_order_index_previous();
+                if let Some(song_index) = playlist.get_song_index() {
+                    let path = &playlist.songs_ref()[song_index];
+                    let song = Song::new(path)?;
+                    self.play(&song)?;
+                }
+            }
+        }
         Ok(())
     }
 
@@ -258,12 +281,6 @@ impl Player {
     pub fn play_status(&self) -> PlayerStatus {
         self.status
     }
-    pub fn playlist_status(&self) -> PlaylistStatus {
-        self._playlist_status
-    }
-    pub fn set_playlist_status(&mut self, status: PlaylistStatus) {
-        self._playlist_status = status;
-    }
 
     pub fn get_volume(&self) -> f32 {
         self.volume
@@ -294,9 +311,20 @@ impl Player {
     }
     pub fn set_shuffle(&mut self, shuffle: bool) {
         self.shuffle = shuffle;
-        if self.shuffle_enabled() {
-            self.playlist.list_mut().shuffle(&mut thread_rng());
-            self.dirlist_playlist.list_mut().shuffle(&mut thread_rng());
+        self.playlist
+            .directory_playlist_mut()
+            .set_shuffle(self.shuffle);
+        self.playlist.file_playlist_mut().set_shuffle(self.shuffle);
+
+        if let Some(index) = self
+            .playlist_ref()
+            .directory_playlist_ref()
+            .get_song_index()
+        {
+            self.playlist.directory_playlist_mut().set_song_index(index);
+        }
+        if let Some(index) = self.playlist_ref().file_playlist_ref().get_song_index() {
+            self.playlist.file_playlist_mut().set_song_index(index);
         }
     }
 
@@ -311,17 +339,10 @@ impl Player {
         self.current_song.as_ref()
     }
 
-    pub fn playlist_ref(&self) -> &Playlist {
+    pub fn playlist_ref(&self) -> &PlayerPlaylist {
         &self.playlist
     }
-    pub fn playlist_mut(&mut self) -> &mut Playlist {
+    pub fn playlist_mut(&mut self) -> &mut PlayerPlaylist {
         &mut self.playlist
-    }
-
-    pub fn dirlist_playlist_ref(&self) -> &DirlistPlaylist {
-        &self.dirlist_playlist
-    }
-    pub fn dirlist_playlist_mut(&mut self) -> &mut DirlistPlaylist {
-        &mut self.dirlist_playlist
     }
 }

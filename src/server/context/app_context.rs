@@ -1,7 +1,6 @@
+use crate::audio::Player;
 use crate::config;
 use crate::events::Events;
-
-use super::PlayerContext;
 
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub enum QuitType {
@@ -14,19 +13,19 @@ pub struct AppContext {
     pub events: Events,
     pub quit: QuitType,
     config: config::AppConfig,
-    player_context: PlayerContext,
+    player: Player,
 }
 
 impl AppContext {
     pub fn new(config: config::AppConfig) -> Self {
         let events = Events::new();
         let event_tx2 = events.server_event_sender().clone();
-        let player_context = PlayerContext::new(&config, event_tx2);
+        let player = Player::new(&config, event_tx2);
         Self {
             events,
             quit: QuitType::DoNot,
             config,
-            player_context,
+            player,
         }
     }
 
@@ -34,10 +33,11 @@ impl AppContext {
         &self.config
     }
 
-    pub fn player_context_ref(&self) -> &PlayerContext {
-        &self.player_context
+    pub fn player_ref(&self) -> &Player {
+        &self.player
     }
-    pub fn player_context_mut(&mut self) -> &mut PlayerContext {
-        &mut self.player_context
+
+    pub fn player_mut(&mut self) -> &mut Player {
+        &mut self.player
     }
 }

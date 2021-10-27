@@ -10,7 +10,7 @@ mod server_commands;
 use std::path::PathBuf;
 
 use lazy_static::lazy_static;
-use log::{debug, error, info, log_enabled, Level};
+use log::{debug, log_enabled, Level};
 use structopt::StructOpt;
 
 use dizi_lib::error::DiziResult;

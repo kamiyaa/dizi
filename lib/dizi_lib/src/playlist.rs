@@ -14,14 +14,14 @@ pub enum PlaylistStatus {
 }
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
-pub struct Playlist {
+pub struct FilePlaylist {
     #[serde(rename = "list")]
-    _list: Vec<Song>,
-    cursor_index: Option<usize>,
-    playing_index: Option<usize>,
+    pub list: Vec<Song>,
+    pub cursor_index: Option<usize>,
+    pub playing_index: Option<usize>,
 }
 
-impl Playlist {
+impl FilePlaylist {
     pub fn new() -> Self {
         Self::default()
     }
@@ -34,15 +34,15 @@ impl Playlist {
     }
 
     pub fn playlist(&self) -> &[Song] {
-        self._list.as_slice()
+        self.list.as_slice()
     }
 
     pub fn clear(&mut self) {
-        self._list.clear();
+        self.list_mut().clear();
     }
 
     pub fn append_song(&mut self, s: Song) {
-        self._list.push(s);
+        self.list_mut().push(s);
     }
 
     pub fn remove_song(&mut self, index: usize) -> Song {
@@ -72,107 +72,40 @@ impl Playlist {
     }
 
     pub fn len(&self) -> usize {
-        self._list.len()
+        self.list.len()
     }
 
     pub fn is_empty(&self) -> bool {
-        self._list.is_empty()
+        self.list.is_empty()
     }
 
     pub fn list_ref(&self) -> &Vec<Song> {
-        &self._list
+        &self.list
     }
     pub fn list_mut(&mut self) -> &mut Vec<Song> {
-        &mut self._list
+        &mut self.list
     }
 }
 
-impl std::default::Default for Playlist {
+impl std::default::Default for FilePlaylist {
     fn default() -> Self {
         Self {
-            _list: Vec::new(),
+            list: Vec::new(),
             cursor_index: None,
             playing_index: None,
         }
     }
 }
 
-#[derive(Clone, Debug, Deserialize, Serialize)]
-pub struct HashPlaylist {
-    #[serde(skip_serializing)]
-    _set: HashSet<PathBuf>,
-    #[serde(rename = "list")]
-    _list: Vec<Song>,
-    pub index: usize,
-}
-
-impl HashPlaylist {
-    pub fn new() -> Self {
-        Self::default()
-    }
-
-    pub fn playlist(&self) -> &[Song] {
-        self._list.as_slice()
-    }
-
-    pub fn append_song(&mut self, s: Song) {
-        self._set.insert(s.file_path().to_path_buf());
-        self._list.push(s);
-    }
-
-    pub fn remove_song(&mut self, index: usize) -> Song {
-        let song = self._list.remove(index);
-        self._set.remove(&song.file_path().to_path_buf());
-        song
-    }
-
-    pub fn len(&self) -> usize {
-        self._list.len()
-    }
-
-    pub fn contains(&self, s: &PathBuf) -> bool {
-        self._set.contains(s)
-    }
-
-    pub fn list_ref(&self) -> &Vec<Song> {
-        &self._list
-    }
-    pub fn list_mut(&mut self) -> &mut Vec<Song> {
-        &mut self._list
-    }
-}
-
-impl std::default::Default for HashPlaylist {
-    fn default() -> Self {
-        Self {
-            _set: HashSet::new(),
-            _list: Vec::new(),
-            index: 0,
-        }
-    }
-}
-
 #[derive(Clone, Debug)]
-pub struct DirlistPlaylist {
+pub struct DirectoryPlaylist {
     _list: Vec<PathBuf>,
     pub index: usize,
 }
 
-impl DirlistPlaylist {
+impl DirectoryPlaylist {
     pub fn new() -> Self {
         Self::default()
-    }
-
-    pub fn from(path: &Path) -> io::Result<Self> {
-        let results: Vec<PathBuf> = fs::read_dir(path)?
-            .filter_map(|entry| entry.ok())
-            .map(|entry| entry.path())
-            .filter(|p| p.is_file())
-            .collect();
-        Ok(Self {
-            _list: results,
-            index: 0,
-        })
     }
 
     pub fn set_playing_index(&mut self, index: usize) {
@@ -194,7 +127,7 @@ impl DirlistPlaylist {
     }
 }
 
-impl std::default::Default for DirlistPlaylist {
+impl std::default::Default for DirectoryPlaylist {
     fn default() -> Self {
         Self {
             _list: Vec::new(),

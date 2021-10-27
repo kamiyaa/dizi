@@ -37,10 +37,7 @@ pub fn process_client_request(context: &mut AppContext, event: ClientRequest) ->
             }
         }
         ClientRequest::PlayerState => {
-            let state = context
-                .player_context_ref()
-                .player_ref()
-                .clone_player_state();
+            let state = context.player_ref().clone_player_state();
             context
                 .events
                 .broadcast_event(ServerBroadcastEvent::PlayerState { state });
@@ -97,26 +94,8 @@ pub fn process_client_request(context: &mut AppContext, event: ClientRequest) ->
             }
         }
         ClientRequest::PlayerPlayNext => {
-            let len1 = context
-                .player_context_ref()
-                .player_ref()
-                .dirlist_playlist_ref()
-                .len();
-
-            let len2 = context
-                .player_context_ref()
-                .player_ref()
-                .playlist_ref()
-                .len();
-
-            let len = if len1 < len2 { len2 } else { len1 };
-            for i in 1..len {
-                if player_play_next(context, i).is_err() {
-                    continue;
-                }
-                send_latest_song_info(context)?;
-                break;
-            }
+            player_play_next(context)?;
+            send_latest_song_info(context)?;
         }
         ClientRequest::PlayerPlayPrevious => {
             player_play_previous(context)?;
@@ -169,37 +148,28 @@ pub fn process_client_request(context: &mut AppContext, event: ClientRequest) ->
             path: Some(path),
         } => {
             playlist::playlist_load(context, &cwd, &path)?;
-            let state = context
-                .player_context_ref()
-                .player_ref()
-                .clone_player_state();
+            let state = context.player_ref().clone_player_state();
             context
                 .events
                 .broadcast_event(ServerBroadcastEvent::PlayerState { state });
         }
         ClientRequest::PlayerToggleNext => {
-            let enabled = context.player_context_ref().player_ref().next_enabled();
-            context.player_context_mut().player_mut().set_next(!enabled);
+            let enabled = context.player_ref().next_enabled();
+            context.player_mut().set_next(!enabled);
             context
                 .events
                 .broadcast_event(ServerBroadcastEvent::PlayerNext { on: !enabled });
         }
         ClientRequest::PlayerToggleRepeat => {
-            let enabled = context.player_context_ref().player_ref().repeat_enabled();
-            context
-                .player_context_mut()
-                .player_mut()
-                .set_repeat(!enabled);
+            let enabled = context.player_ref().repeat_enabled();
+            context.player_mut().set_repeat(!enabled);
             context
                 .events
                 .broadcast_event(ServerBroadcastEvent::PlayerRepeat { on: !enabled });
         }
         ClientRequest::PlayerToggleShuffle => {
-            let enabled = context.player_context_ref().player_ref().shuffle_enabled();
-            context
-                .player_context_mut()
-                .player_mut()
-                .set_shuffle(!enabled);
+            let enabled = context.player_ref().shuffle_enabled();
+            context.player_mut().set_shuffle(!enabled);
             context
                 .events
                 .broadcast_event(ServerBroadcastEvent::PlayerShuffle { on: !enabled });
@@ -214,9 +184,9 @@ pub fn process_client_request(context: &mut AppContext, event: ClientRequest) ->
 }
 
 pub fn send_latest_song_info(context: &mut AppContext) -> DiziResult<()> {
-    match context.player_context_ref().player_ref().playlist_status() {
+    match context.player_ref().playlist_ref().status {
         PlaylistStatus::DirectoryListing => {
-            if let Some(song) = context.player_context_ref().player_ref().current_song_ref() {
+            if let Some(song) = context.player_ref().current_song_ref() {
                 let song = song.clone();
                 context
                     .events
@@ -224,12 +194,10 @@ pub fn send_latest_song_info(context: &mut AppContext) -> DiziResult<()> {
             }
         }
         PlaylistStatus::PlaylistFile => {
-            if let Some(index) = context
-                .player_context_ref()
-                .player_ref()
-                .playlist_ref()
-                .get_playing_index()
-            {
+            let playlist = &context.player_ref().playlist_ref().file_playlist;
+
+            if let Some(index) = playlist.get_song_index() {
+                let index = index;
                 context
                     .events
                     .broadcast_event(ServerBroadcastEvent::PlaylistPlay { index });

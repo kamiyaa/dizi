@@ -69,7 +69,7 @@ pub fn serve(config: AppConfig) -> DiziResult<()> {
     }
 
     let playlist_path = context.config_ref().server_ref().playlist_ref();
-    let playlist = context.player_context_ref().player_ref().playlist_ref();
+    let playlist = context.player_ref().playlist_ref().file_playlist_ref();
 
     if log_enabled!(Level::Debug) {
         debug!("Saving playlist to '{}'", playlist_path.to_string_lossy());
@@ -77,7 +77,7 @@ pub fn serve(config: AppConfig) -> DiziResult<()> {
 
     let mut file = std::fs::File::create(playlist_path)?;
     let mut writer = m3u::Writer::new(&mut file);
-    for song in playlist.list_ref() {
+    for song in playlist.songs_ref() {
         let entry = m3u::Entry::Path(song.file_path().to_path_buf());
         writer.write_entry(&entry)?;
     }
@@ -103,10 +103,7 @@ pub fn process_server_event(context: &mut AppContext, event: ServerEvent) -> Diz
                 .add_broadcast_listener(uuid_string, server_tx);
         }
         ServerEvent::PlayerProgressUpdate(elapsed) => {
-            context
-                .player_context_mut()
-                .player_mut()
-                .set_elapsed(elapsed);
+            context.player_mut().set_elapsed(elapsed);
             context
                 .events
                 .broadcast_event(ServerBroadcastEvent::PlayerProgressUpdate { elapsed });
@@ -126,36 +123,18 @@ pub fn listen_for_clients(listener: UnixListener, event_tx: ServerEventSender) -
 }
 
 pub fn process_done_song(context: &mut AppContext) -> DiziResult<()> {
-    let next_enabled = context.player_context_ref().player_ref().next_enabled();
-    let repeat_enabled = context.player_context_ref().player_ref().repeat_enabled();
+    let next_enabled = context.player_ref().next_enabled();
+    let repeat_enabled = context.player_ref().repeat_enabled();
 
-    if !next_enabled {
-        if repeat_enabled {
-            player_play_again(context)?;
-            send_latest_song_info(context)?;
-        }
+    if next_enabled {
+        player_play_next(context)?;
+        send_latest_song_info(context)?;
+    } else if repeat_enabled {
+        player_play_again(context)?;
+        send_latest_song_info(context)?;
     } else {
-        let len1 = context
-            .player_context_ref()
-            .player_ref()
-            .dirlist_playlist_ref()
-            .len();
-
-        let len2 = context
-            .player_context_ref()
-            .player_ref()
-            .playlist_ref()
-            .len();
-
-        let len = if len1 < len2 { len2 } else { len1 };
-        for i in 1..len {
-            if player_play_next(context, i).is_err() {
-                continue;
-            }
-            send_latest_song_info(context)?;
-            break;
-        }
     }
+
     Ok(())
 }
 

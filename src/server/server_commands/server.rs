@@ -14,10 +14,7 @@ pub fn quit_server(context: &mut AppContext) -> DiziResult<()> {
 pub fn query(context: &mut AppContext, query: &str) -> DiziResult<String> {
     let mut vars = HashMap::new();
 
-    let player_state = context
-        .player_context_ref()
-        .player_ref()
-        .clone_player_state();
+    let player_state = context.player_ref().clone_player_state();
 
     if let Some(song) = player_state.get_song() {
         vars.insert(

@@ -2,7 +2,7 @@ use std::string::ToString;
 use std::time;
 use serde_derive::{Deserialize, Serialize};
 
-use crate::playlist::{Playlist, PlaylistStatus};
+use crate::playlist::{FilePlaylist, PlaylistStatus};
 use crate::song::Song;
 
 #[derive(Copy, Clone, Debug, PartialEq, Serialize, Deserialize)]
@@ -36,7 +36,7 @@ pub struct PlayerState {
     pub repeat: bool,
     pub shuffle: bool,
 
-    pub playlist: Playlist,
+    pub playlist: FilePlaylist,
 }
 
 impl PlayerState {
@@ -50,7 +50,7 @@ impl PlayerState {
             next: true,
             repeat: false,
             shuffle: false,
-            playlist: Playlist::new(),
+            playlist: FilePlaylist::new(),
         }
     }
 
@@ -109,10 +109,10 @@ impl PlayerState {
         self.next = next;
     }
 
-    pub fn playlist_ref(&self) -> &Playlist {
+    pub fn playlist_ref(&self) -> &FilePlaylist {
         &self.playlist
     }
-    pub fn playlist_mut(&mut self) -> &mut Playlist {
+    pub fn playlist_mut(&mut self) -> &mut FilePlaylist {
         &mut self.playlist
     }
 }
