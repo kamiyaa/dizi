@@ -15,6 +15,13 @@ jobs:
         rust: [stable]
     steps:
       - uses: actions/checkout@v2
+      - name: Update apt
+        run: sudo apt update
+      - name: Install alsa
+        run: sudo apt-get install libasound2-dev
+      - name: Install libjack
+        run: sudo apt-get install libjack-jackd2-dev libjack-jackd2-0
+      - uses: actions/checkout@v2
       - name: Install minimal ${{ matrix.rust }} rust
         uses: actions-rs/toolchain@v1
         with:
