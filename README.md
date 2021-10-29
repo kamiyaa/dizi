@@ -1,3 +1,5 @@
+[![Linux build](https://github.com/kamiyaa/joshuto/actions/workflows/rust-linux-main.yml/badge.svg)](https://github.com/kamiyaa/joshuto/actions/workflows/rust-linux-main.yml)
+
 # dizi
 Server-client music player written in Rust
 
