@@ -45,6 +45,7 @@ whenever mocp is playing music, other audio/video apps stop working and vice ver
  - [x] play/pause support
  - [ ] get audio duration (requires [rodio](https://github.com/RustAudio/rodio) and [symphonia](https://github.com/pdeljanov/Symphonia) to work together on this)
  - [x] volume support
+ - [ ] fast forward/rewind
  - [x] directory playing
    - [x] shuffle
    - [x] repeat
@@ -52,6 +53,7 @@ whenever mocp is playing music, other audio/video apps stop working and vice ver
    - [ ] sorting
  - [x] playlist support
    - [x] add/delete/update songs
+   - [ ] recursively add songs in a directory
    - [ ] shuffle
    - [x] repeat
    - [x] next
@@ -67,6 +69,7 @@ whenever mocp is playing music, other audio/video apps stop working and vice ver
    - [x] file name
    - [x] file path
    - [ ] song name (blocked on metadata)
+   - [ ] playlist index and length
  - [x] on song change hook
 
 ### Client-side
@@ -83,6 +86,6 @@ whenever mocp is playing music, other audio/video apps stop working and vice ver
    - [x] repeat
    - [x] next
    - [x] clearing
- - [ ] show audio metadata
+ - [ ] show audio metadata (artists, genre, album, etc)
  - [x] theming support
  - [x] custom layout support
