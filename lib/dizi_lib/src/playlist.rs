@@ -1,6 +1,6 @@
+use std::collections::HashSet;
 use std::fs;
 use std::io;
-use std::collections::HashSet;
 use std::path::{Path, PathBuf};
 
 use serde_derive::{Deserialize, Serialize};
@@ -137,4 +137,3 @@ impl std::default::Default for DirectoryPlaylist {
         }
     }
 }
-

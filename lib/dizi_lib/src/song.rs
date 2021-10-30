@@ -30,7 +30,11 @@ impl Song {
         let audio_metadata = AudioMetadata::from_source(&source);
         let music_metadata = MusicMetadata {};
 
-        let file_name = path.file_name().map(|s| s.to_string_lossy()).unwrap().into_owned();
+        let file_name = path
+            .file_name()
+            .map(|s| s.to_string_lossy())
+            .unwrap()
+            .into_owned();
 
         Ok(Self {
             _file_name: file_name,
@@ -72,7 +76,7 @@ impl AudioMetadata {
         Self {
             _channels: channels,
             _sample_rate: sample_rate,
-            _total_duration: total_duration
+            _total_duration: total_duration,
         }
     }
 

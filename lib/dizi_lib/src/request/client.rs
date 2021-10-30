@@ -39,7 +39,7 @@ pub enum ClientRequest {
     #[serde(rename = "/player/rewind")]
     PlayerRewind { amount: time::Duration },
     #[serde(rename = "/player/fast_forward")]
-    PlayerFastForward { amount: time::Duration  },
+    PlayerFastForward { amount: time::Duration },
 
     #[serde(rename = "/player/toggle/play")]
     PlayerTogglePlay,
@@ -59,7 +59,10 @@ pub enum ClientRequest {
     #[serde(rename = "/playlist/state")]
     PlaylistState,
     #[serde(rename = "/playlist/open")]
-    PlaylistOpen { cwd: Option<PathBuf>, path: Option<PathBuf> },
+    PlaylistOpen {
+        cwd: Option<PathBuf>,
+        path: Option<PathBuf>,
+    },
     #[serde(rename = "/playlist/play")]
     PlaylistPlay { index: Option<usize> },
 
@@ -107,16 +110,20 @@ impl ClientRequest {
             Self::PlaylistClear => "/playlist/clear",
 
             Self::PlaylistMoveUp { .. } => "/playlist/move_up",
-            Self::PlaylistMoveDown { .. } => "/playlist/move_down"
+            Self::PlaylistMoveDown { .. } => "/playlist/move_down",
         }
     }
 
     pub fn parse_str(s: &str, args: &str) -> DiziResult<Self> {
         match s {
             "/server/quit" => Ok(Self::ServerQuit),
-            "/server/query" => Ok(Self::ServerQuery { query: "".to_string() } ),
+            "/server/query" => Ok(Self::ServerQuery {
+                query: "".to_string(),
+            }),
 
-            "/client/leave" => Ok(Self::ClientLeave { uuid: "".to_string() } ),
+            "/client/leave" => Ok(Self::ClientLeave {
+                uuid: "".to_string(),
+            }),
 
             "/player/state" => Ok(Self::PlayerState),
             "/player/play/file" => Ok(Self::PlayerFilePlay { path: None }),
@@ -128,8 +135,12 @@ impl ClientRequest {
             "/player/resume" => Ok(Self::PlayerResume),
             "/player/volume/get" => Ok(Self::PlayerGetVolume),
 
-            "/player/rewind" => Ok(Self::PlayerRewind { amount: time::Duration::from_secs(1) }),
-            "/player/fast_forward" => Ok(Self::PlayerFastForward { amount: time::Duration::from_secs(1) }),
+            "/player/rewind" => Ok(Self::PlayerRewind {
+                amount: time::Duration::from_secs(1),
+            }),
+            "/player/fast_forward" => Ok(Self::PlayerFastForward {
+                amount: time::Duration::from_secs(1),
+            }),
 
             "/player/toggle/play" => Ok(Self::PlayerTogglePlay),
             "/player/toggle/next" => Ok(Self::PlayerToggleNext),
@@ -140,7 +151,10 @@ impl ClientRequest {
             "/player/volume/decrease" => Ok(Self::PlayerVolumeDown { amount: 1 }),
 
             "/playlist/state" => Ok(Self::PlaylistState),
-            "/playlist/open" => Ok(Self::PlaylistOpen { cwd: None, path: None }),
+            "/playlist/open" => Ok(Self::PlaylistOpen {
+                cwd: None,
+                path: None,
+            }),
             "/playlist/play" => Ok(Self::PlaylistPlay { index: None }),
 
             "/playlist/append" => Ok(Self::PlaylistAppend { path: None }),
@@ -150,7 +164,10 @@ impl ClientRequest {
             "/playlist/move_up" => Ok(Self::PlaylistMoveUp { index: None }),
             "/playlist/move_down" => Ok(Self::PlaylistMoveDown { index: None }),
 
-            s => Err(DiziError::new(DiziErrorKind::UnrecognizedCommand, format!("Unrecognized command: '{}'", s))),
+            s => Err(DiziError::new(
+                DiziErrorKind::UnrecognizedCommand,
+                format!("Unrecognized command: '{}'", s),
+            )),
         }
     }
 }

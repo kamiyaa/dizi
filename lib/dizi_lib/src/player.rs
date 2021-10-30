@@ -1,6 +1,6 @@
+use serde_derive::{Deserialize, Serialize};
 use std::string::ToString;
 use std::time;
-use serde_derive::{Deserialize, Serialize};
 
 use crate::playlist::{FilePlaylist, PlaylistStatus};
 use crate::song::Song;

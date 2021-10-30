@@ -61,7 +61,6 @@ impl From<std::sync::mpsc::RecvError> for DiziError {
     }
 }
 
-
 impl From<rodio::PlayError> for DiziError {
     fn from(err: rodio::PlayError) -> Self {
         let err_str = err.to_string();
