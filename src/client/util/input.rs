@@ -64,7 +64,18 @@ pub fn process_server_event(context: &mut AppContext, s: &str) -> DiziResult<()>
         ServerBroadcastEvent::ServerQuery { .. } => {}
         ServerBroadcastEvent::PlayerState { mut state } => {
             if !state.playlist_ref().is_empty() {
-                state.playlist_mut().set_cursor_index(Some(0));
+                let old_state = context.server_state_ref()
+                    .player_ref();
+
+                let playlist_len = state.playlist_ref().len();
+                let new_cursor_index = old_state.playlist_ref().get_cursor_index()
+                    .map(|s| if s < playlist_len {
+                        s
+                    } else {
+                        playlist_len - 1
+                    })
+                    .unwrap_or_else(|| 0);
+                state.playlist_mut().set_cursor_index(Some(new_cursor_index));
             }
             context.server_state_mut().set_player(state);
         }
