@@ -13,6 +13,15 @@ pub enum PlaylistStatus {
     PlaylistFile,
 }
 
+impl ToString for PlaylistStatus {
+    fn to_string(&self) -> String {
+        match *self {
+            Self::DirectoryListing => "directory".to_string(),
+            Self::PlaylistFile => "file".to_string(),
+        }
+    }
+}
+
 #[derive(Clone, Debug, Deserialize, Serialize)]
 pub struct FilePlaylist {
     #[serde(rename = "list")]
