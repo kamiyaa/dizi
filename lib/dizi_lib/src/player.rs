@@ -1,7 +1,12 @@
-use serde_derive::{Deserialize, Serialize};
+use std::collections::HashMap;
 use std::string::ToString;
 use std::time;
 
+use serde_derive::{Deserialize, Serialize};
+
+use strfmt::strfmt;
+
+use crate::error::{DiziError, DiziErrorKind, DiziResult};
 use crate::playlist::{FilePlaylist, PlaylistStatus};
 use crate::song::Song;
 
@@ -114,5 +119,61 @@ impl PlayerState {
     }
     pub fn playlist_mut(&mut self) -> &mut FilePlaylist {
         &mut self.playlist
+    }
+
+    pub fn query(&self, query: &str) -> DiziResult<String> {
+        let player_state = self;
+
+        let mut vars = HashMap::new();
+
+        vars.insert(
+            "player_status".to_string(),
+            player_state.get_player_status().to_string(),
+        );
+        vars.insert(
+            "player_volume".to_string(),
+            format!("{}", player_state.get_volume()),
+        );
+        vars.insert(
+            "player_next".to_string(),
+            format!("{}", player_state.next_enabled()),
+        );
+        vars.insert(
+            "player_repeat".to_string(),
+            format!("{}", player_state.repeat_enabled()),
+        );
+        vars.insert(
+            "player_shuffle".to_string(),
+            format!("{}", player_state.shuffle_enabled()),
+        );
+
+        if let Some(song) = player_state.get_song() {
+            vars.insert("file_name".to_string(), song.file_name().to_string());
+            vars.insert(
+                "file_path".to_string(),
+                song.file_path().to_string_lossy().to_string(),
+            );
+        }
+
+        vars.insert(
+            "playlist_status".to_string(),
+            player_state.get_playlist_status().to_string(),
+        );
+
+        if let Some(index) = player_state.playlist_ref().get_playing_index() {
+            vars.insert("playlist_index".to_string(), format!("{}", index));
+        }
+        vars.insert(
+            "playlist_length".to_string(),
+            format!("{}", player_state.playlist_ref().len()),
+        );
+
+        match strfmt(&query, &vars) {
+            Ok(s) => Ok(s),
+            Err(_e) => Err(DiziError::new(
+                DiziErrorKind::InvalidParameters,
+                "Failed to process query".to_string(),
+            )),
+        }
     }
 }

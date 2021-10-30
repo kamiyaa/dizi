@@ -12,6 +12,7 @@ rodio = { features = [ "symphonia-all" ], git = "https://github.com/RustAudio/ro
 serde = "^1"
 serde_derive = "^1"
 serde_json = "^1"
+strfmt = "^0"
 toml = "^0"
 
 [features]

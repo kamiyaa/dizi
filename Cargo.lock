@@ -590,7 +590,6 @@ dependencies = [
  "shellexpand",
  "signal-hook",
  "skim",
- "strfmt",
  "structopt",
  "termion",
  "toml",
@@ -611,6 +610,7 @@ dependencies = [
  "serde",
  "serde_derive",
  "serde_json",
+ "strfmt",
  "toml",
 ]
 

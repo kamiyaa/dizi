@@ -1,8 +1,5 @@
-use std::collections::HashMap;
 use std::io::{BufRead, BufReader};
 use std::thread;
-
-use strfmt::strfmt;
 
 use dizi_lib::error::{DiziError, DiziErrorKind, DiziResult};
 use dizi_lib::request::client::ClientRequest;
@@ -26,16 +23,16 @@ pub fn run_query(context: &mut AppContext, query: String) -> DiziResult<()> {
         });
 
         // request for server state
-        /*
         let request = ClientRequest::ServerQuery {
             query: query.clone(),
         };
         send_client_request(context, &request)?;
-        */
 
         // request for server state
+        /*
         let request = ClientRequest::PlayerState;
         send_client_request(context, &request)?;
+        */
     }
 
     loop {
@@ -56,9 +53,8 @@ pub fn run_query(context: &mut AppContext, query: String) -> DiziResult<()> {
                         if !state.playlist_ref().is_empty() {
                             state.playlist_mut().set_cursor_index(Some(0));
                         }
-                        context.server_state_mut().set_player(state);
-                        let query = query_local(context, &query)?;
-                        println!("{}", query);
+                        let res = state.query(&query)?;
+                        println!("{}", res);
                         break;
                     }
                     ServerBroadcastEvent::ServerError { msg } => {
@@ -72,60 +68,4 @@ pub fn run_query(context: &mut AppContext, query: String) -> DiziResult<()> {
         }
     }
     Ok(())
-}
-
-fn query_local(context: &AppContext, query: &str) -> DiziResult<String> {
-    let mut vars = HashMap::new();
-
-    let player_state = context.server_state_ref().player_ref();
-
-    vars.insert(
-        "player_status".to_string(),
-        player_state.get_player_status().to_string(),
-    );
-    vars.insert(
-        "player_volume".to_string(),
-        format!("{}", player_state.get_volume()),
-    );
-    vars.insert(
-        "player_next".to_string(),
-        format!("{}", player_state.next_enabled()),
-    );
-    vars.insert(
-        "player_repeat".to_string(),
-        format!("{}", player_state.repeat_enabled()),
-    );
-    vars.insert(
-        "player_shuffle".to_string(),
-        format!("{}", player_state.shuffle_enabled()),
-    );
-
-    if let Some(song) = player_state.get_song() {
-        vars.insert("file_name".to_string(), song.file_name().to_string());
-        vars.insert(
-            "file_path".to_string(),
-            song.file_path().to_string_lossy().to_string(),
-        );
-    }
-
-    vars.insert(
-        "playlist_status".to_string(),
-        player_state.get_playlist_status().to_string(),
-    );
-
-    if let Some(index) = player_state.playlist_ref().get_playing_index() {
-        vars.insert("playlist_index".to_string(), format!("{}", index));
-    }
-    vars.insert(
-        "playlist_length".to_string(),
-        format!("{}", player_state.playlist_ref().len()),
-    );
-
-    match strfmt(&query, &vars) {
-        Ok(s) => Ok(s),
-        Err(_e) => Err(DiziError::new(
-            DiziErrorKind::InvalidParameters,
-            "Failed to process query".to_string(),
-        )),
-    }
 }
