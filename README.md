@@ -54,7 +54,7 @@ whenever mocp is playing music, other audio/video apps stop working and vice ver
    - [ ] sorting
  - [x] playlist support
    - [x] add/delete/update songs
-   - [ ] recursively add songs in a directory
+   - [x] recursively add songs in a directory
    - [x] shuffle
    - [x] repeat
    - [x] next
