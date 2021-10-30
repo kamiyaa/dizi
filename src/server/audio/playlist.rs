@@ -75,7 +75,7 @@ impl PlayerFilePlaylist {
             match entry {
                 m3u::Entry::Path(p) => {
                     if p.is_absolute() {
-                        if let Ok(song) = Song::new(&p) {
+                        if let Ok(song) = Song::new(p) {
                             songs.push(song);
                         }
                     } else {
@@ -138,7 +138,7 @@ impl PlayerFilePlaylist {
     }
 
     pub fn get_song_index(&self) -> Option<usize> {
-        self._order_index.clone().and_then(|s| Some(self._order[s]))
+        self._order_index.map(|s| self._order[s])
     }
     pub fn set_song_index(&mut self, index: usize) {
         if self.len() <= index {
@@ -162,7 +162,7 @@ impl PlayerFilePlaylist {
         }
     }
     pub fn get_order_index(&self) -> Option<usize> {
-        self._order_index.clone()
+        self._order_index
     }
     pub fn set_order_index(&mut self, index: Option<usize>) {
         self._order_index = index;
@@ -254,7 +254,7 @@ impl PlayerDirectoryPlaylist {
     }
 
     pub fn get_song_index(&self) -> Option<usize> {
-        self._order_index.clone().and_then(|s| Some(self._order[s]))
+        self._order_index.map(|s| self._order[s])
     }
     pub fn set_song_index(&mut self, index: usize) {
         if self.len() <= index {

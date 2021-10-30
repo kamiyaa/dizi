@@ -5,8 +5,6 @@ use std::time;
 
 use log::{debug, log_enabled, Level};
 
-use rand::seq::SliceRandom;
-
 use dizi_lib::error::DiziResult;
 use dizi_lib::player::{PlayerState, PlayerStatus};
 use dizi_lib::playlist::PlaylistStatus;

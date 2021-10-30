@@ -1,6 +1,4 @@
-use std::collections::HashMap;
-
-use dizi_lib::error::{DiziError, DiziErrorKind, DiziResult};
+use dizi_lib::error::DiziResult;
 
 use crate::context::{AppContext, QuitType};
 

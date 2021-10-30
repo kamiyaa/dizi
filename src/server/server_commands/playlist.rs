@@ -1,3 +1,4 @@
+use std::fs;
 use std::path::Path;
 
 use dizi_lib::error::{DiziError, DiziErrorKind, DiziResult};
@@ -33,14 +34,25 @@ pub fn playlist_clear(context: &mut AppContext) -> DiziResult<()> {
     Ok(())
 }
 
-pub fn playlist_append(context: &mut AppContext, path: &Path) -> DiziResult<Song> {
-    let song = Song::new(path)?;
-    context
-        .player_mut()
-        .playlist_mut()
-        .file_playlist
-        .push(song.clone());
-    Ok(song)
+pub fn playlist_append(context: &mut AppContext, path: &Path) -> DiziResult<Vec<Song>> {
+    if path.is_dir() {
+        let songs = recursively_find_songs(path);
+        context
+            .player_mut()
+            .playlist_mut()
+            .file_playlist
+            .songs_mut()
+            .extend_from_slice(&songs);
+        Ok(songs)
+    } else {
+        let song = Song::new(path)?;
+        context
+            .player_mut()
+            .playlist_mut()
+            .file_playlist
+            .push(song.clone());
+        Ok(vec![song])
+    }
 }
 
 pub fn playlist_remove(context: &mut AppContext, index: usize) -> DiziResult<()> {
@@ -89,4 +101,28 @@ pub fn playlist_move_down(context: &mut AppContext, index: usize) -> DiziResult<
     playlist.songs_mut().swap(index, index + 1);
 
     Ok(())
+}
+
+fn recursively_find_songs(path: &Path) -> Vec<Song> {
+    let mut songs: Vec<Song> = Vec::new();
+    find_songs_rec(&mut songs, path);
+    songs
+}
+
+fn find_songs_rec(songs: &mut Vec<Song>, path: &Path) {
+    if let Ok(readdir) = fs::read_dir(path) {
+        for entry in readdir {
+            if let Ok(entry) = entry {
+                let entry_path = entry.path();
+
+                if entry_path.is_dir() {
+                    find_songs_rec(songs, &entry_path);
+                } else {
+                    if let Ok(song) = Song::new(&entry_path) {
+                        songs.push(song);
+                    }
+                }
+            }
+        }
+    }
 }

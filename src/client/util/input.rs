@@ -131,12 +131,13 @@ pub fn process_server_event(context: &mut AppContext, s: &str) -> DiziResult<()>
             let playlist = context.server_state_mut().player_mut().playlist_mut();
             playlist.clear();
         }
-        ServerBroadcastEvent::PlaylistAppend { song } => {
+        ServerBroadcastEvent::PlaylistAppend { songs } => {
             context
                 .server_state_mut()
                 .player_mut()
                 .playlist_mut()
-                .append_song(song);
+                .list_mut()
+                .extend_from_slice(&songs);
             if context
                 .server_state_ref()
                 .player_ref()
@@ -150,6 +151,9 @@ pub fn process_server_event(context: &mut AppContext, s: &str) -> DiziResult<()>
                     .playlist_mut()
                     .set_cursor_index(Some(0));
             }
+            context
+                .message_queue_mut()
+                .push_success(format!("Added {} songs to playlist", songs.len()));
         }
         ServerBroadcastEvent::PlaylistRemove { index } => {
             context

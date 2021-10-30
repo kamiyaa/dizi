@@ -30,7 +30,7 @@ pub enum ServerBroadcastEvent {
 
     // playlist
     PlaylistPlay { index: usize },
-    PlaylistAppend { song: Song },
+    PlaylistAppend { songs: Vec<Song> },
     PlaylistRemove { index: usize },
     PlaylistSwapMove { index1: usize, index2: usize },
     PlaylistClear,

@@ -107,7 +107,7 @@ impl Events {
     pub fn broadcast_event(&mut self, event: ServerBroadcastEvent) {
         if log_enabled!(Level::Debug) {
             debug!(
-                "Server broadcast: {:?} to {} clients",
+                "Server broadcast: {:#?} to {} clients",
                 event,
                 self.server_broadcast_listeners.len()
             );

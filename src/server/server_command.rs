@@ -102,10 +102,10 @@ pub fn process_client_request(context: &mut AppContext, event: ClientRequest) ->
             send_latest_song_info(context);
         }
         ClientRequest::PlaylistAppend { path: Some(p) } => {
-            let song = playlist::playlist_append(context, &p)?;
+            let songs = playlist::playlist_append(context, &p)?;
             context
                 .events
-                .broadcast_event(ServerBroadcastEvent::PlaylistAppend { song });
+                .broadcast_event(ServerBroadcastEvent::PlaylistAppend { songs });
         }
         ClientRequest::PlaylistRemove { index: Some(index) } => {
             playlist::playlist_remove(context, index)?;
