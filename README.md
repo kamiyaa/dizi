@@ -40,6 +40,29 @@ whenever mocp is playing music, other audio/video apps stop working and vice ver
 ~ $ dizi            # starts server if not already started
 ```
 
+## Configuration
+
+Check out [docs](/docs) for details and [config](/config) for examples
+
+#### [client.toml](/config/client.toml)
+- client configurations
+
+#### [keymap.toml](/config/keymap.toml)
+- for keybindings for client
+
+#### [theme.toml](/config/theme.toml)
+- color customizations for client
+
+#### [server.toml](/config/server.toml)
+- server configurations
+
+## Contributing
+See [docs](/docs)
+
+## Features/Bugs
+
+Please create an issue :)
+
 ## TODOs
 
 ### Server-side
