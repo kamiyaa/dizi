@@ -27,6 +27,7 @@ use crate::context::AppContext;
 use crate::history::DirectoryHistory;
 
 const PROGRAM_NAME: &str = "dizi";
+const CONFIG_HOME: &str = "DIZI_CONFIG_HOME";
 const CONFIG_FILE: &str = "client.toml";
 const KEYMAP_FILE: &str = "keymap.toml";
 const THEME_FILE: &str = "theme.toml";
@@ -37,7 +38,7 @@ lazy_static! {
     static ref CONFIG_HIERARCHY: Vec<PathBuf> = {
         let mut config_dirs = vec![];
 
-        if let Ok(p) = std::env::var("DIZI_CONFIG_HOME") {
+        if let Ok(p) = std::env::var(CONFIG_HOME) {
             let p = PathBuf::from(p);
             if p.is_dir() {
                 config_dirs.push(p);
