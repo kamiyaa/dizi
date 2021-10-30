@@ -155,17 +155,25 @@ pub fn process_server_event(context: &mut AppContext, s: &str) -> DiziResult<()>
             }
         }
         ServerBroadcastEvent::PlaylistPlay { index } => {
-            let song = context
-                .server_state_ref()
-                .player_ref()
-                .playlist_ref()
-                .list_ref()[index]
-                .clone();
-            let player = context.server_state_mut().player_mut();
-            player.set_song(Some(song));
-            player.set_player_status(PlayerStatus::Playing);
-            player.set_playlist_status(PlaylistStatus::PlaylistFile);
-            player.playlist_mut().set_playing_index(Some(index));
+            let len = context.server_state_ref().player_ref().playlist_ref().len();
+            if index < len {
+                let song = context
+                    .server_state_ref()
+                    .player_ref()
+                    .playlist_ref()
+                    .list_ref()[index]
+                    .clone();
+                let player = context.server_state_mut().player_mut();
+                player.set_song(Some(song));
+                player.set_player_status(PlayerStatus::Playing);
+                player.set_playlist_status(PlaylistStatus::PlaylistFile);
+                let cursor_index = player.playlist_ref().get_cursor_index();
+                let playing_index = player.playlist_ref().get_playing_index();
+                if playing_index == cursor_index {
+                    player.playlist_mut().set_cursor_index(Some(index));
+                }
+                player.playlist_mut().set_playing_index(Some(index));
+            }
         }
         s => {
             context
