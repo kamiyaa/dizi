@@ -111,7 +111,7 @@ Keymapping can be split into 2 categories
 `toggle_view`: switch between file browser and playlist widget
 
 ## Server Requests
-```json
+```rust
 // quit the server
 {
     "request": "/server/quit",
