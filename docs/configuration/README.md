@@ -1,5 +1,5 @@
 # Configuration
-Dizi reads configurations from the following directories using environment variables (in order of precedence):
+Dizi will reads configurations from the following directories using environment variables (in order of precedence):
  - `$DIZI_CONFIG_HOME`
  - `$XDG_CONFIG_HOME/dizi`
  - `$HOME/.config/dizi`
