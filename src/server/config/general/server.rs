@@ -23,7 +23,18 @@ fn default_playlist_path() -> PathBuf {
 }
 
 fn default_audio_system() -> cpal::HostId {
-    cpal::HostId::Jack
+    #[cfg(any(target_os = "linux", target_os = "dragonfly", target_os = "freebsd"))]
+    {
+        cpal::HostId::Jack
+    }
+    #[cfg(any(target_os = "macos", target_os = "ios"))]
+    {
+        cpal::HostId::CoreAudio
+    }
+    #[cfg(target_os = "windows")]
+    {
+        cpal::HostId::Asio
+    }
 }
 
 fn default_audio_system_string() -> String {
