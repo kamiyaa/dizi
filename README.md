@@ -1,5 +1,7 @@
 [![Linux build](https://github.com/kamiyaa/dizi/actions/workflows/rust-linux-main.yml/badge.svg)](https://github.com/kamiyaa/dizi/actions/workflows/rust-linux-main.yml)
 
+[![MacOS build](https://github.com/kamiyaa/dizi/actions/workflows/rust-macos-main.yml/badge.svg)](https://github.com/kamiyaa/dizi/actions/workflows/rust-macos-main.yml)
+
 # dizi
 Server-client music player written in Rust
 
