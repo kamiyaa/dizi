@@ -49,8 +49,9 @@ f12
 
 # Commands available:
 
-- [Client](#client)
-- [Server Requests](#server-requests)
+Keymapping can be split into 2 categories
+ - [Client](#client): Client specific keymappings
+ - [Server Requests](#server-requests): send a request to the server from the client
 
 ## Client
 `help`: opens help menu
@@ -110,3 +111,134 @@ f12
 `toggle_view`: switch between file browser and playlist widget
 
 ## Server Requests
+```json
+// quit the server
+{
+    "request": "/server/quit",
+}
+// query the server for player information
+{
+    "request": "/server/query",
+    "query": "..."
+}
+// tell the server a client left (this should only be used internally by the server)
+{
+    "request": "/client/leave",
+    "uuid": "..."
+}
+
+////////////////////////////
+// Player related requests
+////////////////////////////
+
+// get the state of the server's player
+{
+    "request": "/player/state",
+}
+// play file given by path
+{
+    "request": "/player/play/file",
+    "path": "..."
+}
+// play next song in directory or playlist
+{
+    "request": "/player/play/next",
+}
+// play previous song in directory or playlist
+{
+    "request": "/player/play/previous",
+}
+// pause the audio
+{
+    "request": "/player/pause",
+}
+// resume the audio
+{
+    "request": "/player/resume",
+}
+// get the volume
+{
+    "request": "/player/volume/get",
+}
+// rewind the audio by amount (NOT IMPLEMENTED)
+{
+    "request": "/player/rewind",
+    "amount": "..."
+}
+// fast forward the audio by amount (NOT IMPLEMENTED)
+{
+    "request": "/player/fast_forward",
+    "amount": "..."
+}
+// toggle the audio playing
+{
+    "request": "/player/toggle/play"
+}
+// toggle playing next song
+{
+    "request": "/player/toggle/next"
+}
+// toggle repeating song
+{
+    "request": "/player/toggle/repeat"
+}
+// toggle shuffle
+{
+    "request": "/player/toggle/shuffle"
+}
+
+// increase volume by amount (in percentage)
+{
+    "request": "/player/volume/increase",
+    "amount": "..."
+}
+// decrease volume by amount (in percentage)
+{
+    "request": "/player/volume/decrease",
+    "amount": "..."
+}
+
+////////////////////////////
+// Playlist related requests
+////////////////////////////
+
+// get the state of the server's playlist
+{
+    "request": "/playlist/state"
+}
+// open playing given the current directory of the client and the playlist path
+{
+    "request": "/playlist/open",
+    "cwd": "...",
+    "path": "...",
+}
+// plays the song at index index of playlist
+{
+    "request": "/playlist/play",
+    "index": "...",
+}
+// adds the given song to the end of the playlist
+{
+    "request": "/playlist/append",
+    "path": "..."
+}
+// given an index, remove the song at that index from the playlist
+{
+    "request": "/playlist/remove",
+    "index": "..."
+}
+// clear the playlist
+{
+    "request": "/playlist/clear"
+}
+// given an index, move the song at that index up by one
+{
+    "request": "/playlist/move_up",
+    "index": "..."
+}
+// given an index, move the song at that index down by one
+{
+    "request": "/playlist/move_down",
+    "index": "..."
+}
+```
