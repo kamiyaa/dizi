@@ -7,19 +7,21 @@ use shellexpand::tilde_with_context;
 use super::{PlayerOption, PlayerOptionCrude};
 
 fn default_socket_string() -> String {
-    "/tmp/dizi-server-socket".to_string()
+    "~/dizi-server-socket".to_string()
 }
 
 fn default_playlist_string() -> String {
-    "/tmp/dizi-playlist.m3u".to_string()
+    "~/dizi-playlist.m3u".to_string()
 }
 
 fn default_socket_path() -> PathBuf {
-    PathBuf::from(default_socket_string())
+    let s = default_socket_string();
+    PathBuf::from(tilde_with_context(&s, dirs_next::home_dir).as_ref())
 }
 
 fn default_playlist_path() -> PathBuf {
-    PathBuf::from(default_playlist_string())
+    let s = default_playlist_string();
+    PathBuf::from(tilde_with_context(&s, dirs_next::home_dir).as_ref())
 }
 
 fn default_audio_system() -> cpal::HostId {

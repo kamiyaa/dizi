@@ -1,8 +1,8 @@
 [server]
-socket = "/tmp/dizi-server-socket"
+socket = "~/dizi-server-socket"
 
 # Where to save playlist on exit
-playlist = "~/.config/dizi/playlist.m3u"
+playlist = "~/dizi_playlist.m3u"
 
 # not implemented
 poll_rate = 200

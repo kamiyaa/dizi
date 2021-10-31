@@ -1,5 +1,5 @@
 [client]
-socket = "/tmp/dizi-server-socket"
+socket = "~/dizi-server-socket"
 
 home_dir = "~/music"
 
