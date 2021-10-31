@@ -67,7 +67,8 @@ impl ClientConfig {
 
 impl std::default::Default for ClientConfig {
     fn default() -> Self {
-        let socket = PathBuf::from(tilde_with_context("~/dizi-server-socket", dirs_next::home_dir).as_ref());
+        let socket =
+            PathBuf::from(tilde_with_context("~/dizi-server-socket", dirs_next::home_dir).as_ref());
 
         Self {
             socket,
