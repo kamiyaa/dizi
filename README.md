@@ -15,9 +15,11 @@ This doesn't play well with [pipewire](https://pipewire.org/)'s pipewire-alsa pl
 whenever mocp is playing music, other audio/video apps stop working and vice versa.
 
 ## Dependencies
+ - A system supporting UNIX sockets
  - [cargo](https://github.com/rust-lang/cargo/)
  - [rustc](https://www.rust-lang.org/)
  - Jack or Alsa or any other audio system [cpal](https://github.com/RustAudio/cpal) supports
+ - `file` command for audio file detection
 
 ## Building
 ```
