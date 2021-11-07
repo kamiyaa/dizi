@@ -23,6 +23,7 @@ pub enum DiziErrorKind {
     DecoderError(rodio::decoder::DecoderError),
     NoDevice,
     UnrecognizedFormat,
+    NotAudioFile,
     StreamError(rodio::StreamError),
 
     UnrecognizedArgument,

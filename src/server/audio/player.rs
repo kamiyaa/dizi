@@ -5,7 +5,7 @@ use std::time;
 
 use log::{debug, log_enabled, Level};
 
-use dizi_lib::error::DiziResult;
+use dizi_lib::error::{DiziError, DiziErrorKind, DiziResult};
 use dizi_lib::player::{PlayerState, PlayerStatus};
 use dizi_lib::playlist::PlaylistStatus;
 use dizi_lib::song::Song;
@@ -15,6 +15,7 @@ use crate::audio::{
 };
 use crate::config;
 use crate::events::ServerEventSender;
+use crate::util::mimetype::{get_mimetype, is_mimetype_audio};
 
 #[derive(Debug)]
 pub struct Player {
@@ -135,6 +136,13 @@ impl Player {
     }
 
     pub fn play_entire_directory(&mut self, path: &Path) -> DiziResult<()> {
+        let mimetype = get_mimetype(path)?;
+        if !is_mimetype_audio(&mimetype) {
+            return Err(DiziError::new(
+                DiziErrorKind::NotAudioFile,
+                format!("File mimetype is not of type audio: '{}'", mimetype),
+            ));
+        }
         let song = Song::new(path)?;
 
         if let Some(parent) = song.file_path().parent() {

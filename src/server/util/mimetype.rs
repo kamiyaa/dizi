@@ -2,6 +2,8 @@ use std::io;
 use std::path::Path;
 use std::process::Command;
 
+use log::{debug, log_enabled, Level};
+
 pub fn get_mimetype(p: &Path) -> io::Result<String> {
     let output = Command::new("file")
         .arg("-b")
@@ -12,15 +14,19 @@ pub fn get_mimetype(p: &Path) -> io::Result<String> {
 
     let mimetype = stdout.to_string();
 
+    if log_enabled!(Level::Debug) {
+        debug!("{:?} mimetype: {}", p, mimetype);
+    }
+
     Ok(mimetype)
 }
 
 pub fn is_audio(p: &Path) -> io::Result<bool> {
     let mimetype = get_mimetype(p)?;
 
-    if mimetype.starts_with("audio/") {
-        Ok(true)
-    } else {
-        Ok(false)
-    }
+    Ok(is_mimetype_audio(&mimetype))
+}
+
+pub fn is_mimetype_audio(s: &str) -> bool {
+    s.starts_with("audio/")
 }
