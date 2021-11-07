@@ -10,13 +10,14 @@ use super::search_string;
 pub fn search_next(context: &mut AppContext) -> DiziResult<()> {
     let widget = context.get_view_widget();
     if let Some(search_context) = context.get_search_context() {
-        let index = match search_context {
-            SearchPattern::Glob(s) => {
-                search_glob::search_glob_fwd(context.curr_list_ref().unwrap(), s)
-            }
-            SearchPattern::String(s) => {
-                search_string::search_string_fwd(context.curr_list_ref().unwrap(), s)
-            }
+        let index = match context.curr_list_ref() {
+            Some(list) => match search_context {
+                SearchPattern::Glob(s) => search_glob::search_glob_fwd(list, s),
+                SearchPattern::String(s) => {
+                    search_string::search_string_fwd(context.curr_list_ref().unwrap(), s)
+                }
+            },
+            None => None,
         };
         if let Some(index) = index {
             cursor_move::cursor_move(context, widget, index);

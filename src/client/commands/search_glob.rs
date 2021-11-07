@@ -38,12 +38,13 @@ pub fn search_glob(context: &mut AppContext, pattern: &str) -> DiziResult<()> {
         .build()?
         .compile_matcher();
 
-    let index = cursor_move::cursor_index(context, widget);
-    if index.is_some() {
-        let index = search_glob_fwd(context.curr_list_ref().unwrap(), &glob);
-        if let Some(index) = index {
-            cursor_move::cursor_move(context, widget, index);
-        }
+    let index = match context.curr_list_ref() {
+        Some(list) => search_glob_fwd(list, &glob),
+        None => None,
+    };
+
+    if let Some(index) = index {
+        cursor_move::cursor_move(context, widget, index);
         context.set_search_context(SearchPattern::Glob(glob));
     }
     Ok(())

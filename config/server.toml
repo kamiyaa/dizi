@@ -17,4 +17,4 @@ audio_system = "alsa"
 shuffle = false
 repeat = true
 next = true
-
+volume = 50

@@ -36,7 +36,11 @@ pub fn search_string_rev(curr_list: &DirList, pattern: &str) -> Option<usize> {
 pub fn search_string(context: &mut AppContext, pattern: &str) -> DiziResult<()> {
     let widget = context.get_view_widget();
     let pattern = pattern.to_lowercase();
-    let index = search_string_fwd(context.curr_list_ref().unwrap(), pattern.as_str());
+
+    let index = match context.curr_list_ref() {
+        Some(list) => search_string_fwd(list, pattern.as_str()),
+        None => None,
+    };
     if let Some(index) = index {
         cursor_move::cursor_move(context, widget, index);
     }

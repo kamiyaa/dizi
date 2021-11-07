@@ -6,6 +6,7 @@ mod events;
 mod server;
 mod server_command;
 mod server_commands;
+mod util;
 
 use std::path::PathBuf;
 

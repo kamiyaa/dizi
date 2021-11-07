@@ -62,12 +62,7 @@ impl<'a> Widget for TuiPlayer<'a> {
         };
 
         let song_name = match song {
-            Some(song) => song
-                .file_path()
-                .file_name()
-                .unwrap()
-                .to_string_lossy()
-                .into_owned(),
+            Some(song) => song.file_name().to_string(),
             None => "".to_string(),
         };
 

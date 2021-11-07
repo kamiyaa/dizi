@@ -43,10 +43,11 @@ impl Player {
         let (player_req_tx, player_req_rx) = mpsc::channel();
         let (player_res_tx, player_res_rx) = mpsc::channel();
 
+        let volume = config_t.server_ref().player_ref().volume as f32 / 100.0;
         let config_t2 = config_t.clone();
         let event_tx2 = event_tx.clone();
         let player_handle = thread::spawn(move || {
-            let res = player_stream(config_t2, player_res_tx, player_req_rx, event_tx2);
+            let res = player_stream(volume, config_t2, player_res_tx, player_req_rx, event_tx2);
             match res.as_ref() {
                 Ok(_) => {}
                 Err(e) => {
@@ -71,7 +72,7 @@ impl Player {
             elapsed: time::Duration::from_secs(0),
 
             status: PlayerStatus::Stopped,
-            volume: 0.5,
+            volume,
 
             shuffle: player_config.shuffle,
             repeat: player_config.repeat,

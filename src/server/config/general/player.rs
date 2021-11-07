@@ -4,6 +4,10 @@ const fn default_true() -> bool {
     true
 }
 
+const fn default_volume() -> usize {
+    50
+}
+
 #[derive(Clone, Debug, Deserialize)]
 pub struct PlayerOptionCrude {
     #[serde(default)]
@@ -12,6 +16,8 @@ pub struct PlayerOptionCrude {
     pub repeat: bool,
     #[serde(default = "default_true")]
     pub next: bool,
+    #[serde(default = "default_volume")]
+    pub volume: usize,
 }
 
 impl std::default::Default for PlayerOptionCrude {
@@ -20,6 +26,7 @@ impl std::default::Default for PlayerOptionCrude {
             shuffle: false,
             repeat: true,
             next: true,
+            volume: default_volume(),
         }
     }
 }
@@ -30,6 +37,7 @@ impl From<PlayerOptionCrude> for PlayerOption {
             shuffle: crude.shuffle,
             repeat: crude.repeat,
             next: crude.next,
+            volume: crude.volume,
         }
     }
 }
@@ -39,6 +47,7 @@ pub struct PlayerOption {
     pub shuffle: bool,
     pub repeat: bool,
     pub next: bool,
+    pub volume: usize,
 }
 
 impl std::default::Default for PlayerOption {
@@ -47,6 +56,7 @@ impl std::default::Default for PlayerOption {
             shuffle: false,
             repeat: true,
             next: true,
+            volume: default_volume(),
         }
     }
 }

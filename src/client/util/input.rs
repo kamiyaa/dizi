@@ -6,6 +6,7 @@ use dizi_lib::player::PlayerStatus;
 use dizi_lib::playlist::PlaylistStatus;
 use dizi_lib::response::server::ServerBroadcastEvent;
 
+use crate::config::option::WidgetType;
 use crate::config::AppKeyMapping;
 use crate::context::{AppContext, QuitType};
 use crate::event::AppEvent;
@@ -130,6 +131,7 @@ pub fn process_server_event(context: &mut AppContext, s: &str) -> DiziResult<()>
         ServerBroadcastEvent::PlaylistClear => {
             let playlist = context.server_state_mut().player_mut().playlist_mut();
             playlist.clear();
+            context.set_view_widget(WidgetType::FileBrowser);
         }
         ServerBroadcastEvent::PlaylistAppend { songs } => {
             context

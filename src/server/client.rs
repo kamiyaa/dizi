@@ -86,7 +86,7 @@ pub fn process_server_event(
     event: ServerBroadcastEvent,
 ) -> DiziResult<()> {
     let response = event;
-    let json = serde_json::to_string(&response).unwrap();
+    let json = serde_json::to_string(&response)?;
 
     stream.write(json.as_bytes())?;
     utils::flush(stream)?;

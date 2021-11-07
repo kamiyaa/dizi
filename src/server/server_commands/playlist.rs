@@ -1,13 +1,15 @@
 use std::fs;
 use std::path::Path;
 
-use dizi_lib::error::{DiziError, DiziErrorKind, DiziResult};
+use log::{debug, log_enabled, Level};
 
+use dizi_lib::error::{DiziError, DiziErrorKind, DiziResult};
 use dizi_lib::song::Song;
 
 use crate::audio::PlayerFilePlaylist;
 use crate::context::AppContext;
 use crate::server::run_on_song_change;
+use crate::util::mimetype::is_audio;
 
 pub fn playlist_play(context: &mut AppContext, index: usize) -> DiziResult<()> {
     context.player_mut().play_from_playlist(index)?;
@@ -44,7 +46,7 @@ pub fn playlist_append(context: &mut AppContext, path: &Path) -> DiziResult<Vec<
             .songs_mut()
             .extend_from_slice(&songs);
         Ok(songs)
-    } else {
+    } else if is_audio(path)? {
         let song = Song::new(path)?;
         context
             .player_mut()
@@ -52,6 +54,8 @@ pub fn playlist_append(context: &mut AppContext, path: &Path) -> DiziResult<Vec<
             .file_playlist
             .push(song.clone());
         Ok(vec![song])
+    } else {
+        Ok(vec![])
     }
 }
 
@@ -117,7 +121,10 @@ fn find_songs_rec(songs: &mut Vec<Song>, path: &Path) {
 
                 if entry_path.is_dir() {
                     find_songs_rec(songs, &entry_path);
-                } else {
+                } else if let Ok(true) = is_audio(&entry_path) {
+                    if log_enabled!(Level::Debug) {
+                        debug!("Adding {:?} to playlist", entry_path);
+                    }
                     if let Ok(song) = Song::new(&entry_path) {
                         songs.push(song);
                     }

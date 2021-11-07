@@ -32,6 +32,7 @@ pub enum PlayerRequest {
 }
 
 pub struct PlayerStream {
+    pub volume: f32,
     pub event_tx: ServerEventSender,
     pub player_res_tx: mpsc::Sender<DiziResult<()>>,
     pub player_req_rx: mpsc::Receiver<PlayerRequest>,
@@ -41,11 +42,13 @@ pub struct PlayerStream {
 
 impl PlayerStream {
     pub fn new(
+        volume: f32,
         event_tx: ServerEventSender,
         player_res_tx: mpsc::Sender<DiziResult<()>>,
         player_req_rx: mpsc::Receiver<PlayerRequest>,
     ) -> Self {
         Self {
+            volume,
             event_tx,
             player_res_tx,
             player_req_rx,
@@ -81,7 +84,8 @@ impl PlayerStream {
         Ok(())
     }
 
-    pub fn set_volume(&self, volume: f32) {
+    pub fn set_volume(&mut self, volume: f32) {
+        self.volume = volume;
         if let Some(source_tx) = self.source_tx.as_ref() {
             let _ = source_tx.send(PlayerRequest::SetVolume(volume));
         }
@@ -111,7 +115,7 @@ impl PlayerStream {
 
         let mut paused = false;
         let source = Decoder::new(buffer)?
-            .amplify(1.0)
+            .amplify(self.volume)
             .pausable(false)
             .stoppable()
             .periodic_access(POLL_RATE, move |source| {
@@ -154,12 +158,13 @@ impl PlayerStream {
 }
 
 pub fn player_stream(
+    volume: f32,
     config_t: config::AppConfig,
     player_res_tx: mpsc::Sender<DiziResult<()>>,
     player_req_rx: mpsc::Receiver<PlayerRequest>,
     event_tx: ServerEventSender,
 ) -> DiziResult<()> {
-    let mut player_stream = PlayerStream::new(event_tx, player_res_tx, player_req_rx);
+    let mut player_stream = PlayerStream::new(volume, event_tx, player_res_tx, player_req_rx);
 
     let audio_device = get_default_output_device(config_t.server_ref().audio_system);
     let (_stream, stream_handle) = OutputStream::try_from_device(&audio_device)?;
