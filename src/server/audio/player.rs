@@ -148,6 +148,9 @@ impl Player {
         if let Some(parent) = song.file_path().parent() {
             let mut directory_playlist = PlayerDirectoryPlaylist::from_path(parent)?;
             directory_playlist.set_shuffle(self.shuffle_enabled());
+
+            // find the song we're playing in the playlist and set playing index
+            // equal to the playing song
             let index = directory_playlist
                 .songs_ref()
                 .iter()
@@ -212,18 +215,36 @@ impl Player {
         match self.playlist_ref().status {
             PlaylistStatus::PlaylistFile => {
                 let playlist = self.playlist_mut().file_playlist_mut();
+                if playlist.is_empty() {
+                    return Ok(());
+                }
                 playlist.increment_order_index();
                 if let Some(song_index) = playlist.get_song_index() {
-                    let song = playlist.songs_ref()[song_index].clone();
-                    self.play(&song)?;
+                    if song_index < playlist.len() {
+                        let song = playlist.songs_ref()[song_index].clone();
+                        self.play(&song)?;
+                    } else if let Some(order_index) = playlist.get_order_index() {
+                        playlist.playlist_order_mut().remove(order_index);
+                        playlist.decrement_order_index();
+                        self.play_next();
+                    }
                 }
             }
             PlaylistStatus::DirectoryListing => {
                 let playlist = self.playlist_mut().directory_playlist_mut();
+                if playlist.is_empty() {
+                    return Ok(());
+                }
                 playlist.increment_order_index();
                 if let Some(song_index) = playlist.get_song_index() {
-                    let song = playlist.songs_ref()[song_index].clone();
-                    self.play(&song)?;
+                    if song_index < playlist.len() {
+                        let song = playlist.songs_ref()[song_index].clone();
+                        self.play(&song)?;
+                    } else if let Some(order_index) = playlist.get_order_index() {
+                        playlist.playlist_order_mut().remove(order_index);
+                        playlist.decrement_order_index();
+                        self.play_next();
+                    }
                 }
             }
         }
@@ -278,7 +299,7 @@ impl Player {
                 self.resume()?;
                 Ok(PlayerStatus::Playing)
             }
-            _ => Ok(PlayerStatus::Stopped),
+            s => Ok(s),
         }
     }
     pub fn play_status(&self) -> PlayerStatus {

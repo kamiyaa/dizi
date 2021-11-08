@@ -86,7 +86,10 @@ impl<'a> Widget for TuiPlaylist<'a> {
         }
 
         if let Some(playing_index) = playlist.get_playing_index() {
-            if playing_index >= skip_dist && playing_index <= skip_dist + area.height as usize {
+            if playing_index < playlist.len()
+                && playing_index >= skip_dist
+                && playing_index <= skip_dist + area.height as usize
+            {
                 let song = &playlist.list_ref()[playing_index];
 
                 // draw selected entry in a different style
