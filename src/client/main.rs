@@ -110,7 +110,7 @@ fn run_app(args: Args) -> DiziResult<()> {
             .stdout(process::Stdio::null())
             .stderr(process::Stdio::null())
             .spawn()?;
-        let ten_millis = time::Duration::from_millis(300);
+        let ten_millis = time::Duration::from_millis(500);
         thread::sleep(ten_millis);
     }
     let stream = UnixStream::connect(&config.client_ref().socket)?;

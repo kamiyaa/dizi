@@ -30,3 +30,7 @@ pub fn is_audio(p: &Path) -> io::Result<bool> {
 pub fn is_mimetype_audio(s: &str) -> bool {
     s.starts_with("audio/")
 }
+
+pub fn is_mimetype_video(s: &str) -> bool {
+    s.starts_with("video/")
+}

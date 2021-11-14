@@ -15,7 +15,7 @@ use crate::audio::{
 };
 use crate::config;
 use crate::events::ServerEventSender;
-use crate::util::mimetype::{get_mimetype, is_mimetype_audio};
+use crate::util::mimetype::{get_mimetype, is_mimetype_audio, is_mimetype_video};
 
 #[derive(Debug)]
 pub struct Player {
@@ -137,7 +137,7 @@ impl Player {
 
     pub fn play_entire_directory(&mut self, path: &Path) -> DiziResult<()> {
         let mimetype = get_mimetype(path)?;
-        if !is_mimetype_audio(&mimetype) {
+        if !is_mimetype_audio(&mimetype) && !is_mimetype_video(&mimetype) {
             return Err(DiziError::new(
                 DiziErrorKind::NotAudioFile,
                 format!("File mimetype is not of type audio: '{}'", mimetype),
