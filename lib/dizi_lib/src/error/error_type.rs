@@ -82,9 +82,10 @@ impl From<rodio::StreamError> for DiziError {
 
 impl From<rodio::decoder::DecoderError> for DiziError {
     fn from(err: rodio::decoder::DecoderError) -> Self {
+        let cause = format!("{}", err);
         Self {
             _kind: DiziErrorKind::from(err),
-            _cause: "Unsupported audio format".to_string(),
+            _cause: cause,
         }
     }
 }

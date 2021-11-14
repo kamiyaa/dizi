@@ -43,11 +43,13 @@ pub fn process_client_request(context: &mut AppContext, event: ClientRequest) ->
                 .broadcast_event(ServerBroadcastEvent::PlayerState { state });
         }
         ClientRequest::PlayerFilePlay { path: Some(p) } => {
-            let song = Song::new(p.as_path())?;
-            player_play(context, song.file_path())?;
-            context
-                .events
-                .broadcast_event(ServerBroadcastEvent::PlayerFilePlay { song });
+            player_play(context, p.as_path())?;
+            if let Some(song) = context.player_ref().current_song_ref() {
+                let song = song.clone();
+                context
+                    .events
+                    .broadcast_event(ServerBroadcastEvent::PlayerFilePlay { song });
+            }
         }
         ClientRequest::PlayerPause => {
             player_pause(context)?;

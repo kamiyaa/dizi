@@ -125,7 +125,7 @@ impl Player {
         &self.player_res_rx
     }
 
-    pub fn play(&mut self, song: &Song) -> DiziResult<()> {
+    fn play(&mut self, song: &Song) -> DiziResult<()> {
         self.player_stream_req()
             .send(PlayerRequest::Play(song.clone()))?;
         let _resp = self.player_stream_res().recv()??;
@@ -136,13 +136,16 @@ impl Player {
     }
 
     pub fn play_entire_directory(&mut self, path: &Path) -> DiziResult<()> {
+        eprintln!("Print!");
         let mimetype = get_mimetype(path)?;
+        eprintln!("mimetype: {}", mimetype);
         if !is_mimetype_audio(&mimetype) && !is_mimetype_video(&mimetype) {
             return Err(DiziError::new(
                 DiziErrorKind::NotAudioFile,
                 format!("File mimetype is not of type audio: '{}'", mimetype),
             ));
         }
+        eprintln!("making song");
         let song = Song::new(path)?;
 
         if let Some(parent) = song.file_path().parent() {
