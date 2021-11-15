@@ -92,7 +92,8 @@ Please create an issue :)
  - [x] configurable audio system
    - [x] ALSA support
    - [x] JACK support (current default)
-   - [ ] Pipewire support (requires [cpal](https://github.com/RustAudio/cpal) to support it)
+   - [ ] Pulseaudio support (issue https://github.com/RustAudio/cpal/issues/259)
+   - [ ] Pipewire support (issue https://github.com/RustAudio/cpal/issues/554)
  - [x] querying
    - [x] file name
    - [x] file path
