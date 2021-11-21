@@ -29,6 +29,7 @@ pub enum ServerBroadcastEvent {
     PlayerProgressUpdate { elapsed: time::Duration },
 
     // playlist
+    PlaylistOpen { state: PlayerState },
     PlaylistPlay { index: usize },
     PlaylistAppend { songs: Vec<Song> },
     PlaylistRemove { index: usize },

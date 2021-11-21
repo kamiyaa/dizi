@@ -153,7 +153,7 @@ pub fn process_client_request(context: &mut AppContext, event: ClientRequest) ->
             let state = context.player_ref().clone_player_state();
             context
                 .events
-                .broadcast_event(ServerBroadcastEvent::PlayerState { state });
+                .broadcast_event(ServerBroadcastEvent::PlaylistOpen { state });
         }
         ClientRequest::PlayerToggleNext => {
             let enabled = context.player_ref().next_enabled();

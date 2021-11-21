@@ -136,16 +136,13 @@ impl Player {
     }
 
     pub fn play_entire_directory(&mut self, path: &Path) -> DiziResult<()> {
-        eprintln!("Print!");
         let mimetype = get_mimetype(path)?;
-        eprintln!("mimetype: {}", mimetype);
         if !is_mimetype_audio(&mimetype) && !is_mimetype_video(&mimetype) {
             return Err(DiziError::new(
                 DiziErrorKind::NotAudioFile,
                 format!("File mimetype is not of type audio: '{}'", mimetype),
             ));
         }
-        eprintln!("making song");
         let song = Song::new(path)?;
 
         if let Some(parent) = song.file_path().parent() {

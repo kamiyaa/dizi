@@ -85,6 +85,32 @@ pub fn process_server_event(context: &mut AppContext, s: &str) -> DiziResult<()>
             }
             context.server_state_mut().set_player(state);
         }
+        ServerBroadcastEvent::PlaylistOpen { mut state } => {
+            if !state.playlist_ref().is_empty() {
+                let old_state = context.server_state_ref().player_ref();
+
+                let playlist_len = state.playlist_ref().len();
+                let new_cursor_index = old_state
+                    .playlist_ref()
+                    .get_cursor_index()
+                    .map(|s| {
+                        if s < playlist_len {
+                            s
+                        } else {
+                            playlist_len - 1
+                        }
+                    })
+                    .unwrap_or_else(|| 0);
+                state
+                    .playlist_mut()
+                    .set_cursor_index(Some(new_cursor_index));
+            }
+            context.server_state_mut().set_player(state);
+            let len = context.server_state_ref().player_ref().playlist_ref().len();
+            context
+                .message_queue_mut()
+                .push_success(format!("Loaded {} songs to playlist", len));
+        }
         ServerBroadcastEvent::PlayerFilePlay { song } => {
             context.server_state_mut().player_mut().set_song(Some(song));
             context
@@ -110,12 +136,27 @@ pub fn process_server_event(context: &mut AppContext, s: &str) -> DiziResult<()>
         }
         ServerBroadcastEvent::PlayerShuffle { on } => {
             context.server_state_mut().player_mut().set_shuffle(on);
+            let setting = "Shuffle";
+            let status = if on { "ON" } else { "OFF" };
+            context
+                .message_queue_mut()
+                .push_success(format!("{} {}", setting, status));
         }
         ServerBroadcastEvent::PlayerRepeat { on } => {
             context.server_state_mut().player_mut().set_repeat(on);
+            let setting = "Repeat";
+            let status = if on { "ON" } else { "OFF" };
+            context
+                .message_queue_mut()
+                .push_success(format!("{} {}", setting, status));
         }
         ServerBroadcastEvent::PlayerNext { on } => {
             context.server_state_mut().player_mut().set_next(on);
+            let setting = "Next";
+            let status = if on { "ON" } else { "OFF" };
+            context
+                .message_queue_mut()
+                .push_success(format!("{} {}", setting, status));
         }
         ServerBroadcastEvent::PlayerVolumeUpdate { volume } => {
             context.server_state_mut().player_mut().set_volume(volume);
@@ -130,8 +171,12 @@ pub fn process_server_event(context: &mut AppContext, s: &str) -> DiziResult<()>
         }
         ServerBroadcastEvent::PlaylistClear => {
             let playlist = context.server_state_mut().player_mut().playlist_mut();
+            let len = playlist.len();
             playlist.clear();
             context.set_view_widget(WidgetType::FileBrowser);
+            context
+                .message_queue_mut()
+                .push_success(format!("Removed {} songs from playlist", len));
         }
         ServerBroadcastEvent::PlaylistAppend { songs } => {
             context
