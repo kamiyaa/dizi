@@ -28,7 +28,9 @@ pub fn playlist_load(context: &mut AppContext, cwd: &Path, path: &Path) -> DiziR
     }
 
     let mut new_playlist = PlayerFilePlaylist::from_file(cwd, path)?;
-    new_playlist.set_shuffle(shuffle);
+    if shuffle {
+        new_playlist.on_spot_shuffle();
+    }
     playlist.file_playlist = new_playlist;
     Ok(())
 }

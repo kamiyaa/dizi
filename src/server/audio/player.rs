@@ -145,10 +145,9 @@ impl Player {
         }
         let song = Song::new(path)?;
 
+        let shuffle_enabled = self.shuffle_enabled();
         if let Some(parent) = song.file_path().parent() {
             let mut directory_playlist = PlayerDirectoryPlaylist::from_path(parent)?;
-            directory_playlist.set_shuffle(self.shuffle_enabled());
-
             // find the song we're playing in the playlist and set playing index
             // equal to the playing song
             let index = directory_playlist
@@ -160,6 +159,9 @@ impl Player {
             if let Some(index) = index {
                 directory_playlist.set_song_index(index);
             }
+            if shuffle_enabled {
+                directory_playlist.on_spot_shuffle();
+            }
             self.play(&song)?;
             self.playlist.directory_playlist = directory_playlist;
             self.playlist.set_status(PlaylistStatus::DirectoryListing);
@@ -168,9 +170,13 @@ impl Player {
     }
 
     pub fn play_from_playlist(&mut self, index: usize) -> DiziResult<()> {
+        let shuffle_enabled = self.shuffle_enabled();
         let playlist = self.playlist_mut().file_playlist_mut();
 
         playlist.set_song_index(index);
+        if shuffle_enabled {
+            playlist.on_spot_shuffle();
+        }
         if let Some(song_index) = playlist.get_song_index() {
             let song = playlist.songs_ref()[song_index].clone();
             self.play(&song)?;
@@ -335,20 +341,11 @@ impl Player {
     }
     pub fn set_shuffle(&mut self, shuffle: bool) {
         self.shuffle = shuffle;
-        self.playlist
-            .directory_playlist_mut()
-            .set_shuffle(self.shuffle);
-        self.playlist.file_playlist_mut().set_shuffle(self.shuffle);
-
-        if let Some(index) = self
-            .playlist_ref()
-            .directory_playlist_ref()
-            .get_song_index()
-        {
-            self.playlist.directory_playlist_mut().set_song_index(index);
-        }
-        if let Some(index) = self.playlist_ref().file_playlist_ref().get_song_index() {
-            self.playlist.file_playlist_mut().set_song_index(index);
+        if self.shuffle {
+            self.playlist_mut().file_playlist_mut().on_spot_shuffle();
+            self.playlist_mut()
+                .directory_playlist_mut()
+                .on_spot_shuffle();
         }
     }
 

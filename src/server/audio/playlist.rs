@@ -53,7 +53,6 @@ pub struct PlayerFilePlaylist {
     _songs: Vec<Song>,
     _order: Vec<usize>,
     _order_index: Option<usize>,
-    _shuffle: bool,
 }
 
 impl PlayerFilePlaylist {
@@ -63,7 +62,6 @@ impl PlayerFilePlaylist {
             _songs: songs,
             _order: (0..songs_count).collect(),
             _order_index: None,
-            _shuffle: false,
         }
     }
 
@@ -119,10 +117,6 @@ impl PlayerFilePlaylist {
         }
     }
 
-    pub fn set_shuffle(&mut self, shuffle: bool) {
-        self._shuffle = shuffle;
-    }
-
     pub fn songs_ref(&self) -> &Vec<Song> {
         &self._songs
     }
@@ -144,23 +138,23 @@ impl PlayerFilePlaylist {
         if self.len() <= index {
             return;
         }
+        self.set_order_index(Some(index));
+    }
 
-        if self._shuffle {
-            let mut random_order: Vec<usize> = (0..self.len()).collect();
-            // we want the song to be first
+    pub fn on_spot_shuffle(&mut self) {
+        let mut random_order: Vec<usize> = (0..self.len()).collect();
+
+        // we want the current song's index to not change
+        if let Some(index) = self.get_order_index() {
             random_order.remove(index);
             random_order.shuffle(&mut thread_rng());
-
-            let mut order = vec![index];
-            order.extend_from_slice(&random_order);
-            self._order = order;
-            self.set_order_index(Some(0));
+            random_order.insert(index, index);
         } else {
-            let order = (0..self.len()).collect();
-            self._order = order;
-            self.set_order_index(Some(index));
+            random_order.shuffle(&mut thread_rng());
         }
+        self._order = random_order;
     }
+
     pub fn get_order_index(&self) -> Option<usize> {
         self._order_index
     }
@@ -195,7 +189,6 @@ pub struct PlayerDirectoryPlaylist {
     _songs: Vec<Song>,
     _order: Vec<usize>,
     _order_index: Option<usize>,
-    _shuffle: bool,
 }
 
 impl PlayerDirectoryPlaylist {
@@ -205,7 +198,6 @@ impl PlayerDirectoryPlaylist {
             _songs: songs,
             _order: (0..songs_count).collect(),
             _order_index: None,
-            _shuffle: false,
         }
     }
 
@@ -224,7 +216,6 @@ impl PlayerDirectoryPlaylist {
             _songs: songs,
             _order: (0..len).collect(),
             _order_index: None,
-            _shuffle: false,
         })
     }
 
@@ -233,10 +224,6 @@ impl PlayerDirectoryPlaylist {
     }
     pub fn len(&self) -> usize {
         self._songs.len()
-    }
-
-    pub fn set_shuffle(&mut self, shuffle: bool) {
-        self._shuffle = shuffle;
     }
 
     pub fn songs_ref(&self) -> &Vec<Song> {
@@ -260,23 +247,23 @@ impl PlayerDirectoryPlaylist {
         if self.len() <= index {
             return;
         }
+        self.set_order_index(Some(index));
+    }
 
-        if self._shuffle {
-            let mut random_order: Vec<usize> = (0..self.len()).collect();
-            // we want the song to be first
+    pub fn on_spot_shuffle(&mut self) {
+        let mut random_order: Vec<usize> = (0..self.len()).collect();
+
+        // we want the current song's index to not change
+        if let Some(index) = self.get_order_index() {
             random_order.remove(index);
             random_order.shuffle(&mut thread_rng());
-
-            let mut order = vec![index];
-            order.extend_from_slice(&random_order);
-            self._order = order;
-            self.set_order_index(Some(0));
+            random_order.insert(index, index);
         } else {
-            let order = (0..self.len()).collect();
-            self._order = order;
-            self.set_order_index(Some(index));
+            random_order.shuffle(&mut thread_rng());
         }
+        self._order = random_order;
     }
+
     pub fn get_order_index(&self) -> Option<usize> {
         self._order_index.clone()
     }
