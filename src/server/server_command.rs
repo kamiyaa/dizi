@@ -3,7 +3,6 @@ use dizi_lib::player::PlayerStatus;
 use dizi_lib::playlist::PlaylistStatus;
 use dizi_lib::request::client::ClientRequest;
 use dizi_lib::response::server::ServerBroadcastEvent;
-use dizi_lib::song::Song;
 
 use log::{debug, log_enabled, Level};
 

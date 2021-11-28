@@ -2,7 +2,6 @@ use std::time;
 
 use serde_derive::{Deserialize, Serialize};
 
-use crate::error::DiziError;
 use crate::player::PlayerState;
 use crate::song::Song;
 

@@ -119,19 +119,17 @@ fn recursively_find_songs(path: &Path) -> Vec<Song> {
 
 fn find_songs_rec(songs: &mut Vec<Song>, path: &Path) {
     if let Ok(readdir) = fs::read_dir(path) {
-        for entry in readdir {
-            if let Ok(entry) = entry {
-                let entry_path = entry.path();
+        for entry in readdir.flatten() {
+            let entry_path = entry.path();
 
-                if entry_path.is_dir() {
-                    find_songs_rec(songs, &entry_path);
-                } else if let Ok(true) = is_audio(&entry_path) {
-                    if log_enabled!(Level::Debug) {
-                        debug!("Adding {:?} to playlist", entry_path);
-                    }
-                    if let Ok(song) = Song::new(&entry_path) {
-                        songs.push(song);
-                    }
+            if entry_path.is_dir() {
+                find_songs_rec(songs, &entry_path);
+            } else if let Ok(true) = is_audio(&entry_path) {
+                if log_enabled!(Level::Debug) {
+                    debug!("Adding {:?} to playlist", entry_path);
+                }
+                if let Ok(song) = Song::new(&entry_path) {
+                    songs.push(song);
                 }
             }
         }

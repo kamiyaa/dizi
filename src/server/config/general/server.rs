@@ -128,12 +128,9 @@ impl From<ServerConfigCrude> for ServerConfig {
 
         let socket = tilde_with_context(&crude.socket, dirs_next::home_dir);
         let playlist = tilde_with_context(&crude.playlist, dirs_next::home_dir);
-        let on_song_change = match crude.on_song_change {
-            Some(path) => Some(PathBuf::from(
-                tilde_with_context(&path, dirs_next::home_dir).as_ref(),
-            )),
-            None => None,
-        };
+        let on_song_change = crude
+            .on_song_change
+            .map(|path| PathBuf::from(tilde_with_context(&path, dirs_next::home_dir).as_ref()));
 
         Self {
             socket: PathBuf::from(socket.as_ref()),

@@ -88,7 +88,7 @@ pub fn process_server_event(
     let response = event;
     let json = serde_json::to_string(&response)?;
 
-    stream.write(json.as_bytes())?;
+    stream.write_all(json.as_bytes())?;
     utils::flush(stream)?;
     Ok(())
 }
