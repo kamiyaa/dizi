@@ -11,6 +11,7 @@ use uuid::Uuid;
 use dizi_lib::error::DiziResult;
 use dizi_lib::response::server::ServerBroadcastEvent;
 
+use crate::audio::DiziPlaylist;
 use crate::client;
 use crate::config::AppConfig;
 use crate::context::{AppContext, QuitType};
@@ -77,7 +78,7 @@ pub fn serve(config: AppConfig) -> DiziResult<()> {
 
     let mut file = std::fs::File::create(playlist_path)?;
     let mut writer = m3u::Writer::new(&mut file);
-    for song in playlist.songs_ref() {
+    for song in playlist.iter() {
         let entry = m3u::Entry::Path(song.file_path().to_path_buf());
         writer.write_entry(&entry)?;
     }

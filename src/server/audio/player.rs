@@ -11,7 +11,8 @@ use dizi_lib::playlist::PlaylistStatus;
 use dizi_lib::song::Song;
 
 use crate::audio::{
-    player_stream, PlayerDirectoryPlaylist, PlayerFilePlaylist, PlayerPlaylist, PlayerRequest,
+    player_stream, DiziPlaylist, PlayerDirectoryPlaylist, PlayerFilePlaylist, PlayerPlaylist,
+    PlayerRequest,
 };
 use crate::config;
 use crate::events::ServerEventSender;
@@ -151,7 +152,6 @@ impl Player {
             // find the song we're playing in the playlist and set playing index
             // equal to the playing song
             let index = directory_playlist
-                .songs_ref()
                 .iter()
                 .enumerate()
                 .find(|(_, p)| p.file_path() == path)
@@ -178,7 +178,7 @@ impl Player {
             playlist.on_spot_shuffle();
         }
         if let Some(song_index) = playlist.get_song_index() {
-            let song = playlist.songs_ref()[song_index].clone();
+            let song = playlist.get_song(song_index).clone();
             self.play(&song)?;
             self.playlist.set_status(PlaylistStatus::PlaylistFile);
         }
@@ -190,7 +190,7 @@ impl Player {
 
         playlist.set_song_index(index);
         if let Some(song_index) = playlist.get_song_index() {
-            let song = playlist.songs_ref()[song_index].clone();
+            let song = playlist.get_song(song_index).clone();
             self.play(&song)?;
             self.playlist.set_status(PlaylistStatus::DirectoryListing);
         }
@@ -202,14 +202,14 @@ impl Player {
             PlaylistStatus::PlaylistFile => {
                 let playlist = self.playlist_mut().file_playlist_mut();
                 if let Some(song_index) = playlist.get_song_index() {
-                    let song = playlist.songs_ref()[song_index].clone();
+                    let song = playlist.get_song(song_index).clone();
                     self.play(&song)?;
                 }
             }
             PlaylistStatus::DirectoryListing => {
                 let playlist = self.playlist_mut().directory_playlist_mut();
                 if let Some(song_index) = playlist.get_song_index() {
-                    let song = playlist.songs_ref()[song_index].clone();
+                    let song = playlist.get_song(song_index).clone();
                     self.play(&song)?;
                 }
             }
@@ -227,7 +227,7 @@ impl Player {
                 playlist.increment_order_index();
                 if let Some(song_index) = playlist.get_song_index() {
                     if song_index < playlist.len() {
-                        let song = playlist.songs_ref()[song_index].clone();
+                        let song = playlist.get_song(song_index).clone();
                         self.play(&song)?;
                     } else if let Some(order_index) = playlist.get_order_index() {
                         playlist.playlist_order_mut().remove(order_index);
@@ -244,7 +244,7 @@ impl Player {
                 playlist.increment_order_index();
                 if let Some(song_index) = playlist.get_song_index() {
                     if song_index < playlist.len() {
-                        let song = playlist.songs_ref()[song_index].clone();
+                        let song = playlist.get_song(song_index).clone();
                         self.play(&song)?;
                     } else if let Some(order_index) = playlist.get_order_index() {
                         playlist.playlist_order_mut().remove(order_index);
@@ -263,7 +263,7 @@ impl Player {
                 let playlist = self.playlist_mut().file_playlist_mut();
                 playlist.decrement_order_index();
                 if let Some(song_index) = playlist.get_song_index() {
-                    let song = playlist.songs_ref()[song_index].clone();
+                    let song = playlist.get_song(song_index).clone();
                     self.play(&song)?;
                 }
             }
@@ -271,7 +271,7 @@ impl Player {
                 let playlist = self.playlist_mut().directory_playlist_mut();
                 playlist.decrement_order_index();
                 if let Some(song_index) = playlist.get_song_index() {
-                    let song = playlist.songs_ref()[song_index].clone();
+                    let song = playlist.get_song(song_index).clone();
                     self.play(&song)?;
                 }
             }

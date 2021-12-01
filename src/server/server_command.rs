@@ -6,6 +6,7 @@ use dizi_lib::response::server::ServerBroadcastEvent;
 
 use log::{debug, log_enabled, Level};
 
+use crate::audio::DiziPlaylist;
 use crate::context::AppContext;
 use crate::server_commands::*;
 

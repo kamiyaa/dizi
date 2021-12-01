@@ -6,10 +6,10 @@ use log::{debug, log_enabled, Level};
 use dizi_lib::error::{DiziError, DiziErrorKind, DiziResult};
 use dizi_lib::song::Song;
 
-use crate::audio::PlayerFilePlaylist;
+use crate::audio::{DiziPlaylist, PlayerFilePlaylist};
 use crate::context::AppContext;
 use crate::server::run_on_song_change;
-use crate::util::mimetype::is_audio;
+use crate::util::mimetype::is_playable;
 
 pub fn playlist_play(context: &mut AppContext, index: usize) -> DiziResult<()> {
     context.player_mut().play_from_playlist(index)?;
@@ -43,19 +43,20 @@ pub fn playlist_clear(context: &mut AppContext) -> DiziResult<()> {
 pub fn playlist_append(context: &mut AppContext, path: &Path) -> DiziResult<Vec<Song>> {
     if path.is_dir() {
         let songs = recursively_find_songs(path);
-        context
-            .player_mut()
-            .playlist_mut()
-            .file_playlist
-            .songs_mut()
-            .extend_from_slice(&songs);
+        for song in songs.iter() {
+            context
+                .player_mut()
+                .playlist_mut()
+                .file_playlist_mut()
+                .push(song.clone());
+        }
         Ok(songs)
-    } else if is_audio(path)? {
+    } else if is_playable(path)? {
         let song = Song::new(path)?;
         context
             .player_mut()
             .playlist_mut()
-            .file_playlist
+            .file_playlist_mut()
             .push(song.clone());
         Ok(vec![song])
     } else {
@@ -91,7 +92,7 @@ pub fn playlist_move_up(context: &mut AppContext, index: usize) -> DiziResult<()
         ));
     }
 
-    playlist.songs_mut().swap(index, index - 1);
+    playlist.swap(index, index - 1);
 
     Ok(())
 }
@@ -106,7 +107,7 @@ pub fn playlist_move_down(context: &mut AppContext, index: usize) -> DiziResult<
         ));
     }
 
-    playlist.songs_mut().swap(index, index + 1);
+    playlist.swap(index, index + 1);
 
     Ok(())
 }
@@ -124,7 +125,7 @@ fn find_songs_rec(songs: &mut Vec<Song>, path: &Path) {
 
             if entry_path.is_dir() {
                 find_songs_rec(songs, &entry_path);
-            } else if let Ok(true) = is_audio(&entry_path) {
+            } else if let Ok(true) = is_playable(&entry_path) {
                 if log_enabled!(Level::Debug) {
                     debug!("Adding {:?} to playlist", entry_path);
                 }

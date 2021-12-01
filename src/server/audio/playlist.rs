@@ -8,6 +8,32 @@ use rand::thread_rng;
 use dizi_lib::playlist::{FilePlaylist, PlaylistStatus};
 use dizi_lib::song::Song;
 
+pub trait DiziPlaylist {
+    fn is_empty(&self) -> bool;
+    fn len(&self) -> usize;
+    fn push(&mut self, song: Song);
+    fn remove(&mut self, index: usize);
+    fn clear(&mut self);
+    fn iter(&self) -> std::slice::Iter<'_, Song>;
+    fn swap(&mut self, index1: usize, index2: usize);
+
+    fn get_song(&self, index: usize) -> &Song;
+
+    fn playlist_order_ref(&self) -> &Vec<usize>;
+    fn playlist_order_mut(&mut self) -> &mut Vec<usize>;
+
+    fn get_song_index(&self) -> Option<usize>;
+    fn set_song_index(&mut self, index: usize);
+
+    fn on_spot_shuffle(&mut self);
+
+    fn get_order_index(&self) -> Option<usize>;
+    fn set_order_index(&mut self, index: Option<usize>);
+
+    fn increment_order_index(&mut self) -> Option<usize>;
+    fn decrement_order_index(&mut self) -> Option<usize>;
+}
+
 #[derive(Clone, Debug)]
 pub struct PlayerPlaylist {
     pub file_playlist: PlayerFilePlaylist,
@@ -91,24 +117,6 @@ impl PlayerFilePlaylist {
         Ok(playlist)
     }
 
-    pub fn is_empty(&self) -> bool {
-        self._songs.is_empty()
-    }
-    pub fn len(&self) -> usize {
-        self._songs.len()
-    }
-    pub fn push(&mut self, song: Song) {
-        self._songs.push(song);
-    }
-    pub fn remove(&mut self, index: usize) {
-        self._songs.remove(index);
-    }
-    pub fn clear(&mut self) {
-        self._songs.clear();
-        self._order = vec![];
-        self._order_index = None;
-    }
-
     pub fn clone_file_playlist(&self) -> FilePlaylist {
         FilePlaylist {
             list: self._songs.clone(),
@@ -116,32 +124,56 @@ impl PlayerFilePlaylist {
             playing_index: self.get_song_index(),
         }
     }
+}
 
-    pub fn songs_ref(&self) -> &Vec<Song> {
-        &self._songs
+impl DiziPlaylist for PlayerFilePlaylist {
+    fn is_empty(&self) -> bool {
+        self._songs.is_empty()
     }
-    pub fn songs_mut(&mut self) -> &mut Vec<Song> {
-        &mut self._songs
+    fn len(&self) -> usize {
+        self._songs.len()
+    }
+    fn push(&mut self, song: Song) {
+        self._songs.push(song);
+        self._order.push(self.len() - 1);
+    }
+    fn remove(&mut self, index: usize) {
+        self._songs.remove(index);
+    }
+    fn clear(&mut self) {
+        self._songs.clear();
+        self._order = Vec::new();
+        self._order_index = None;
+    }
+    fn iter(&self) -> std::slice::Iter<'_, Song> {
+        self._songs.iter()
+    }
+    fn swap(&mut self, index1: usize, index2: usize) {
+        self._songs.swap(index1, index2);
     }
 
-    pub fn playlist_order_ref(&self) -> &Vec<usize> {
+    fn get_song(&self, index: usize) -> &Song {
+        &self._songs[index]
+    }
+
+    fn playlist_order_ref(&self) -> &Vec<usize> {
         &self._order
     }
-    pub fn playlist_order_mut(&mut self) -> &mut Vec<usize> {
+    fn playlist_order_mut(&mut self) -> &mut Vec<usize> {
         &mut self._order
     }
 
-    pub fn get_song_index(&self) -> Option<usize> {
+    fn get_song_index(&self) -> Option<usize> {
         self._order_index.map(|s| self._order[s])
     }
-    pub fn set_song_index(&mut self, index: usize) {
+    fn set_song_index(&mut self, index: usize) {
         if self.len() <= index {
             return;
         }
         self.set_order_index(Some(index));
     }
 
-    pub fn on_spot_shuffle(&mut self) {
+    fn on_spot_shuffle(&mut self) {
         let mut random_order: Vec<usize> = (0..self.len()).collect();
 
         // we want the current song's index to not change
@@ -155,14 +187,14 @@ impl PlayerFilePlaylist {
         self._order = random_order;
     }
 
-    pub fn get_order_index(&self) -> Option<usize> {
+    fn get_order_index(&self) -> Option<usize> {
         self._order_index
     }
-    pub fn set_order_index(&mut self, index: Option<usize>) {
+    fn set_order_index(&mut self, index: Option<usize>) {
         self._order_index = index;
     }
 
-    pub fn increment_order_index(&mut self) -> Option<usize> {
+    fn increment_order_index(&mut self) -> Option<usize> {
         let order_index = self.get_order_index()?;
         let new_order_index = if order_index + 1 < self.len() {
             order_index + 1
@@ -172,7 +204,7 @@ impl PlayerFilePlaylist {
         self.set_order_index(Some(new_order_index));
         Some(new_order_index)
     }
-    pub fn decrement_order_index(&mut self) -> Option<usize> {
+    fn decrement_order_index(&mut self) -> Option<usize> {
         let order_index = self.get_order_index()?;
         let new_order_index = if order_index > 1 {
             order_index - 1
@@ -225,12 +257,11 @@ impl PlayerDirectoryPlaylist {
     pub fn len(&self) -> usize {
         self._songs.len()
     }
-
-    pub fn songs_ref(&self) -> &Vec<Song> {
-        &self._songs
+    pub fn iter(&self) -> std::slice::Iter<'_, Song> {
+        self._songs.iter()
     }
-    pub fn songs_mut(&mut self) -> &mut Vec<Song> {
-        &mut self._songs
+    pub fn swap(&mut self, index1: usize, index2: usize) {
+        self._songs.swap(index1, index2);
     }
 
     pub fn playlist_order_ref(&self) -> &Vec<usize> {
@@ -238,6 +269,10 @@ impl PlayerDirectoryPlaylist {
     }
     pub fn playlist_order_mut(&mut self) -> &mut Vec<usize> {
         &mut self._order
+    }
+
+    pub fn get_song(&self, index: usize) -> &Song {
+        &self._songs[index]
     }
 
     pub fn get_song_index(&self) -> Option<usize> {

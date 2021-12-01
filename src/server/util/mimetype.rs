@@ -21,10 +21,10 @@ pub fn get_mimetype(p: &Path) -> io::Result<String> {
     Ok(mimetype)
 }
 
-pub fn is_audio(p: &Path) -> io::Result<bool> {
+pub fn is_playable(p: &Path) -> io::Result<bool> {
     let mimetype = get_mimetype(p)?;
 
-    Ok(is_mimetype_audio(&mimetype))
+    Ok(is_mimetype_audio(&mimetype) || is_mimetype_video(&mimetype))
 }
 
 pub fn is_mimetype_audio(s: &str) -> bool {
