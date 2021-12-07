@@ -170,6 +170,7 @@ impl DiziPlaylist for PlayerFilePlaylist {
         if self.len() <= index {
             return;
         }
+        self._order = (0..self.len()).collect();
         self.set_order_index(Some(index));
     }
 
@@ -282,6 +283,7 @@ impl PlayerDirectoryPlaylist {
         if self.len() <= index {
             return;
         }
+        self._order = (0..self.len()).collect();
         self.set_order_index(Some(index));
     }
 

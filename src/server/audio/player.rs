@@ -346,6 +346,22 @@ impl Player {
             self.playlist_mut()
                 .directory_playlist_mut()
                 .on_spot_shuffle();
+        } else {
+            let index = self.playlist_ref().file_playlist_ref().get_song_index();
+            if let Some(index) = index {
+                self.playlist_mut()
+                    .file_playlist_mut()
+                    .set_song_index(index)
+            }
+            let index = self
+                .playlist_ref()
+                .directory_playlist_ref()
+                .get_song_index();
+            if let Some(index) = index {
+                self.playlist_mut()
+                    .directory_playlist_mut()
+                    .set_song_index(index)
+            }
         }
     }
 
