@@ -133,15 +133,7 @@ pub fn process_done_song(context: &mut AppContext) -> DiziResult<()> {
     let repeat_enabled = context.player_ref().repeat_enabled();
 
     if next_enabled {
-        let end_of_playlist = {
-            let playlist = context.player_ref().playlist_ref();
-            match playlist.get_status() {
-                PlaylistStatus::DirectoryListing => playlist.directory_playlist_ref().reached_end(),
-                PlaylistStatus::PlaylistFile => playlist.file_playlist_ref().reached_end(),
-            }
-        };
-
-        if !repeat_enabled && end_of_playlist {
+        if !repeat_enabled && end_of_playlist(context) {
             context.player_mut().stop()?;
             context
                 .events
@@ -163,5 +155,13 @@ pub fn run_on_song_change(context: &AppContext) {
     let server_config = context.config_ref().server_ref();
     if let Some(path) = server_config.on_song_change.as_ref() {
         Command::new(path).spawn();
+    }
+}
+
+pub fn end_of_playlist(context: &AppContext) -> bool {
+    let playlist = context.player_ref().playlist_ref();
+    match playlist.get_status() {
+        PlaylistStatus::DirectoryListing => playlist.directory_playlist_ref().reached_end(),
+        PlaylistStatus::PlaylistFile => playlist.file_playlist_ref().reached_end(),
     }
 }
