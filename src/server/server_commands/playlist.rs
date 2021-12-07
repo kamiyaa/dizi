@@ -18,7 +18,7 @@ pub fn playlist_play(context: &mut AppContext, index: usize) -> DiziResult<()> {
 }
 
 pub fn playlist_load(context: &mut AppContext, cwd: &Path, path: &Path) -> DiziResult<()> {
-    let shuffle = context.player_ref().shuffle_enabled();
+    let shuffle_enabled = context.player_ref().shuffle_enabled();
     let playlist = context.player_mut().playlist_mut();
     if !playlist.file_playlist.is_empty() {
         return Err(DiziError::new(
@@ -28,9 +28,7 @@ pub fn playlist_load(context: &mut AppContext, cwd: &Path, path: &Path) -> DiziR
     }
 
     let mut new_playlist = PlayerFilePlaylist::from_file(cwd, path)?;
-    if shuffle {
-        new_playlist.on_spot_shuffle();
-    }
+    new_playlist.set_shuffle(shuffle_enabled);
     playlist.file_playlist = new_playlist;
     Ok(())
 }
