@@ -134,6 +134,12 @@ pub fn process_server_event(context: &mut AppContext, s: &str) -> DiziResult<()>
                 .player_mut()
                 .set_player_status(PlayerStatus::Playing);
         }
+        ServerBroadcastEvent::PlayerStop => {
+            context
+                .server_state_mut()
+                .player_mut()
+                .set_player_status(PlayerStatus::Stopped);
+        }
         ServerBroadcastEvent::PlayerShuffle { on } => {
             context.server_state_mut().player_mut().set_shuffle(on);
             let setting = "Shuffle";

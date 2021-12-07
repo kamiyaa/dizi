@@ -295,6 +295,14 @@ impl Player {
         Ok(())
     }
 
+    pub fn stop(&mut self) -> DiziResult<()> {
+        self.player_stream_req().send(PlayerRequest::Stop)?;
+
+        self.player_stream_res().recv()??;
+        self.status = PlayerStatus::Stopped;
+        Ok(())
+    }
+
     pub fn toggle_play(&mut self) -> DiziResult<PlayerStatus> {
         match self.status {
             PlayerStatus::Playing => {

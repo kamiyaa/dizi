@@ -223,6 +223,10 @@ pub fn player_stream(
                 player_stream.pause();
                 player_stream.player_res().send(Ok(()))?;
             }
+            PlayerRequest::Stop => {
+                player_stream.stop();
+                player_stream.player_res().send(Ok(()))?;
+            }
             PlayerRequest::Resume => {
                 player_stream.resume();
                 player_stream.player_res().send(Ok(()))?;

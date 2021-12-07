@@ -19,6 +19,7 @@ pub enum ServerBroadcastEvent {
 
     PlayerPause,
     PlayerResume,
+    PlayerStop,
 
     PlayerRepeat { on: bool },
     PlayerShuffle { on: bool },
