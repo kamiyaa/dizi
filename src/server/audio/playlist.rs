@@ -239,7 +239,7 @@ impl DiziPlaylist for PlayerFilePlaylist {
     }
     fn decrement_order_index(&mut self) -> Option<usize> {
         let order_index = self.get_order_index()?;
-        let new_order_index = if order_index > 1 {
+        let new_order_index = if order_index > 0 {
             order_index - 1
         } else {
             self.len() - 1
