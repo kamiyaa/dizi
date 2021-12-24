@@ -11,7 +11,7 @@ mod ui;
 mod util;
 
 use std::os::unix::net::UnixStream;
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 use std::process;
 use std::thread;
 use std::time;
@@ -94,6 +94,20 @@ pub struct Args {
     toggle_play: bool,
 }
 
+fn start_server() -> DiziResult<()> {
+    println!("Server is not running");
+    println!("Starting server...");
+    process::Command::new("dizi-server")
+        .stdout(process::Stdio::null())
+        .stderr(process::Stdio::null())
+        .spawn()?;
+    Ok(())
+}
+
+fn create_context(config: AppConfig, cwd: &Path, stream: UnixStream) -> AppContext {
+    AppContext::new(config, cwd.to_path_buf(), stream)
+}
+
 fn run_app(args: Args) -> DiziResult<()> {
     // print version
     if args.version {
@@ -103,26 +117,16 @@ fn run_app(args: Args) -> DiziResult<()> {
     }
 
     let config = AppConfig::get_config(CONFIG_FILE);
-    if UnixStream::connect(&config.client_ref().socket).is_err() {
-        println!("Server is not running");
-        println!("Starting server...");
-        process::Command::new("dizi-server")
-            .stdout(process::Stdio::null())
-            .stderr(process::Stdio::null())
-            .spawn()?;
-        let ten_millis = time::Duration::from_millis(500);
-        thread::sleep(ten_millis);
-    }
-    let stream = UnixStream::connect(&config.client_ref().socket)?;
-
     if let Some(home_dir) = config.client_ref().home_dir.as_ref() {
         std::env::set_current_dir(home_dir)?;
     }
     let cwd = std::env::current_dir()?;
-    let mut context = AppContext::new(config, cwd.clone(), stream);
 
     // query
     if let Some(query) = args.query {
+        // connect to stream
+        let stream = UnixStream::connect(&config.client_ref().socket)?;
+        let mut context = create_context(config, &cwd, stream);
         run::run_query(&mut context, query)?;
         return Ok(());
     } else if args.exit
@@ -132,22 +136,47 @@ fn run_app(args: Args) -> DiziResult<()> {
         || args.resume
         || args.toggle_play
     {
+        // connect to stream
+        let stream = UnixStream::connect(&config.client_ref().socket)?;
+        let mut context = create_context(config, &cwd, stream);
         run::run_control(&mut context, &args);
     } else {
-        let keymap = AppKeyMapping::get_config(KEYMAP_FILE);
-        // eprintln!("keymap: {:#?}", keymap);
+        let mut stream = UnixStream::connect(&config.client_ref().socket);
+        if stream.is_err() {
+            start_server()?;
+        }
+        println!("Connecting to server ...");
+        for i in 1..11 {
+            stream = UnixStream::connect(&config.client_ref().socket);
+            if stream.is_ok() {
+                break;
+            }
+            let wait_interval = time::Duration::from_millis(500);
+            thread::sleep(wait_interval);
+            println!("Retrying #{} ...", i);
+        }
 
-        let display_options = context
-            .config_ref()
-            .client_ref()
-            .display_options_ref()
-            .clone();
-        context
-            .history_mut()
-            .populate_to_root(cwd.as_path(), &display_options)?;
+        match stream {
+            Err(_) => eprintln!("Error: Failed to connect to server after 10 retries"),
+            Ok(stream) => {
+                let mut context = create_context(config, &cwd, stream);
 
-        let mut backend: ui::TuiBackend = ui::TuiBackend::new()?;
-        run::run_ui(&mut backend, &mut context, keymap)?;
+                let keymap = AppKeyMapping::get_config(KEYMAP_FILE);
+                // eprintln!("keymap: {:#?}", keymap);
+
+                let display_options = context
+                    .config_ref()
+                    .client_ref()
+                    .display_options_ref()
+                    .clone();
+                context
+                    .history_mut()
+                    .populate_to_root(cwd.as_path(), &display_options)?;
+
+                let mut backend: ui::TuiBackend = ui::TuiBackend::new()?;
+                run::run_ui(&mut backend, &mut context, keymap)?;
+            }
+        }
     }
     Ok(())
 }
