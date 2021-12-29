@@ -1,5 +1,6 @@
+use std::cmp::Ordering;
 use std::fs;
-use std::path::Path;
+use std::path::{Path, PathBuf};
 
 use log::{debug, log_enabled, Level};
 
@@ -110,6 +111,16 @@ pub fn playlist_move_down(context: &mut AppContext, index: usize) -> DiziResult<
     Ok(())
 }
 
+fn sort_function(p1: &Path, p2: &Path) -> Ordering {
+    let p1_is_dir = p1.is_dir();
+    let p2_is_dir = p2.is_dir();
+    match (p1_is_dir, p2_is_dir) {
+        (true, false) => Ordering::Less,
+        (false, true) => Ordering::Greater,
+        _ => alphanumeric_sort::compare_path(p1, p2),
+    }
+}
+
 fn recursively_find_songs(path: &Path) -> Vec<Song> {
     let mut songs: Vec<Song> = Vec::new();
     find_songs_rec(&mut songs, path);
@@ -118,9 +129,9 @@ fn recursively_find_songs(path: &Path) -> Vec<Song> {
 
 fn find_songs_rec(songs: &mut Vec<Song>, path: &Path) {
     if let Ok(readdir) = fs::read_dir(path) {
-        for entry in readdir.flatten() {
-            let entry_path = entry.path();
-
+        let mut paths: Vec<PathBuf> = readdir.flatten().map(|entry| entry.path()).collect();
+        paths.sort_by(|p1, p2| sort_function(p1, p2));
+        for entry_path in paths {
             if entry_path.is_dir() {
                 find_songs_rec(songs, &entry_path);
             } else if let Ok(true) = is_playable(&entry_path) {
