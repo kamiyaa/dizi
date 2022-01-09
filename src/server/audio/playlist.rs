@@ -219,7 +219,7 @@ impl DiziPlaylist for PlayerFilePlaylist {
     }
 
     fn get_song_index(&self) -> Option<usize> {
-        self.get_order_index()
+        self._order_index.map(|s| self._order[s])
     }
     fn set_song_index(&mut self, index: usize) {
         self.set_order_index(Some(index));
