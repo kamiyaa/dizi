@@ -12,7 +12,6 @@ use crate::context::{AppContext, QuitType};
 use crate::event::AppEvent;
 use crate::key_command::{AppExecute, Command, CommandKeybind};
 use crate::preview::preview_default;
-use crate::ui;
 use crate::ui::views;
 use crate::ui::views::TuiView;
 use crate::ui::PreviewArea;

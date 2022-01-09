@@ -1,7 +1,6 @@
 use tui::buffer::Buffer;
 use tui::layout::{Constraint, Direction, Layout, Rect};
 use tui::style::{Color, Style};
-use tui::symbols::line::{HORIZONTAL_DOWN, HORIZONTAL_UP};
 use tui::text::Span;
 use tui::widgets::{Block, Borders, Paragraph, Widget, Wrap};
 

@@ -23,14 +23,8 @@ impl<'a> TuiPlaylist<'a> {
     pub fn new(player: &'a PlayerState, focused: bool) -> Self {
         Self { player, focused }
     }
-}
 
-impl<'a> Widget for TuiPlaylist<'a> {
-    fn render(self, area: Rect, buf: &mut Buffer) {
-        if area.width < 4 || area.height < 1 {
-            return;
-        }
-
+    fn draw_playlist(&self, area: &Rect, buf: &mut Buffer) {
         let x = area.left();
         let y = area.top();
 
@@ -62,15 +56,33 @@ impl<'a> Widget for TuiPlaylist<'a> {
                     drawing_width - 1,
                 );
             });
+    }
 
-        if self.focused {
-            if let Some(curr_index) = curr_index {
+    fn draw_selected_entry(&self, area: &Rect, buf: &mut Buffer) {
+        if !self.focused {
+            return;
+        }
+
+        let playlist = self.player.playlist_ref();
+        let skip_dist = playlist.first_index_for_viewport(area.height as usize);
+        let curr_index = playlist.get_cursor_index();
+
+        if let Some(curr_index) = curr_index {
+            if curr_index >= skip_dist && curr_index < skip_dist + area.height as usize {
                 let song = &playlist.list_ref()[curr_index];
+
+                let x = area.left();
+                let y = area.top();
+
+                let drawing_width = area.width as usize;
+                let skip_dist = playlist.first_index_for_viewport(area.height as usize);
+
+                let style = Style::default()
+                    .fg(Color::Magenta)
+                    .add_modifier(Modifier::REVERSED);
 
                 // draw selected entry in a different style
                 let screen_index = curr_index % area.height as usize;
-
-                let style = style.add_modifier(Modifier::REVERSED);
 
                 let space_fill = " ".repeat(drawing_width);
                 buf.set_string(x, y + screen_index as u16, space_fill.as_str(), style);
@@ -85,11 +97,25 @@ impl<'a> Widget for TuiPlaylist<'a> {
                 );
             }
         }
+    }
 
+    fn draw_currently_playing(&self, area: &Rect, buf: &mut Buffer) {
+        let x = area.left();
+        let y = area.top();
+
+        let playlist = self.player.playlist_ref();
+        let playlist_len = playlist.len();
+
+        let curr_index = playlist.get_cursor_index();
+
+        let drawing_width = area.width as usize;
+        let skip_dist = playlist.first_index_for_viewport(area.height as usize);
+
+        // print currently playing
         if let Some(playing_index) = playlist.get_playing_index() {
             if playing_index < playlist.len()
                 && playing_index >= skip_dist
-                && playing_index <= skip_dist + area.height as usize
+                && playing_index < skip_dist + area.height as usize
             {
                 let song = &playlist.list_ref()[playing_index];
 
@@ -114,6 +140,17 @@ impl<'a> Widget for TuiPlaylist<'a> {
                 );
             }
         }
+    }
+}
+
+impl<'a> Widget for TuiPlaylist<'a> {
+    fn render(self, area: Rect, buf: &mut Buffer) {
+        if area.width < 4 || area.height < 1 {
+            return;
+        }
+        self.draw_playlist(&area, buf);
+        self.draw_selected_entry(&area, buf);
+        self.draw_currently_playing(&area, buf);
     }
 }
 

@@ -174,6 +174,14 @@ pub fn process_server_event(context: &mut AppContext, s: &str) -> DiziResult<()>
             let playlist = context.server_state_mut().player_mut().playlist_mut();
             playlist.list_mut().swap(index1, index2);
             playlist.set_cursor_index(Some(index2));
+            if let Some(playing_index) = playlist.get_playing_index() {
+                if playing_index == index1 {
+                    playlist.set_playing_index(Some(index2));
+                }
+                if playing_index == index2 {
+                    playlist.set_playing_index(Some(index1));
+                }
+            }
         }
         ServerBroadcastEvent::PlaylistClear => {
             let playlist = context.server_state_mut().player_mut().playlist_mut();

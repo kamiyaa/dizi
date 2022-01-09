@@ -25,7 +25,6 @@ use crate::config::{
     AppConfig, AppKeyMapping, AppLayout, AppTheme, JsonConfigFile, TomlConfigFile,
 };
 use crate::context::AppContext;
-use crate::history::DirectoryHistory;
 use crate::tab::JoshutoTab;
 
 const PROGRAM_NAME: &str = "dizi";

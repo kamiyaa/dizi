@@ -22,11 +22,11 @@ pub trait DiziPlaylist {
     fn playlist_order_ref(&self) -> &Vec<usize>;
     fn playlist_order_mut(&mut self) -> &mut Vec<usize>;
 
-    fn get_song_index(&self) -> Option<usize>;
-    fn set_song_index(&mut self, index: usize);
-
     fn shuffle_enabled(&self) -> bool;
     fn set_shuffle(&mut self, shuffle: bool);
+
+    fn get_song_index(&self) -> Option<usize>;
+    fn set_song_index(&mut self, index: usize);
 
     fn get_order_index(&self) -> Option<usize>;
     fn set_order_index(&mut self, index: Option<usize>);
@@ -174,6 +174,14 @@ impl DiziPlaylist for PlayerFilePlaylist {
     }
     fn swap(&mut self, index1: usize, index2: usize) {
         self._songs.swap(index1, index2);
+        if let Some(index) = self.get_order_index() {
+            if index == index1 {
+                self.set_order_index(Some(index2));
+            }
+            if index == index2 {
+                self.set_order_index(Some(index1));
+            }
+        }
     }
     fn reached_end(&self) -> bool {
         match self.get_order_index() {
@@ -193,16 +201,6 @@ impl DiziPlaylist for PlayerFilePlaylist {
         &mut self._order
     }
 
-    fn get_song_index(&self) -> Option<usize> {
-        self._order_index.map(|s| self._order[s])
-    }
-    fn set_song_index(&mut self, index: usize) {
-        if self.len() <= index {
-            return;
-        }
-        self.set_order_index(Some(index));
-    }
-
     fn shuffle_enabled(&self) -> bool {
         self.shuffle
     }
@@ -220,10 +218,22 @@ impl DiziPlaylist for PlayerFilePlaylist {
         }
     }
 
+    fn get_song_index(&self) -> Option<usize> {
+        self.get_order_index()
+    }
+    fn set_song_index(&mut self, index: usize) {
+        self.set_order_index(Some(index));
+    }
+
     fn get_order_index(&self) -> Option<usize> {
         self._order_index
     }
     fn set_order_index(&mut self, index: Option<usize>) {
+        if let Some(index) = index {
+            if self.len() <= index {
+                return;
+            }
+        }
         self._order_index = index;
     }
 

@@ -10,8 +10,6 @@ use crate::config;
 use crate::config::option::WidgetType;
 use crate::context::{MessageQueue, ServerState, TabContext};
 use crate::event::{AppEvent, Events};
-use crate::fs::JoshutoDirList;
-use crate::history::JoshutoHistory;
 use crate::util::search::SearchPattern;
 
 #[derive(Clone, Copy, Debug, PartialEq)]
