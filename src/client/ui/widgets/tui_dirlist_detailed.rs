@@ -33,14 +33,8 @@ impl<'a> TuiDirListDetailed<'a> {
             focused,
         }
     }
-}
 
-impl<'a> Widget for TuiDirListDetailed<'a> {
-    fn render(self, area: Rect, buf: &mut Buffer) {
-        if area.width < 4 || area.height < 1 {
-            return;
-        }
-
+    fn draw_listing(&self, area: &Rect, buf: &mut Buffer) {
         let x = area.left();
         let y = area.top();
         let curr_index = match self.dirlist.get_index() {
@@ -72,7 +66,11 @@ impl<'a> Widget for TuiDirListDetailed<'a> {
                 let ix = skip_dist + i;
 
                 let style = if ix == curr_index {
-                    style::entry_style(entry).add_modifier(Modifier::REVERSED)
+                    if self.focused {
+                        style::entry_style(entry).add_modifier(Modifier::REVERSED)
+                    } else {
+                        style::entry_style(entry).bg(Color::Black)
+                    }
                 } else {
                     style::entry_style(entry)
                 };
@@ -92,6 +90,15 @@ impl<'a> Widget for TuiDirListDetailed<'a> {
                     line_number_string,
                 );
             });
+    }
+}
+
+impl<'a> Widget for TuiDirListDetailed<'a> {
+    fn render(self, area: Rect, buf: &mut Buffer) {
+        if area.width < 4 || area.height < 1 {
+            return;
+        }
+        self.draw_listing(&area, buf);
     }
 }
 
