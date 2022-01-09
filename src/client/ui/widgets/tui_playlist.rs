@@ -59,6 +59,10 @@ impl<'a> TuiPlaylist<'a> {
     }
 
     fn draw_selected_entry(&self, area: &Rect, buf: &mut Buffer) {
+        if !self.focused {
+            return;
+        }
+
         let playlist = self.player.playlist_ref();
         let skip_dist = playlist.first_index_for_viewport(area.height as usize);
         let curr_index = playlist.get_cursor_index();
@@ -73,13 +77,9 @@ impl<'a> TuiPlaylist<'a> {
                 let drawing_width = area.width as usize;
                 let skip_dist = playlist.first_index_for_viewport(area.height as usize);
 
-                let style = if self.focused {
-                    Style::default()
-                        .fg(Color::Magenta)
-                        .add_modifier(Modifier::REVERSED)
-                } else {
-                    Style::default().fg(Color::Magenta).bg(Color::Black)
-                };
+                let style = Style::default()
+                    .fg(Color::Magenta)
+                    .add_modifier(Modifier::REVERSED);
 
                 // draw selected entry in a different style
                 let screen_index = curr_index % area.height as usize;

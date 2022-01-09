@@ -65,12 +65,8 @@ impl<'a> TuiDirListDetailed<'a> {
             .for_each(|(i, entry)| {
                 let ix = skip_dist + i;
 
-                let style = if ix == curr_index {
-                    if self.focused {
-                        style::entry_style(entry).add_modifier(Modifier::REVERSED)
-                    } else {
-                        style::entry_style(entry).bg(Color::Black)
-                    }
+                let style = if self.focused && ix == curr_index {
+                    style::entry_style(entry).add_modifier(Modifier::REVERSED)
                 } else {
                     style::entry_style(entry)
                 };
