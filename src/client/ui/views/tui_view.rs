@@ -58,7 +58,8 @@ impl<'a> Widget for TuiView<'a> {
             width: topbar_width,
             height: 1,
         };
-        TuiTopBar::new(self.context, self.context.cwd()).render(rect, buf);
+        let cwd = self.context.tab_context_ref().curr_tab_ref().cwd();
+        TuiTopBar::new(self.context, cwd).render(rect, buf);
     }
 }
 

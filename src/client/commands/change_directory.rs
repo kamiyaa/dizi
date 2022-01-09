@@ -9,7 +9,7 @@ use crate::history::DirectoryHistory;
 
 pub fn cd(path: &path::Path, context: &mut AppContext) -> io::Result<()> {
     std::env::set_current_dir(path)?;
-    context.set_cwd(path);
+    context.tab_context_mut().curr_tab_mut().set_cwd(path);
     Ok(())
 }
 

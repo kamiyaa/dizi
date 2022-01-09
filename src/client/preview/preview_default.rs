@@ -37,8 +37,9 @@ pub fn load_preview(context: &mut AppContext, backend: &mut TuiBackend) {
             }
         }
         None => {
-            if let Ok(metadata) = JoshutoMetadata::from(context.cwd()) {
-                load_list.push((context.cwd().to_path_buf(), metadata));
+            let cwd = context.tab_context_mut().curr_tab_mut().cwd();
+            if let Ok(metadata) = JoshutoMetadata::from(cwd) {
+                load_list.push((cwd.to_path_buf(), metadata));
             }
         }
     }

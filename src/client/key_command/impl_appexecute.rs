@@ -100,8 +100,9 @@ pub fn execute_request(context: &mut AppContext, request: &ClientRequest) -> Diz
                 .curr_list_ref()
                 .and_then(|s| s.curr_entry_ref())
             {
+                let cwd = context.tab_context_ref().curr_tab_ref().cwd().to_path_buf();
                 let request = ClientRequest::PlaylistOpen {
-                    cwd: Some(context.cwd().to_path_buf()),
+                    cwd: Some(cwd),
                     path: Some(entry.file_path().to_path_buf()),
                 };
                 send_client_request(context, &request)?;

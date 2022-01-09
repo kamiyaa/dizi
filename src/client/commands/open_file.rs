@@ -33,8 +33,9 @@ pub fn file_browser_open(context: &mut AppContext) -> DiziResult<()> {
                 Some(s) => {
                     let s = s.to_string_lossy();
                     if s.as_ref().starts_with("m3u") {
+                        let cwd = context.tab_context_ref().curr_tab_ref().cwd().to_path_buf();
                         let request = ClientRequest::PlaylistOpen {
-                            cwd: Some(context.cwd().to_path_buf()),
+                            cwd: Some(cwd),
                             path: Some(entry.file_path().to_path_buf()),
                         };
                         send_client_request(context, &request)?;

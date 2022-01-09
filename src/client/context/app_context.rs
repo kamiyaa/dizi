@@ -129,13 +129,6 @@ impl AppContext {
         &mut self.ui_context
     }
 
-    pub fn cwd(&self) -> &Path {
-        &self._cwd
-    }
-    pub fn set_cwd(&mut self, path: &Path) {
-        self._cwd = path.to_path_buf();
-    }
-
     pub fn get_view_widget(&self) -> WidgetType {
         self.view_widget
     }
