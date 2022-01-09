@@ -97,7 +97,7 @@ fn search_playlist_skim(
 
             match item {
                 Some(item) => {
-                    cursor_move::cursor_move(context, widget, item.idx);
+                    cursor_move::cursor_move_for_widget(context, widget, item.idx);
                 }
                 None => {
                     return Err(DiziError::new(
@@ -124,6 +124,8 @@ fn search_directory_skim(
         .unwrap();
 
     let items = context
+        .tab_context_ref()
+        .curr_tab_ref()
         .curr_list_ref()
         .map(|list| {
             let v: Vec<DiziSkimItem> = list
@@ -175,7 +177,7 @@ fn search_directory_skim(
 
             match item {
                 Some(item) => {
-                    cursor_move::cursor_move(context, widget, item.idx);
+                    cursor_move::cursor_move_for_widget(context, widget, item.idx);
                 }
                 None => {
                     return Err(DiziError::new(

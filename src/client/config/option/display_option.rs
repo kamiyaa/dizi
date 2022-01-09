@@ -9,7 +9,9 @@ pub const fn default_column_ratio() -> (usize, usize, usize) {
 #[derive(Clone, Debug)]
 pub struct DisplayOption {
     pub _show_hidden: bool,
+    pub _show_icons: bool,
     pub _sort_options: SortOption,
+    pub _scroll_offset: usize,
 }
 
 impl DisplayOption {
@@ -19,6 +21,14 @@ impl DisplayOption {
 
     pub fn set_show_hidden(&mut self, show_hidden: bool) {
         self._show_hidden = show_hidden;
+    }
+
+    pub fn scroll_offset(&self) -> usize {
+        self._scroll_offset
+    }
+
+    pub fn show_icons(&self) -> bool {
+        self._show_icons
     }
 
     pub fn sort_options_ref(&self) -> &SortOption {
@@ -42,7 +52,9 @@ impl std::default::Default for DisplayOption {
     fn default() -> Self {
         Self {
             _show_hidden: false,
+            _show_icons: false,
             _sort_options: SortOption::default(),
+            _scroll_offset: 4,
         }
     }
 }

@@ -32,7 +32,7 @@ impl AppExecute for Command {
             Self::CursorMovePageUp => cursor_move::page_up(context, backend)?,
             Self::CursorMovePageDown => cursor_move::page_down(context, backend)?,
 
-            Self::ParentDirectory => parent_directory::parent_directory(context)?,
+            Self::ParentDirectory => change_directory::parent_directory(context)?,
 
             Self::Close => quit::close(context)?,
 
@@ -78,7 +78,12 @@ pub fn execute_request(context: &mut AppContext, request: &ClientRequest) -> Diz
             quit::server_quit(context)?;
         }
         ClientRequest::PlaylistAppend { path: None } => {
-            if let Some(entry) = context.curr_list_ref().and_then(|s| s.curr_entry_ref()) {
+            if let Some(entry) = context
+                .tab_context_ref()
+                .curr_tab_ref()
+                .curr_list_ref()
+                .and_then(|s| s.curr_entry_ref())
+            {
                 let request = ClientRequest::PlaylistAppend {
                     path: Some(entry.file_path().to_path_buf()),
                 };
@@ -89,7 +94,12 @@ pub fn execute_request(context: &mut AppContext, request: &ClientRequest) -> Diz
             cwd: None,
             path: None,
         } => {
-            if let Some(entry) = context.curr_list_ref().and_then(|s| s.curr_entry_ref()) {
+            if let Some(entry) = context
+                .tab_context_ref()
+                .curr_tab_ref()
+                .curr_list_ref()
+                .and_then(|s| s.curr_entry_ref())
+            {
                 let request = ClientRequest::PlaylistOpen {
                     cwd: Some(context.cwd().to_path_buf()),
                     path: Some(entry.file_path().to_path_buf()),

@@ -2,15 +2,16 @@ use std::io;
 use std::os::unix::net::UnixStream;
 use std::path::{Path, PathBuf};
 use std::sync::mpsc;
+use tui::layout::Rect;
 
 use dizi_lib::utils;
 
 use crate::config;
 use crate::config::option::WidgetType;
-use crate::context::{MessageQueue, ServerState};
+use crate::context::{MessageQueue, ServerState, TabContext};
 use crate::event::{AppEvent, Events};
-use crate::fs::DirList;
-use crate::history::History;
+use crate::fs::JoshutoDirList;
+use crate::history::JoshutoHistory;
 use crate::util::search::SearchPattern;
 
 #[derive(Clone, Copy, Debug, PartialEq)]
@@ -18,6 +19,11 @@ pub enum QuitType {
     DoNot,
     Normal,
     Server,
+}
+
+#[derive(Clone, Debug, PartialEq)]
+pub struct UiContext {
+    pub layout: Vec<Rect>,
 }
 
 pub struct AppContext {
@@ -31,8 +37,11 @@ pub struct AppContext {
     config: config::AppConfig,
 
     _cwd: PathBuf,
-    // directory history
-    history: History,
+    // context related to tabs
+    tab_context: TabContext,
+
+    // user interface context; data which is input to both, the UI rendering and the app state
+    ui_context: UiContext,
     // context related to searching
     search_context: Option<SearchPattern>,
     // message queue for displaying messages
@@ -52,8 +61,9 @@ impl AppContext {
             view_widget: WidgetType::FileBrowser,
             events,
             _cwd: cwd,
-            history: History::new(),
             search_context: None,
+            tab_context: TabContext::new(),
+            ui_context: UiContext { layout: vec![] },
             message_queue: MessageQueue::new(),
             server_state: ServerState::new(),
         }
@@ -100,6 +110,13 @@ impl AppContext {
         &mut self.server_state
     }
 
+    pub fn tab_context_ref(&self) -> &TabContext {
+        &self.tab_context
+    }
+    pub fn tab_context_mut(&mut self) -> &mut TabContext {
+        &mut self.tab_context
+    }
+
     pub fn get_search_context(&self) -> Option<&SearchPattern> {
         self.search_context.as_ref()
     }
@@ -107,11 +124,11 @@ impl AppContext {
         self.search_context = Some(pattern);
     }
 
-    pub fn history_ref(&self) -> &History {
-        &self.history
+    pub fn ui_context_ref(&self) -> &UiContext {
+        &self.ui_context
     }
-    pub fn history_mut(&mut self) -> &mut History {
-        &mut self.history
+    pub fn ui_context_mut(&mut self) -> &mut UiContext {
+        &mut self.ui_context
     }
 
     pub fn cwd(&self) -> &Path {
@@ -119,13 +136,6 @@ impl AppContext {
     }
     pub fn set_cwd(&mut self, path: &Path) {
         self._cwd = path.to_path_buf();
-    }
-
-    pub fn curr_list_ref(&self) -> Option<&DirList> {
-        self.history.get(self.cwd())
-    }
-    pub fn curr_list_mut(&mut self) -> Option<&mut DirList> {
-        self.history.get_mut(self._cwd.as_path())
     }
 
     pub fn get_view_widget(&self) -> WidgetType {

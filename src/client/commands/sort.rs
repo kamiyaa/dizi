@@ -11,7 +11,9 @@ pub fn set_sort(context: &mut AppContext, method: SortType) -> DiziResult<()> {
         .config_mut()
         .sort_options_mut()
         .set_sort_method(method);
-    context.history_mut().depreciate_all_entries();
+    for tab in context.tab_context_mut().iter_mut() {
+        tab.history_mut().depreciate_all_entries();
+    }
     refresh(context)
 }
 
@@ -19,11 +21,13 @@ pub fn toggle_reverse(context: &mut AppContext) -> DiziResult<()> {
     let reversed = !context.config_ref().sort_options_ref().reverse;
     context.config_mut().sort_options_mut().reverse = reversed;
 
-    context.history_mut().depreciate_all_entries();
+    for tab in context.tab_context_mut().iter_mut() {
+        tab.history_mut().depreciate_all_entries();
+    }
     refresh(context)
 }
 
 fn refresh(context: &mut AppContext) -> DiziResult<()> {
-    reload::soft_reload(context)?;
+    reload::soft_reload(context.tab_context_ref().index, context)?;
     Ok(())
 }

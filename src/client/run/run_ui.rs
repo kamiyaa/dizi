@@ -2,6 +2,7 @@ use std::io::{BufRead, BufReader};
 use std::thread;
 
 use termion::event::Event;
+use tui::layout::{Constraint, Rect};
 
 use dizi_lib::error::DiziResult;
 use dizi_lib::request::client::ClientRequest;
@@ -11,7 +12,10 @@ use crate::context::{AppContext, QuitType};
 use crate::event::AppEvent;
 use crate::key_command::{AppExecute, Command, CommandKeybind};
 use crate::preview::preview_default;
+use crate::ui;
+use crate::ui::views;
 use crate::ui::views::TuiView;
+use crate::ui::PreviewArea;
 use crate::ui::TuiBackend;
 use crate::util::input;
 use crate::util::request::send_client_request;
@@ -42,7 +46,14 @@ pub fn run_ui(
     }
 
     while context.quit == QuitType::DoNot {
-        backend.render(TuiView::new(&context));
+        // do the ui
+        if let Ok(area) = backend.terminal_ref().size() {
+            // pre-calculate some ui attributes
+            calculate_ui_context(context, area);
+
+            // render the ui
+            backend.render(TuiView::new(context));
+        }
 
         let event = match context.poll_event() {
             Ok(event) => event,
@@ -106,4 +117,25 @@ pub fn run_ui(
         }
     }
     Ok(())
+}
+
+fn calculate_ui_context(context: &mut AppContext, area: Rect) {
+    let area = Rect {
+        y: area.top() + 1,
+        height: area.height - 2,
+        ..area
+    };
+    let config = context.config_ref();
+    let display_options = config.display_options_ref();
+
+    let column_ratio = (1, 3, 4);
+    let total = (column_ratio.0 + column_ratio.1 + column_ratio.2) as u32;
+    let constraints = [
+        Constraint::Ratio(column_ratio.0 as u32, total),
+        Constraint::Ratio(column_ratio.1 as u32, total),
+        Constraint::Ratio(column_ratio.2 as u32, total),
+    ];
+
+    let layout = views::calculate_layout_with_borders(area, &constraints);
+    context.ui_context_mut().layout = layout;
 }

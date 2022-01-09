@@ -22,8 +22,9 @@ pub enum LinkType {
 }
 
 #[derive(Clone, Debug)]
-pub struct Metadata {
+pub struct JoshutoMetadata {
     _len: u64,
+    _directory_size: Option<usize>,
     _modified: time::SystemTime,
     _permissions: fs::Permissions,
     _file_type: FileType,
@@ -36,7 +37,7 @@ pub struct Metadata {
     pub mode: u32,
 }
 
-impl Metadata {
+impl JoshutoMetadata {
     pub fn from(path: &path::Path) -> io::Result<Self> {
         #[cfg(unix)]
         use std::os::unix::fs::MetadataExt;
@@ -52,9 +53,9 @@ impl Metadata {
             ),
         };
 
-        let _file_type = match metadata.as_ref() {
-            Ok(m) if m.file_type().is_dir() => FileType::Directory,
-            _ => FileType::File,
+        let (_file_type, _directory_size) = match metadata.as_ref() {
+            Ok(m) if m.file_type().is_dir() => (FileType::Directory, None),
+            _ => (FileType::File, None),
         };
 
         let _link_type = if symlink_metadata.file_type().is_symlink() {
@@ -81,6 +82,7 @@ impl Metadata {
 
         Ok(Self {
             _len,
+            _directory_size,
             _modified,
             _permissions,
             _file_type,
@@ -96,6 +98,14 @@ impl Metadata {
 
     pub fn len(&self) -> u64 {
         self._len
+    }
+
+    pub fn directory_size(&self) -> Option<usize> {
+        self._directory_size
+    }
+
+    pub fn update_directory_size(&mut self, size: usize) {
+        self._directory_size = Some(size);
     }
 
     pub fn modified(&self) -> time::SystemTime {

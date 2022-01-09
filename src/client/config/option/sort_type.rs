@@ -6,7 +6,7 @@ use std::time;
 use serde_derive::Deserialize;
 
 use crate::config::option::SortOption;
-use crate::fs::DirEntry;
+use crate::fs::JoshutoDirEntry;
 
 #[derive(Clone, Copy, Debug, Deserialize, PartialEq)]
 pub enum SortType {
@@ -37,7 +37,12 @@ impl SortType {
             SortType::Ext => "ext",
         }
     }
-    pub fn cmp(&self, f1: &DirEntry, f2: &DirEntry, sort_option: &SortOption) -> cmp::Ordering {
+    pub fn cmp(
+        &self,
+        f1: &JoshutoDirEntry,
+        f2: &JoshutoDirEntry,
+        sort_option: &SortOption,
+    ) -> cmp::Ordering {
         match &self {
             SortType::Natural => natural_sort(f1, f2, sort_option),
             SortType::Lexical => lexical_sort(f1, f2, sort_option),
@@ -65,7 +70,12 @@ impl SortTypes {
         self.list.pop_back();
     }
 
-    pub fn cmp(&self, f1: &DirEntry, f2: &DirEntry, sort_option: &SortOption) -> cmp::Ordering {
+    pub fn cmp(
+        &self,
+        f1: &JoshutoDirEntry,
+        f2: &JoshutoDirEntry,
+        sort_option: &SortOption,
+    ) -> cmp::Ordering {
         for st in &self.list {
             let res = st.cmp(f1, f2, sort_option);
             if res != cmp::Ordering::Equal {
@@ -92,8 +102,11 @@ impl std::default::Default for SortTypes {
     }
 }
 
-fn mtime_sort(file1: &DirEntry, file2: &DirEntry) -> cmp::Ordering {
-    fn compare(file1: &DirEntry, file2: &DirEntry) -> Result<cmp::Ordering, std::io::Error> {
+fn mtime_sort(file1: &JoshutoDirEntry, file2: &JoshutoDirEntry) -> cmp::Ordering {
+    fn compare(
+        file1: &JoshutoDirEntry,
+        file2: &JoshutoDirEntry,
+    ) -> Result<cmp::Ordering, std::io::Error> {
         let f1_meta: fs::Metadata = std::fs::metadata(file1.file_path())?;
         let f2_meta: fs::Metadata = std::fs::metadata(file2.file_path())?;
 
@@ -104,17 +117,21 @@ fn mtime_sort(file1: &DirEntry, file2: &DirEntry) -> cmp::Ordering {
     compare(file1, file2).unwrap_or(cmp::Ordering::Equal)
 }
 
-fn size_sort(file1: &DirEntry, file2: &DirEntry) -> cmp::Ordering {
+fn size_sort(file1: &JoshutoDirEntry, file2: &JoshutoDirEntry) -> cmp::Ordering {
     file1.metadata.len().cmp(&file2.metadata.len())
 }
 
-fn ext_sort(file1: &DirEntry, file2: &DirEntry) -> cmp::Ordering {
+fn ext_sort(file1: &JoshutoDirEntry, file2: &JoshutoDirEntry) -> cmp::Ordering {
     let f1_ext = file1.get_ext();
     let f2_ext = file2.get_ext();
     alphanumeric_sort::compare_str(&f1_ext, &f2_ext)
 }
 
-fn lexical_sort(f1: &DirEntry, f2: &DirEntry, sort_option: &SortOption) -> cmp::Ordering {
+fn lexical_sort(
+    f1: &JoshutoDirEntry,
+    f2: &JoshutoDirEntry,
+    sort_option: &SortOption,
+) -> cmp::Ordering {
     let f1_name = f1.file_name();
     let f2_name = f2.file_name();
     if sort_option.case_sensitive {
@@ -126,7 +143,11 @@ fn lexical_sort(f1: &DirEntry, f2: &DirEntry, sort_option: &SortOption) -> cmp::
     }
 }
 
-fn natural_sort(f1: &DirEntry, f2: &DirEntry, sort_option: &SortOption) -> cmp::Ordering {
+fn natural_sort(
+    f1: &JoshutoDirEntry,
+    f2: &JoshutoDirEntry,
+    sort_option: &SortOption,
+) -> cmp::Ordering {
     let f1_name = f1.file_name();
     let f2_name = f2.file_name();
     if sort_option.case_sensitive {

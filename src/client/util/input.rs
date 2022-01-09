@@ -10,7 +10,7 @@ use crate::config::option::WidgetType;
 use crate::config::AppKeyMapping;
 use crate::context::{AppContext, QuitType};
 use crate::event::AppEvent;
-use crate::fs::DirList;
+use crate::fs::JoshutoDirList;
 use crate::key_command::{Command, CommandKeybind};
 use crate::ui;
 use crate::ui::views::TuiCommandMenu;
@@ -265,8 +265,8 @@ pub fn process_noninteractive(event: AppEvent, context: &mut AppContext) {
     }
 }
 
-pub fn process_dir_preview(context: &mut AppContext, dirlist: DirList) {
-    let history = context.history_mut();
+pub fn process_dir_preview(context: &mut AppContext, dirlist: JoshutoDirList) {
+    let history = context.tab_context_mut().curr_tab_mut().history_mut();
 
     let dir_path = dirlist.file_path().to_path_buf();
     history.insert(dir_path, dirlist);

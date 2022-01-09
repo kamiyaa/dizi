@@ -1,13 +1,15 @@
 use dizi_lib::error::DiziResult;
 
 use crate::context::AppContext;
-use crate::fs::DirList;
+use crate::tab::JoshutoTab;
 use crate::util::search::SearchPattern;
 
 use super::cursor_move;
 
-pub fn search_string_fwd(curr_list: &DirList, pattern: &str) -> Option<usize> {
-    let offset = curr_list.index? + 1;
+pub fn search_string_fwd(curr_tab: &JoshutoTab, pattern: &str) -> Option<usize> {
+    let curr_list = curr_tab.curr_list_ref()?;
+
+    let offset = curr_list.get_index()? + 1;
     let contents_len = curr_list.contents.len();
     for i in 0..contents_len {
         let file_name_lower = curr_list.contents[(offset + i) % contents_len]
@@ -19,8 +21,10 @@ pub fn search_string_fwd(curr_list: &DirList, pattern: &str) -> Option<usize> {
     }
     None
 }
-pub fn search_string_rev(curr_list: &DirList, pattern: &str) -> Option<usize> {
-    let offset = curr_list.index?;
+pub fn search_string_rev(curr_tab: &JoshutoTab, pattern: &str) -> Option<usize> {
+    let curr_list = curr_tab.curr_list_ref()?;
+
+    let offset = curr_list.get_index()?;
     let contents_len = curr_list.contents.len();
     for i in (0..contents_len).rev() {
         let file_name_lower = curr_list.contents[(offset + i) % contents_len]
@@ -34,15 +38,10 @@ pub fn search_string_rev(curr_list: &DirList, pattern: &str) -> Option<usize> {
 }
 
 pub fn search_string(context: &mut AppContext, pattern: &str) -> DiziResult<()> {
-    let widget = context.get_view_widget();
     let pattern = pattern.to_lowercase();
-
-    let index = match context.curr_list_ref() {
-        Some(list) => search_string_fwd(list, pattern.as_str()),
-        None => None,
-    };
+    let index = search_string_fwd(context.tab_context_ref().curr_tab_ref(), pattern.as_str());
     if let Some(index) = index {
-        cursor_move::cursor_move(context, widget, index);
+        let _ = cursor_move::cursor_move(context, index);
     }
     context.set_search_context(SearchPattern::String(pattern));
     Ok(())

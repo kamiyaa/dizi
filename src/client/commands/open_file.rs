@@ -19,7 +19,12 @@ pub fn open(context: &mut AppContext) -> DiziResult<()> {
 }
 
 pub fn file_browser_open(context: &mut AppContext) -> DiziResult<()> {
-    if let Some(entry) = context.curr_list_ref().and_then(|s| s.curr_entry_ref()) {
+    if let Some(entry) = context
+        .tab_context_ref()
+        .curr_tab_ref()
+        .curr_list_ref()
+        .and_then(|s| s.curr_entry_ref())
+    {
         if entry.file_path().is_dir() {
             let path = entry.file_path().to_path_buf();
             change_directory::cd(path.as_path(), context)?;

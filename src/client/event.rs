@@ -9,12 +9,12 @@ use signal_hook::iterator::SignalsInfo;
 use termion::event::Event;
 use termion::input::TermRead;
 
-use crate::fs::DirList;
+use crate::fs::JoshutoDirList;
 
 #[derive(Debug)]
 pub enum AppEvent {
     Termion(Event),
-    PreviewDir(io::Result<DirList>),
+    PreviewDir(io::Result<JoshutoDirList>),
     Signal(i32),
     Server(String),
 }

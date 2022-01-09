@@ -27,6 +27,42 @@ impl<'a> TuiView<'a> {
     }
 }
 
+impl<'a> Widget for TuiView<'a> {
+    fn render(self, area: Rect, buf: &mut Buffer) {
+        let default_layout = [Constraint::Ratio(1, 1)];
+        let layout_rect = Layout::default()
+            .direction(Direction::Horizontal)
+            .vertical_margin(1)
+            .constraints(default_layout)
+            .split(area);
+
+        render_widget(self.context, &LAYOUT_T.layout, layout_rect[0], buf);
+
+        if let Some(msg) = self.context.message_queue_ref().current_message() {
+            let rect = Rect {
+                x: 0,
+                y: area.height - 1,
+                width: area.width,
+                height: 1,
+            };
+
+            let text = Span::styled(msg.content.as_str(), msg.style);
+            Paragraph::new(text)
+                .wrap(Wrap { trim: true })
+                .render(rect, buf);
+        }
+
+        let topbar_width = area.width;
+        let rect = Rect {
+            x: 0,
+            y: 0,
+            width: topbar_width,
+            height: 1,
+        };
+        TuiTopBar::new(self.context, self.context.cwd()).render(rect, buf);
+    }
+}
+
 pub fn render_widget(
     context: &AppContext,
     layout: &LayoutComposition,
@@ -97,59 +133,20 @@ pub fn render_widget(
     }
 }
 
-impl<'a> Widget for TuiView<'a> {
-    fn render(self, area: Rect, buf: &mut Buffer) {
-        let default_layout = [Constraint::Ratio(1, 1)];
-        let layout_rect = Layout::default()
-            .direction(Direction::Horizontal)
-            .vertical_margin(1)
-            .constraints(default_layout)
-            .split(area);
+pub fn calculate_layout_with_borders(area: Rect, constraints: &[Constraint]) -> Vec<Rect> {
+    let block = Block::default().borders(Borders::ALL);
+    let inner = block.inner(area);
 
-        render_widget(self.context, &LAYOUT_T.layout, layout_rect[0], buf);
+    let layout_rect = Layout::default()
+        .direction(Direction::Horizontal)
+        .constraints(constraints.as_ref())
+        .split(inner);
 
-        if let Some(msg) = self.context.message_queue_ref().current_message() {
-            let rect = Rect {
-                x: 0,
-                y: area.height - 1,
-                width: area.width,
-                height: 1,
-            };
+    let block = Block::default().borders(Borders::RIGHT);
+    let inner1 = block.inner(layout_rect[0]);
 
-            let text = Span::styled(msg.content.as_str(), msg.style);
-            Paragraph::new(text)
-                .wrap(Wrap { trim: true })
-                .render(rect, buf);
-        }
+    let block = Block::default().borders(Borders::LEFT);
+    let inner3 = block.inner(layout_rect[2]);
 
-        let topbar_width = area.width;
-        let rect = Rect {
-            x: 0,
-            y: 0,
-            width: topbar_width,
-            height: 1,
-        };
-        TuiTopBar::new(self.context, self.context.cwd()).render(rect, buf);
-    }
-}
-
-struct Intersections {
-    top: u16,
-    bottom: u16,
-    left: u16,
-    right: u16,
-}
-
-impl Intersections {
-    fn render_left(&self, buf: &mut Buffer) {
-        buf.get_mut(self.left, self.top).set_symbol(HORIZONTAL_DOWN);
-        buf.get_mut(self.left, self.bottom)
-            .set_symbol(HORIZONTAL_UP);
-    }
-    fn render_right(&self, buf: &mut Buffer) {
-        buf.get_mut(self.right, self.top)
-            .set_symbol(HORIZONTAL_DOWN);
-        buf.get_mut(self.right, self.bottom)
-            .set_symbol(HORIZONTAL_UP);
-    }
+    vec![inner1, layout_rect[1], inner3]
 }

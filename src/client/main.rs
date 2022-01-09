@@ -7,6 +7,7 @@ mod history;
 mod key_command;
 mod preview;
 mod run;
+mod tab;
 mod ui;
 mod util;
 
@@ -25,6 +26,7 @@ use crate::config::{
 };
 use crate::context::AppContext;
 use crate::history::DirectoryHistory;
+use crate::tab::JoshutoTab;
 
 const PROGRAM_NAME: &str = "dizi";
 const CONFIG_HOME: &str = "DIZI_CONFIG_HOME";
@@ -164,14 +166,12 @@ fn run_app(args: Args) -> DiziResult<()> {
                 let keymap = AppKeyMapping::get_config(KEYMAP_FILE);
                 // eprintln!("keymap: {:#?}", keymap);
 
-                let display_options = context
-                    .config_ref()
-                    .client_ref()
-                    .display_options_ref()
-                    .clone();
-                context
-                    .history_mut()
-                    .populate_to_root(cwd.as_path(), &display_options)?;
+                let tab = JoshutoTab::new(
+                    cwd,
+                    context.ui_context_ref(),
+                    context.config_ref().display_options_ref(),
+                )?;
+                context.tab_context_mut().push_tab(tab);
 
                 let mut backend: ui::TuiBackend = ui::TuiBackend::new()?;
                 run::run_ui(&mut backend, &mut context, keymap)?;

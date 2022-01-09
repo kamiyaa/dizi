@@ -12,7 +12,12 @@ pub fn safe_subtract(a: usize, b: usize) -> usize {
     }
 }
 
-pub fn cursor_move(context: &mut AppContext, widget: WidgetType, new_index: usize) {
+pub fn cursor_move(context: &mut AppContext, new_index: usize) {
+    let widget = context.get_view_widget();
+    cursor_move_for_widget(context, widget, new_index);
+}
+
+pub fn cursor_move_for_widget(context: &mut AppContext, widget: WidgetType, new_index: usize) {
     match widget {
         WidgetType::FileBrowser => set_curr_dirlist_index(context, new_index),
         WidgetType::Playlist => set_playlist_index(context, new_index),
@@ -29,22 +34,37 @@ pub fn cursor_index(context: &mut AppContext, widget: WidgetType) -> Option<usiz
 }
 
 fn get_curr_dirlist_index(context: &AppContext) -> Option<usize> {
-    context.curr_list_ref().and_then(|list| list.index)
+    context
+        .tab_context_ref()
+        .curr_tab_ref()
+        .curr_list_ref()
+        .and_then(|list| list.get_index())
 }
 fn get_curr_dirlist_len(context: &AppContext) -> Option<usize> {
-    context.curr_list_ref().map(|list| list.len())
+    context
+        .tab_context_ref()
+        .curr_tab_ref()
+        .curr_list_ref()
+        .map(|list| list.len())
 }
 fn set_curr_dirlist_index(context: &mut AppContext, new_index: usize) {
+    let ui_context = context.ui_context_ref().clone();
+    let display_options = context.config_ref().display_options_ref().clone();
+
     let new_index = new_index;
-    if let Some(curr_list) = context.curr_list_mut() {
+    if let Some(curr_list) = context.tab_context_mut().curr_tab_mut().curr_list_mut() {
         if curr_list.is_empty() {
             return;
         }
         let dir_len = curr_list.len();
         if dir_len <= new_index {
-            curr_list.index = Some(safe_subtract(dir_len, 1));
+            curr_list.set_index(
+                Some(safe_subtract(dir_len, 1)),
+                &ui_context,
+                &display_options,
+            );
         } else {
-            curr_list.index = Some(new_index);
+            curr_list.set_index(Some(new_index), &ui_context, &display_options);
         }
     }
 }
@@ -82,7 +102,7 @@ pub fn up(context: &mut AppContext, u: usize) -> DiziResult<()> {
 
     if let Some(index) = index {
         let new_index = safe_subtract(index, u);
-        cursor_move(context, widget, new_index);
+        cursor_move_for_widget(context, widget, new_index);
     }
     Ok(())
 }
@@ -93,7 +113,7 @@ pub fn down(context: &mut AppContext, u: usize) -> DiziResult<()> {
 
     if let Some(index) = index {
         let new_index = index + u;
-        cursor_move(context, widget, new_index);
+        cursor_move_for_widget(context, widget, new_index);
     }
     Ok(())
 }
@@ -104,7 +124,7 @@ pub fn home(context: &mut AppContext) -> DiziResult<()> {
 
     match index {
         Some(index) if index > 0 => {
-            cursor_move(context, widget, 0);
+            cursor_move_for_widget(context, widget, 0);
         }
         _ => {}
     }
@@ -127,7 +147,7 @@ pub fn end(context: &mut AppContext) -> DiziResult<()> {
 
     match (index, len) {
         (Some(index), Some(len)) if index < len - 1 => {
-            cursor_move(context, widget, len - 1);
+            cursor_move_for_widget(context, widget, len - 1);
         }
         _ => {}
     }
@@ -146,7 +166,7 @@ pub fn page_up(context: &mut AppContext, backend: &mut TuiBackend) -> DiziResult
 
     if let Some(index) = index {
         let new_index = safe_subtract(index, page_size);
-        cursor_move(context, widget, new_index);
+        cursor_move_for_widget(context, widget, new_index);
     }
     Ok(())
 }
@@ -159,7 +179,7 @@ pub fn page_down(context: &mut AppContext, backend: &mut TuiBackend) -> DiziResu
 
     if let Some(index) = index {
         let new_index = index + page_size;
-        cursor_move(context, widget, new_index);
+        cursor_move_for_widget(context, widget, new_index);
     }
     Ok(())
 }

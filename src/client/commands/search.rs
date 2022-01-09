@@ -8,37 +8,34 @@ use super::search_glob;
 use super::search_string;
 
 pub fn search_next(context: &mut AppContext) -> DiziResult<()> {
-    let widget = context.get_view_widget();
     if let Some(search_context) = context.get_search_context() {
-        let index = match context.curr_list_ref() {
-            Some(list) => match search_context {
-                SearchPattern::Glob(s) => search_glob::search_glob_fwd(list, s),
-                SearchPattern::String(s) => {
-                    search_string::search_string_fwd(context.curr_list_ref().unwrap(), s)
-                }
-            },
-            None => None,
+        let index = match search_context {
+            SearchPattern::Glob(s) => {
+                search_glob::search_glob_fwd(context.tab_context_ref().curr_tab_ref(), s)
+            }
+            SearchPattern::String(s) => {
+                search_string::search_string_fwd(context.tab_context_ref().curr_tab_ref(), s)
+            }
         };
         if let Some(index) = index {
-            cursor_move::cursor_move(context, widget, index);
+            let _ = cursor_move::cursor_move(context, index);
         }
     }
     Ok(())
 }
 
 pub fn search_prev(context: &mut AppContext) -> DiziResult<()> {
-    let widget = context.get_view_widget();
     if let Some(search_context) = context.get_search_context() {
         let index = match search_context {
             SearchPattern::Glob(s) => {
-                search_glob::search_glob_rev(context.curr_list_ref().unwrap(), s)
+                search_glob::search_glob_rev(context.tab_context_ref().curr_tab_ref(), s)
             }
             SearchPattern::String(s) => {
-                search_string::search_string_rev(context.curr_list_ref().unwrap(), s)
+                search_string::search_string_rev(context.tab_context_ref().curr_tab_ref(), s)
             }
         };
         if let Some(index) = index {
-            cursor_move::cursor_move(context, widget, index);
+            let _ = cursor_move::cursor_move(context, index);
         }
     }
     Ok(())

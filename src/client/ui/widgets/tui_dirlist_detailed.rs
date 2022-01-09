@@ -1,11 +1,12 @@
-use std::cmp::Ordering;
+use std::cmp::{min, Ordering};
 
 use tui::buffer::Buffer;
 use tui::layout::Rect;
 use tui::style::{Color, Modifier, Style};
 use tui::widgets::Widget;
 
-use crate::fs::{DirEntry, DirList, FileType, LinkType};
+use crate::config::option::DisplayOption;
+use crate::fs::{FileType, JoshutoDirEntry, JoshutoDirList, LinkType};
 use crate::util::format;
 use crate::util::string::UnicodeTruncate;
 use crate::util::style;
@@ -16,13 +17,21 @@ const MIN_LEFT_LABEL_WIDTH: i32 = 15;
 const ELLIPSIS: &str = "…";
 
 pub struct TuiDirListDetailed<'a> {
-    dirlist: &'a DirList,
+    dirlist: &'a JoshutoDirList,
+    display_options: &'a DisplayOption,
     focused: bool,
 }
-
 impl<'a> TuiDirListDetailed<'a> {
-    pub fn new(dirlist: &'a DirList, focused: bool) -> Self {
-        Self { dirlist, focused }
+    pub fn new(
+        dirlist: &'a JoshutoDirList,
+        display_options: &'a DisplayOption,
+        focused: bool,
+    ) -> Self {
+        Self {
+            dirlist,
+            display_options,
+            focused,
+        }
     }
 }
 
@@ -34,7 +43,7 @@ impl<'a> Widget for TuiDirListDetailed<'a> {
 
         let x = area.left();
         let y = area.top();
-        let curr_index = match self.dirlist.index {
+        let curr_index = match self.dirlist.get_index() {
             Some(i) => i,
             None => {
                 let style = Style::default().bg(Color::Red).fg(Color::White);
@@ -44,7 +53,14 @@ impl<'a> Widget for TuiDirListDetailed<'a> {
         };
 
         let drawing_width = area.width as usize;
-        let skip_dist = self.dirlist.first_index_for_viewport(area.height as usize);
+        let skip_dist = self.dirlist.first_index_for_viewport();
+        let line_num_style = false; // self.display_options.line_nums();
+                                    // Length (In chars) of the last entry's index on current page.
+                                    // Using this to align all elements
+        let max_index_length = (skip_dist
+            + min(self.dirlist.len() - skip_dist, area.height as usize))
+        .to_string()
+        .len();
 
         // draw every entry
         self.dirlist
@@ -53,40 +69,46 @@ impl<'a> Widget for TuiDirListDetailed<'a> {
             .enumerate()
             .take(area.height as usize)
             .for_each(|(i, entry)| {
-                let style = style::entry_style(entry);
-                print_entry(buf, entry, style, (x + 1, y + i as u16), drawing_width - 1);
+                let ix = skip_dist + i;
+
+                let style = if ix == curr_index {
+                    style::entry_style(entry).add_modifier(Modifier::REVERSED)
+                } else {
+                    style::entry_style(entry)
+                };
+
+                let line_number_string = "".to_string();
+                if ix == curr_index {
+                    let space_fill = " ".repeat(drawing_width);
+                    buf.set_string(x, y + i as u16, space_fill.as_str(), style);
+                }
+
+                print_entry(
+                    buf,
+                    entry,
+                    style,
+                    (x + 1, y + i as u16),
+                    drawing_width - 1,
+                    line_number_string,
+                );
             });
-
-        if self.focused {
-            // draw selected entry in a different style
-            let screen_index = curr_index % area.height as usize;
-
-            let entry = self.dirlist.curr_entry_ref().unwrap();
-            let style = style::entry_style(entry).add_modifier(Modifier::REVERSED);
-
-            let space_fill = " ".repeat(drawing_width);
-            buf.set_string(x, y + screen_index as u16, space_fill.as_str(), style);
-
-            print_entry(
-                buf,
-                entry,
-                style,
-                (x + 1, y + screen_index as u16),
-                drawing_width - 1,
-            );
-        }
     }
 }
 
 fn print_entry(
     buf: &mut Buffer,
-    entry: &DirEntry,
+    entry: &JoshutoDirEntry,
     style: Style,
     (x, y): (u16, u16),
     drawing_width: usize,
+    index: String,
 ) {
     let size_string = match entry.metadata.file_type() {
-        FileType::Directory => "".to_string(),
+        FileType::Directory => entry
+            .metadata
+            .directory_size()
+            .map(|n| n.to_string())
+            .unwrap_or_else(|| "".to_string()),
         FileType::File => format::file_size_to_string(entry.metadata.len()),
     };
     let symlink_string = match entry.metadata.link_type() {
@@ -102,10 +124,16 @@ fn print_entry(
         drawing_width,
     );
 
-    let right_width = right_label.width();
+    let index_width = index.width();
+    // draw_index
+    buf.set_stringn(x, y, index, index_width, Style::default());
+
+    let drawing_width = drawing_width - index_width as usize;
+    let x = x + index_width as u16;
+    // Drawing labels
     buf.set_stringn(x, y, left_label, drawing_width, style);
     buf.set_stringn(
-        x + drawing_width as u16 - right_width as u16,
+        x + drawing_width as u16 - right_label.width() as u16,
         y,
         right_label,
         drawing_width,
@@ -174,132 +202,5 @@ pub fn trim_file_label(name: &str, drawing_width: usize) -> String {
                 format!("{}{}.{}", truncated_stem, ELLIPSIS, ELLIPSIS)
             }
         }
-    }
-}
-
-#[cfg(test)]
-mod test_factor_labels {
-    use super::{factor_labels_for_entry, MIN_LEFT_LABEL_WIDTH};
-
-    #[test]
-    fn both_labels_empty_if_drawing_width_zero() {
-        let left = "foo.ext";
-        let right = "right";
-        assert_eq!(
-            ("".to_string(), ""),
-            factor_labels_for_entry(left, right, 0)
-        );
-    }
-
-    #[test]
-    fn nothing_changes_if_all_labels_fit_easily() {
-        let left = "foo.ext";
-        let right = "right";
-        assert_eq!(
-            (left.to_string(), right),
-            factor_labels_for_entry(left, right, 20)
-        );
-    }
-
-    #[test]
-    fn nothing_changes_if_all_labels_just_fit() {
-        let left = "foo.ext";
-        let right = "right";
-        assert_eq!(
-            (left.to_string(), right),
-            factor_labels_for_entry(left, right, 12)
-        );
-    }
-
-    #[test]
-    fn right_label_omitted_if_left_label_would_need_to_be_shortened_below_min_left_label_width() {
-        let left = "foobarbazfo.ext";
-        let right = "right";
-        assert!(left.chars().count() as i32 == MIN_LEFT_LABEL_WIDTH);
-        assert_eq!(
-            ("foobarbazfo.ext".to_string(), ""),
-            factor_labels_for_entry(left, right, MIN_LEFT_LABEL_WIDTH as usize)
-        );
-    }
-
-    #[test]
-    fn right_label_is_kept_if_left_label_is_not_shortened_below_min_left_label_width() {
-        let left = "foobarbazfoobarbaz.ext";
-        let right = "right";
-        assert!(left.chars().count() as i32 > MIN_LEFT_LABEL_WIDTH + right.chars().count() as i32);
-        assert_eq!(
-            ("foobarbazf….ext".to_string(), right),
-            factor_labels_for_entry(
-                left,
-                right,
-                MIN_LEFT_LABEL_WIDTH as usize + right.chars().count()
-            )
-        );
-    }
-
-    #[test]
-    // regression
-    fn file_name_which_is_smaller_or_equal_drawing_width_does_not_cause_right_label_to_be_omitted()
-    {
-        let left = "foooooobaaaaaaarbaaaaaaaaaz";
-        let right = "right";
-        assert!(left.chars().count() as i32 > MIN_LEFT_LABEL_WIDTH);
-        assert_eq!(
-            ("foooooobaaaaaaarbaaaa…".to_string(), right),
-            factor_labels_for_entry(left, right, left.chars().count())
-        );
-    }
-}
-
-#[cfg(test)]
-mod test_trim_file_label {
-    use super::trim_file_label;
-
-    #[test]
-    fn dotfiles_get_an_ellipsis_at_the_end_if_they_dont_fit() {
-        let label = ".joshuto";
-        assert_eq!(".jos…".to_string(), trim_file_label(label, 5));
-    }
-
-    #[test]
-    fn dotless_files_get_an_ellipsis_at_the_end_if_they_dont_fit() {
-        let label = "Desktop";
-        assert_eq!("Desk…".to_string(), trim_file_label(label, 5));
-    }
-
-    #[test]
-    fn if_the_extension_doesnt_fit_show_stem_with_double_ellipse() {
-        let label = "12345678.12345678910";
-        assert_eq!("12345….…".to_string(), trim_file_label(label, 8));
-    }
-
-    #[test]
-    fn if_just_the_extension_fits_its_shown_with_an_ellipsis_instead_of_a_dot() {
-        let left = "foo.ext";
-        assert_eq!("…ext".to_string(), trim_file_label(left, 4));
-    }
-
-    #[test]
-    fn if_the_extension_fits_the_stem_is_truncated_with_an_appended_ellipsis_1() {
-        let left = "foo.ext";
-        assert_eq!("….ext".to_string(), trim_file_label(left, 5));
-    }
-
-    #[test]
-    fn if_the_extension_fits_the_stem_is_truncated_with_an_appended_ellipsis_2() {
-        let left = "foo.ext";
-        assert_eq!("f….ext".to_string(), trim_file_label(left, 6));
-    }
-
-    #[test]
-    fn if_the_name_is_truncated_after_a_full_width_character_the_ellipsis_is_shown_correctly() {
-        let left = "🌕🌕🌕";
-        assert_eq!("🌕…".to_string(), trim_file_label(left, 4));
-    }
-
-    #[test]
-    fn if_the_name_is_truncated_within_a_full_width_character_the_ellipsis_is_shown_correctly() {
-        let left = "🌕🌕🌕";
-        assert_eq!("🌕🌕…".to_string(), trim_file_label(left, 5));
     }
 }

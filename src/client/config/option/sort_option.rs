@@ -1,7 +1,7 @@
 use std::cmp;
 
 use crate::config::option::{SortType, SortTypes};
-use crate::fs::DirEntry;
+use crate::fs::JoshutoDirEntry;
 
 #[derive(Clone, Debug)]
 pub struct SortOption {
@@ -16,7 +16,7 @@ impl SortOption {
         self.sort_methods.reorganize(method);
     }
 
-    pub fn compare(&self, f1: &DirEntry, f2: &DirEntry) -> cmp::Ordering {
+    pub fn compare(&self, f1: &JoshutoDirEntry, f2: &JoshutoDirEntry) -> cmp::Ordering {
         if self.directories_first {
             let f1_isdir = f1.file_path().is_dir();
             let f2_isdir = f2.file_path().is_dir();
