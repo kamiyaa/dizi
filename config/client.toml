@@ -6,6 +6,7 @@ home_dir = "~/music"
 [client.display]
 show_borders = true
 show_hidden = false
+show_icons = false
 layout = "~/.config/dizi/layout.json"
 
 [client.display.sort]
