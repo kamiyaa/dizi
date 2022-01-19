@@ -11,7 +11,7 @@ use cpal::traits::HostTrait;
 use log::{debug, log_enabled, Level};
 
 use rodio::queue;
-use rodio::source::Source;
+use rodio::source::{Amplify, Pausable, Source, Stoppable};
 use rodio::{Decoder, OutputStream};
 
 use dizi_lib::error::DiziResult;
@@ -127,26 +127,8 @@ impl PlayerStream {
                         let _ = event_tx.send(ServerEvent::PlayerProgressUpdate(duration_played));
                     }
                 }
-
                 if let Ok(msg) = source_rx.try_recv() {
-                    match msg {
-                        PlayerRequest::Pause => {
-                            source.inner_mut().set_paused(true);
-                            paused = true;
-                        }
-                        PlayerRequest::Resume => {
-                            source.inner_mut().set_paused(false);
-                            paused = false;
-                        }
-                        PlayerRequest::SetVolume(volume) => {
-                            source.inner_mut().inner_mut().set_factor(volume);
-                        }
-                        PlayerRequest::Stop => {
-                            source.stop();
-                            paused = true;
-                        }
-                        _ => {}
-                    }
+                    process_msg(msg, source, &source_rx, &mut paused);
                 }
             })
             .convert_samples();
@@ -154,6 +136,39 @@ impl PlayerStream {
         self.source_tx = Some(source_tx);
         let finish_signal = queue_tx.append_with_signal(source);
         Ok(finish_signal)
+    }
+}
+
+pub fn process_msg(
+    msg: PlayerRequest,
+    source: &mut Stoppable<Pausable<Amplify<Decoder<BufReader<File>>>>>,
+    source_rx: &mpsc::Receiver<PlayerRequest>,
+    paused: &mut bool,
+) {
+    match msg {
+        PlayerRequest::Pause => {
+            source.inner_mut().set_paused(true);
+            *paused = true;
+            while let Ok(msg) = source_rx.recv() {
+                process_msg(msg.clone(), source, source_rx, paused);
+                match msg {
+                    PlayerRequest::Resume => break,
+                    _ => {}
+                }
+            }
+        }
+        PlayerRequest::Resume => {
+            source.inner_mut().set_paused(false);
+            *paused = false;
+        }
+        PlayerRequest::SetVolume(volume) => {
+            source.inner_mut().inner_mut().set_factor(volume);
+        }
+        PlayerRequest::Stop => {
+            source.stop();
+            *paused = true;
+        }
+        _ => {}
     }
 }
 
