@@ -149,13 +149,6 @@ pub fn process_msg(
         PlayerRequest::Pause => {
             source.inner_mut().set_paused(true);
             *paused = true;
-            while let Ok(msg) = source_rx.recv() {
-                process_msg(msg.clone(), source, source_rx, paused);
-                match msg {
-                    PlayerRequest::Resume => break,
-                    _ => {}
-                }
-            }
         }
         PlayerRequest::Resume => {
             source.inner_mut().set_paused(false);
