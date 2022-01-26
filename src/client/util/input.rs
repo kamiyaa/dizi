@@ -217,10 +217,7 @@ pub fn process_server_event(context: &mut AppContext, s: &str) -> DiziResult<()>
                 .push_success(format!("Added {} songs to playlist", songs.len()));
         }
         ServerBroadcastEvent::PlaylistRemove { index } => {
-            let playlist = context
-                .server_state_mut()
-                .player_mut()
-                .playlist_mut();
+            let playlist = context.server_state_mut().player_mut().playlist_mut();
             playlist.remove_song(index);
         }
         ServerBroadcastEvent::PlaylistPlay { index } => {

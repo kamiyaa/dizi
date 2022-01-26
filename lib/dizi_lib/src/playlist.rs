@@ -62,13 +62,13 @@ impl FilePlaylist {
                 Some(i) if i > self.list_ref().len() => {
                     self.set_cursor_index(Some(self.list_ref().len() - 1));
                 }
-                _ => {},
+                _ => {}
             }
             match self.get_playing_index() {
                 Some(i) if i > index => {
                     self.set_playing_index(Some(i - 1));
                 }
-                _ => {},
+                _ => {}
             }
         }
         song
