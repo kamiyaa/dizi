@@ -217,23 +217,11 @@ pub fn process_server_event(context: &mut AppContext, s: &str) -> DiziResult<()>
                 .push_success(format!("Added {} songs to playlist", songs.len()));
         }
         ServerBroadcastEvent::PlaylistRemove { index } => {
-            context
+            let playlist = context
                 .server_state_mut()
                 .player_mut()
-                .playlist_mut()
-                .remove_song(index);
-            if context
-                .server_state_ref()
-                .player_ref()
-                .playlist_ref()
-                .is_empty()
-            {
-                context
-                    .server_state_mut()
-                    .player_mut()
-                    .playlist_mut()
-                    .set_cursor_index(None);
-            }
+                .playlist_mut();
+            playlist.remove_song(index);
         }
         ServerBroadcastEvent::PlaylistPlay { index } => {
             let len = context.server_state_ref().player_ref().playlist_ref().len();

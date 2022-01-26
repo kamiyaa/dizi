@@ -56,10 +56,19 @@ impl FilePlaylist {
     pub fn remove_song(&mut self, index: usize) -> Song {
         let song = self.list_mut().remove(index);
         if self.list_ref().is_empty() {
-            self.cursor_index = None;
-        } else if let Some(index) = self.get_cursor_index() {
-            if index >= self.list_ref().len() {
-                self.set_cursor_index(Some(self.list_ref().len() - 1));
+            self.set_cursor_index(None);
+        } else {
+            match self.get_cursor_index() {
+                Some(i) if i > self.list_ref().len() => {
+                    self.set_cursor_index(Some(self.list_ref().len() - 1));
+                }
+                _ => {},
+            }
+            match self.get_playing_index() {
+                Some(i) if i > index => {
+                    self.set_playing_index(Some(i - 1));
+                }
+                _ => {},
             }
         }
         song
