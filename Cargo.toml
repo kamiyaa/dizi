@@ -38,7 +38,7 @@ skim = "^0"
 structopt = "^0"
 termion = "^1"
 toml = "^0"
-tui = "^0"
+tui = { version = "^0", default-features = false, features = ["termion"] }
 unicode-width = "^0"
 unicode-segmentation = "^1"
 uuid = { features = [ "v4" ], version = "^0" }
