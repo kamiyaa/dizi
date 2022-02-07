@@ -154,7 +154,12 @@ pub fn process_done_song(context: &mut AppContext) -> DiziResult<()> {
 pub fn run_on_song_change(context: &AppContext) {
     let server_config = context.config_ref().server_ref();
     if let Some(path) = server_config.on_song_change.as_ref() {
-        Command::new(path).spawn();
+        let on_song_change_script = path.to_path_buf();
+        thread::spawn(move || {
+            if let Ok(mut child) = Command::new(on_song_change_script).spawn() {
+                child.wait();
+            }
+        });
     }
 }
 
