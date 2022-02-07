@@ -29,10 +29,8 @@ pub fn run_query(context: &mut AppContext, query: String) -> DiziResult<()> {
         send_client_request(context, &request)?;
 
         // request for server state
-        /*
         let request = ClientRequest::PlayerState;
         send_client_request(context, &request)?;
-        */
     }
 
     loop {

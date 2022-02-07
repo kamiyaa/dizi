@@ -20,14 +20,17 @@ pub enum ServerEvent {
 #[derive(Debug)]
 pub enum AppEvent {
     Server(ServerEvent),
-    Client(ClientRequest),
+    Client {
+        uuid: String,
+        request: ClientRequest,
+    },
 }
 
 pub type AppEventSender = mpsc::Sender<AppEvent>;
 pub type AppEventReceiver = mpsc::Receiver<AppEvent>;
 
-pub type ClientRequestSender = mpsc::Sender<ClientRequest>;
-pub type ClientRequestReceiver = mpsc::Receiver<ClientRequest>;
+pub type ClientRequestSender = mpsc::Sender<(String, ClientRequest)>;
+pub type ClientRequestReceiver = mpsc::Receiver<(String, ClientRequest)>;
 
 pub type ServerEventSender = mpsc::Sender<ServerEvent>;
 pub type ServerEventReceiver = mpsc::Receiver<ServerEvent>;
@@ -66,8 +69,8 @@ impl Events {
         // listen to client requests
         let app_event_tx2 = app_event_tx.clone();
         let _ = thread::spawn(move || loop {
-            if let Ok(msg) = client_request_rx.recv() {
-                app_event_tx2.send(AppEvent::Client(msg));
+            if let Ok((uuid, request)) = client_request_rx.recv() {
+                app_event_tx2.send(AppEvent::Client { uuid, request });
             }
         });
 

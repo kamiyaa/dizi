@@ -46,8 +46,8 @@ pub fn serve(config: AppConfig) -> DiziResult<()> {
         };
 
         match event {
-            AppEvent::Client(event) => {
-                let res = process_client_request(&mut context, event);
+            AppEvent::Client { uuid, request } => {
+                let res = process_client_request(&mut context, uuid, request);
                 if let Err(err) = res {
                     if log_enabled!(Level::Debug) {
                         debug!("Error: {:?}", err);
@@ -154,12 +154,7 @@ pub fn process_done_song(context: &mut AppContext) -> DiziResult<()> {
 pub fn run_on_song_change(context: &AppContext) {
     let server_config = context.config_ref().server_ref();
     if let Some(path) = server_config.on_song_change.as_ref() {
-        match Command::new(path).spawn() {
-            Ok(mut child) => {
-                child.wait();
-            }
-            Err(_) => {}
-        }
+        Command::new(path).spawn();
     }
 }
 

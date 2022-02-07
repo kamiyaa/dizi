@@ -10,7 +10,11 @@ use crate::audio::DiziPlaylist;
 use crate::context::AppContext;
 use crate::server_commands::*;
 
-pub fn process_client_request(context: &mut AppContext, event: ClientRequest) -> DiziResult<()> {
+pub fn process_client_request(
+    context: &mut AppContext,
+    uuid: String,
+    event: ClientRequest,
+) -> DiziResult<()> {
     if log_enabled!(Level::Debug) {
         debug!("request: {:?}", event);
     }

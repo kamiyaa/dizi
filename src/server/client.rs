@@ -37,6 +37,8 @@ pub fn handle_client(
         }
     });
 
+    let uuid_string = uuid.to_string();
+
     // listen for client requests
     let event_tx_clone = event_tx;
     let stream_clone = stream.try_clone().unwrap();
@@ -65,7 +67,7 @@ pub fn handle_client(
                 if line.is_empty() {
                     continue;
                 }
-                forward_client_request(&client_request_tx, &line);
+                forward_client_request(&client_request_tx, &uuid_string, &line);
             }
         }
     }
@@ -74,10 +76,11 @@ pub fn handle_client(
 
 pub fn forward_client_request(
     client_request_tx: &ClientRequestSender,
+    uuid: &str,
     line: &str,
 ) -> DiziResult<()> {
     let request: ClientRequest = serde_json::from_str(line)?;
-    client_request_tx.send(request)?;
+    client_request_tx.send((uuid.to_string(), request))?;
     Ok(())
 }
 
