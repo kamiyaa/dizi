@@ -59,7 +59,7 @@ impl FilePlaylist {
             self.set_cursor_index(None);
         } else {
             match self.get_cursor_index() {
-                Some(i) if i > self.list_ref().len() => {
+                Some(i) if i >= self.list_ref().len() => {
                     self.set_cursor_index(Some(self.list_ref().len() - 1));
                 }
                 _ => {}
