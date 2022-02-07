@@ -69,7 +69,7 @@ impl<'a> Widget for TuiPlayer<'a> {
         buf.set_string(
             area.x,
             area.y,
-            format!("{} [{}]", player_status, song_name),
+            format!("{}: '{}'", player_status, song_name),
             player_status_style,
         );
         buf.set_string(
