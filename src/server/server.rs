@@ -86,6 +86,11 @@ pub fn serve(config: AppConfig) -> DiziResult<()> {
     if log_enabled!(Level::Debug) {
         debug!("Playlist saved!");
     }
+
+    context
+        .events
+        .broadcast_event(ServerBroadcastEvent::ServerQuit);
+
     Ok(())
 }
 
