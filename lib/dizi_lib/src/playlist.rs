@@ -5,12 +5,12 @@ use serde_derive::{Deserialize, Serialize};
 use crate::song::Song;
 
 #[derive(Copy, Clone, Debug, PartialEq, Serialize, Deserialize)]
-pub enum PlaylistStatus {
+pub enum PlaylistType {
     DirectoryListing,
     PlaylistFile,
 }
 
-impl ToString for PlaylistStatus {
+impl ToString for PlaylistType {
     fn to_string(&self) -> String {
         match *self {
             Self::DirectoryListing => "directory".to_string(),

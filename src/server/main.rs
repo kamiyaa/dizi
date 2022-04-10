@@ -3,6 +3,7 @@ mod client;
 mod config;
 mod context;
 mod events;
+mod playlist;
 mod server;
 mod server_command;
 mod server_commands;

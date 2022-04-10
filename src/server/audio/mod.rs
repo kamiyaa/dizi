@@ -1,7 +1,5 @@
 mod player;
-mod player_stream;
-mod playlist;
+mod stream;
 
 pub use player::*;
-pub use player_stream::*;
-pub use playlist::*;
+pub use stream::*;

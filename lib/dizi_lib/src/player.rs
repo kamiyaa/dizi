@@ -7,7 +7,7 @@ use serde_derive::{Deserialize, Serialize};
 use strfmt::strfmt;
 
 use crate::error::{DiziError, DiziErrorKind, DiziResult};
-use crate::playlist::{FilePlaylist, PlaylistStatus};
+use crate::playlist::{FilePlaylist, PlaylistType};
 use crate::song::Song;
 
 #[derive(Copy, Clone, Debug, PartialEq, Serialize, Deserialize)]
@@ -33,7 +33,7 @@ pub struct PlayerState {
     pub elapsed: time::Duration,
 
     pub status: PlayerStatus,
-    pub playlist_status: PlaylistStatus,
+    pub playlist_status: PlaylistType,
 
     pub volume: usize,
 
@@ -49,7 +49,7 @@ impl PlayerState {
         Self {
             song: None,
             status: PlayerStatus::Stopped,
-            playlist_status: PlaylistStatus::PlaylistFile,
+            playlist_status: PlaylistType::PlaylistFile,
             elapsed: time::Duration::from_secs(0),
             volume: 50,
             next: true,
@@ -79,10 +79,10 @@ impl PlayerState {
     pub fn set_player_status(&mut self, status: PlayerStatus) {
         self.status = status;
     }
-    pub fn get_playlist_status(&self) -> PlaylistStatus {
+    pub fn get_playlist_status(&self) -> PlaylistType {
         self.playlist_status
     }
-    pub fn set_playlist_status(&mut self, status: PlaylistStatus) {
+    pub fn set_playlist_status(&mut self, status: PlaylistType) {
         self.playlist_status = status;
     }
 

@@ -9,14 +9,13 @@ use log::{debug, log_enabled, Level};
 use uuid::Uuid;
 
 use dizi_lib::error::DiziResult;
-use dizi_lib::playlist::PlaylistStatus;
 use dizi_lib::response::server::ServerBroadcastEvent;
 
-use crate::audio::DiziPlaylist;
 use crate::client;
 use crate::config::AppConfig;
 use crate::context::{AppContext, QuitType};
 use crate::events::{AppEvent, ServerEvent, ServerEventSender};
+use crate::playlist::traits::{OrderedPlaylist, ShufflePlaylist};
 use crate::server_command::{process_client_request, send_latest_song_info};
 use crate::server_commands::player::*;
 
@@ -169,9 +168,5 @@ pub fn run_on_song_change(context: &AppContext) {
 }
 
 pub fn end_of_playlist(context: &AppContext) -> bool {
-    let playlist = context.player_ref().playlist_ref();
-    match playlist.get_status() {
-        PlaylistStatus::DirectoryListing => playlist.directory_playlist_ref().reached_end(),
-        PlaylistStatus::PlaylistFile => playlist.file_playlist_ref().reached_end(),
-    }
+    context.player_ref().playlist_ref().is_end()
 }

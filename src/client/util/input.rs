@@ -3,7 +3,7 @@ use termion::event::{Event, Key};
 
 use dizi_lib::error::DiziResult;
 use dizi_lib::player::PlayerStatus;
-use dizi_lib::playlist::PlaylistStatus;
+use dizi_lib::playlist::PlaylistType;
 use dizi_lib::response::server::ServerBroadcastEvent;
 
 use crate::config::option::WidgetType;
@@ -120,7 +120,7 @@ pub fn process_server_event(context: &mut AppContext, s: &str) -> DiziResult<()>
             context
                 .server_state_mut()
                 .player_mut()
-                .set_playlist_status(PlaylistStatus::DirectoryListing);
+                .set_playlist_status(PlaylistType::DirectoryListing);
         }
         ServerBroadcastEvent::PlayerPause => {
             context
@@ -232,7 +232,7 @@ pub fn process_server_event(context: &mut AppContext, s: &str) -> DiziResult<()>
                 let player = context.server_state_mut().player_mut();
                 player.set_song(Some(song));
                 player.set_player_status(PlayerStatus::Playing);
-                player.set_playlist_status(PlaylistStatus::PlaylistFile);
+                player.set_playlist_status(PlaylistType::PlaylistFile);
                 let cursor_index = player.playlist_ref().get_cursor_index();
                 let playing_index = player.playlist_ref().get_playing_index();
                 if playing_index == cursor_index {

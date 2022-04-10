@@ -9,7 +9,7 @@ use crate::context::AppContext;
 use crate::server::run_on_song_change;
 
 pub fn player_play(context: &mut AppContext, path: &Path) -> DiziResult<()> {
-    context.player_mut().play_entire_directory(path)?;
+    context.player_mut().play_directory(path)?;
 
     run_on_song_change(context);
     Ok(())

@@ -7,8 +7,10 @@ use log::{debug, log_enabled, Level};
 use dizi_lib::error::{DiziError, DiziErrorKind, DiziResult};
 use dizi_lib::song::Song;
 
-use crate::audio::{DiziPlaylist, PlayerFilePlaylist};
 use crate::context::AppContext;
+use crate::playlist::playlist_directory::PlaylistDirectory;
+use crate::playlist::playlist_file::PlaylistFile;
+use crate::playlist::traits::{OrderedPlaylist, OrderedPlaylistEntry, ShufflePlaylist};
 use crate::server::run_on_song_change;
 use crate::util::mimetype::is_playable;
 
@@ -28,7 +30,7 @@ pub fn playlist_load(context: &mut AppContext, cwd: &Path, path: &Path) -> DiziR
         ));
     }
 
-    let mut new_playlist = PlayerFilePlaylist::from_file(cwd, path)?;
+    let mut new_playlist = PlaylistFile::from_file(cwd, path)?;
     new_playlist.set_shuffle(shuffle_enabled);
     playlist.file_playlist = new_playlist;
     Ok(())

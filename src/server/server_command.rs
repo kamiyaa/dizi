@@ -1,13 +1,13 @@
 use dizi_lib::error::DiziResult;
 use dizi_lib::player::PlayerStatus;
-use dizi_lib::playlist::PlaylistStatus;
+use dizi_lib::playlist::PlaylistType;
 use dizi_lib::request::client::ClientRequest;
 use dizi_lib::response::server::ServerBroadcastEvent;
 
 use log::{debug, log_enabled, Level};
 
-use crate::audio::DiziPlaylist;
 use crate::context::AppContext;
+use crate::playlist::traits::{OrderedPlaylist, OrderedPlaylistEntry, ShufflePlaylist};
 use crate::server_commands::*;
 
 pub fn process_client_request(
@@ -190,8 +190,8 @@ pub fn process_client_request(
 }
 
 pub fn send_latest_song_info(context: &mut AppContext) -> DiziResult<()> {
-    match context.player_ref().playlist_ref().status {
-        PlaylistStatus::DirectoryListing => {
+    match context.player_ref().playlist_ref().get_type() {
+        PlaylistType::DirectoryListing => {
             if let Some(song) = context.player_ref().current_song_ref() {
                 let song = song.clone();
                 context
@@ -199,11 +199,11 @@ pub fn send_latest_song_info(context: &mut AppContext) -> DiziResult<()> {
                     .broadcast_event(ServerBroadcastEvent::PlayerFilePlay { song });
             }
         }
-        PlaylistStatus::PlaylistFile => {
+        PlaylistType::PlaylistFile => {
             let playlist = &context.player_ref().playlist_ref().file_playlist;
 
-            if let Some(index) = playlist.get_song_index() {
-                let index = index;
+            if let Some(entry) = playlist.get_current_entry() {
+                let index = entry.song_index;
                 context
                     .events
                     .broadcast_event(ServerBroadcastEvent::PlaylistPlay { index });
