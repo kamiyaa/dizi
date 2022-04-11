@@ -3,39 +3,47 @@ use std::collections::HashMap;
 
 use tui::style::{Color, Modifier};
 
-use super::{AppStyle, RawAppStyle};
+use dizi_lib::error::DiziResult;
+
+use super::DEFAULT_CONFIG_FILE_PATH;
+use super::{AppStyle, AppStyleRaw};
 use crate::config::{parse_toml_to_config, TomlConfigFile};
 
 #[derive(Clone, Debug, Deserialize)]
-pub struct AppThemeCrude {
+pub struct AppThemeRaw {
     #[serde(default)]
-    pub regular: RawAppStyle,
+    pub playing: AppStyleRaw,
     #[serde(default)]
-    pub selection: RawAppStyle,
+    pub playlist: AppStyleRaw,
+
     #[serde(default)]
-    pub directory: RawAppStyle,
+    pub regular: AppStyleRaw,
     #[serde(default)]
-    pub executable: RawAppStyle,
+    pub directory: AppStyleRaw,
     #[serde(default)]
-    pub link: RawAppStyle,
+    pub executable: AppStyleRaw,
     #[serde(default)]
-    pub link_invalid: RawAppStyle,
+    pub link: AppStyleRaw,
     #[serde(default)]
-    pub socket: RawAppStyle,
+    pub link_invalid: AppStyleRaw,
     #[serde(default)]
-    pub ext: HashMap<String, RawAppStyle>,
+    pub socket: AppStyleRaw,
+    #[serde(default)]
+    pub ext: HashMap<String, AppStyleRaw>,
 }
 
-impl std::default::Default for AppThemeCrude {
+impl std::default::Default for AppThemeRaw {
     fn default() -> Self {
         Self {
-            regular: RawAppStyle::default(),
-            selection: RawAppStyle::default(),
-            directory: RawAppStyle::default(),
-            executable: RawAppStyle::default(),
-            link: RawAppStyle::default(),
-            link_invalid: RawAppStyle::default(),
-            socket: RawAppStyle::default(),
+            playing: AppStyleRaw::default(),
+            playlist: AppStyleRaw::default(),
+
+            regular: AppStyleRaw::default(),
+            directory: AppStyleRaw::default(),
+            executable: AppStyleRaw::default(),
+            link: AppStyleRaw::default(),
+            link_invalid: AppStyleRaw::default(),
+            socket: AppStyleRaw::default(),
             ext: HashMap::default(),
         }
     }
@@ -43,8 +51,10 @@ impl std::default::Default for AppThemeCrude {
 
 #[derive(Clone, Debug)]
 pub struct AppTheme {
+    pub playing: AppStyle,
+    pub playlist: AppStyle,
+
     pub regular: AppStyle,
-    pub selection: AppStyle,
     pub directory: AppStyle,
     pub executable: AppStyle,
     pub link: AppStyle,
@@ -53,16 +63,18 @@ pub struct AppTheme {
     pub ext: HashMap<String, AppStyle>,
 }
 
-impl From<AppThemeCrude> for AppTheme {
-    fn from(crude: AppThemeCrude) -> Self {
-        let selection = crude.selection.to_style_theme();
-        let executable = crude.executable.to_style_theme();
-        let regular = crude.regular.to_style_theme();
-        let directory = crude.directory.to_style_theme();
-        let link = crude.link.to_style_theme();
-        let link_invalid = crude.link_invalid.to_style_theme();
-        let socket = crude.socket.to_style_theme();
-        let ext: HashMap<String, AppStyle> = crude
+impl From<AppThemeRaw> for AppTheme {
+    fn from(raw: AppThemeRaw) -> Self {
+        let playing = raw.playing.to_style_theme();
+        let playlist = raw.playlist.to_style_theme();
+
+        let executable = raw.executable.to_style_theme();
+        let regular = raw.regular.to_style_theme();
+        let directory = raw.directory.to_style_theme();
+        let link = raw.link.to_style_theme();
+        let link_invalid = raw.link_invalid.to_style_theme();
+        let socket = raw.socket.to_style_theme();
+        let ext: HashMap<String, AppStyle> = raw
             .ext
             .iter()
             .map(|(k, v)| {
@@ -72,7 +84,9 @@ impl From<AppThemeCrude> for AppTheme {
             .collect();
 
         Self {
-            selection,
+            playing,
+            playlist,
+
             executable,
             regular,
             directory,
@@ -81,47 +95,26 @@ impl From<AppThemeCrude> for AppTheme {
             socket,
             ext,
         }
+    }
+}
+
+impl AppTheme {
+    pub fn default_res() -> DiziResult<Self> {
+        let raw: AppThemeRaw = toml::from_str(DEFAULT_CONFIG_FILE_PATH)?;
+        Ok(Self::from(raw))
     }
 }
 
 impl TomlConfigFile for AppTheme {
     fn get_config(file_name: &str) -> Self {
-        parse_toml_to_config::<AppThemeCrude, AppTheme>(file_name).unwrap_or_else(Self::default)
+        parse_toml_to_config::<AppThemeRaw, AppTheme>(file_name).unwrap_or_default()
     }
 }
 
 impl std::default::Default for AppTheme {
     fn default() -> Self {
-        let selection = AppStyle::default()
-            .set_fg(Color::LightYellow)
-            .insert(Modifier::BOLD);
-        let executable = AppStyle::default()
-            .set_fg(Color::LightGreen)
-            .insert(Modifier::BOLD);
-        let regular = AppStyle::default().set_fg(Color::White);
-        let directory = AppStyle::default()
-            .set_fg(Color::LightBlue)
-            .insert(Modifier::BOLD);
-        let link = AppStyle::default()
-            .set_fg(Color::LightCyan)
-            .insert(Modifier::BOLD);
-        let link_invalid = AppStyle::default()
-            .set_fg(Color::Red)
-            .insert(Modifier::BOLD);
-        let socket = AppStyle::default()
-            .set_fg(Color::LightMagenta)
-            .insert(Modifier::BOLD);
-        let ext = HashMap::new();
-
-        Self {
-            selection,
-            executable,
-            regular,
-            directory,
-            link,
-            link_invalid,
-            socket,
-            ext,
-        }
+        // This should not fail.
+        // If it fails then there is a (syntax) error in the default config file
+        Self::default_res().unwrap()
     }
 }

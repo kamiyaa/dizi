@@ -4,13 +4,15 @@ use tui::buffer::Buffer;
 use tui::layout::Rect;
 use tui::style::{Color, Modifier, Style};
 use tui::widgets::Widget;
+use unicode_width::UnicodeWidthStr;
+
+use dizi_lib::song::Song;
 
 use crate::config::option::DisplayOption;
 use crate::fs::{FileType, JoshutoDirEntry, JoshutoDirList, LinkType};
 use crate::util::format;
 use crate::util::string::UnicodeTruncate;
 use crate::util::style;
-use unicode_width::UnicodeWidthStr;
 
 const MIN_LEFT_LABEL_WIDTH: i32 = 15;
 
@@ -19,17 +21,20 @@ const ELLIPSIS: &str = "…";
 pub struct TuiDirListDetailed<'a> {
     dirlist: &'a JoshutoDirList,
     display_options: &'a DisplayOption,
+    currently_playing: Option<&'a Song>,
     focused: bool,
 }
 impl<'a> TuiDirListDetailed<'a> {
     pub fn new(
         dirlist: &'a JoshutoDirList,
         display_options: &'a DisplayOption,
+        currently_playing: Option<&'a Song>,
         focused: bool,
     ) -> Self {
         Self {
             dirlist,
             display_options,
+            currently_playing,
             focused,
         }
     }
@@ -56,6 +61,8 @@ impl<'a> TuiDirListDetailed<'a> {
         .to_string()
         .len();
 
+        let space_fill = " ".repeat(drawing_width);
+
         // draw every entry
         self.dirlist
             .iter()
@@ -67,16 +74,19 @@ impl<'a> TuiDirListDetailed<'a> {
 
                 let style = if self.focused && ix == curr_index {
                     style::entry_style(entry).add_modifier(Modifier::REVERSED)
+                } else if let Some(song) = self.currently_playing {
+                    if song.file_path() == entry.file_path() {
+                        style::playing_style()
+                    } else {
+                        style::entry_style(entry)
+                    }
                 } else {
                     style::entry_style(entry)
                 };
 
-                let line_number_string = "".to_string();
-                if ix == curr_index {
-                    let space_fill = " ".repeat(drawing_width);
-                    buf.set_string(x, y + i as u16, space_fill.as_str(), style);
-                }
+                buf.set_string(x, y + i as u16, space_fill.as_str(), style);
 
+                let line_number_string = "".to_string();
                 print_entry(
                     buf,
                     entry,

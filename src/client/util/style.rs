@@ -5,34 +5,41 @@ use crate::util::unix;
 
 use crate::THEME_T;
 
+pub fn playing_style() -> Style {
+    Style::default()
+        .fg(THEME_T.playing.fg)
+        .bg(THEME_T.playing.bg)
+        .add_modifier(THEME_T.playing.modifier)
+}
+
+pub fn playlist_style() -> Style {
+    Style::default()
+        .fg(THEME_T.playlist.fg)
+        .bg(THEME_T.playlist.bg)
+        .add_modifier(THEME_T.playlist.modifier)
+}
+
 pub fn entry_style(entry: &JoshutoDirEntry) -> Style {
     let metadata = &entry.metadata;
     let filetype = &metadata.file_type();
     let linktype = &metadata.link_type();
 
-    if entry.is_selected() {
-        Style::default()
-            .fg(THEME_T.selection.fg)
-            .bg(THEME_T.selection.bg)
-            .add_modifier(THEME_T.selection.modifier)
-    } else {
-        match linktype {
-            LinkType::Symlink(_, true) => Style::default()
-                .fg(THEME_T.link.fg)
-                .bg(THEME_T.link.bg)
-                .add_modifier(THEME_T.link.modifier),
-            LinkType::Symlink(_, false) => Style::default()
-                .fg(THEME_T.link_invalid.fg)
-                .bg(THEME_T.link_invalid.bg)
-                .add_modifier(THEME_T.link_invalid.modifier),
-            LinkType::Normal => match filetype {
-                FileType::Directory => Style::default()
-                    .fg(THEME_T.directory.fg)
-                    .bg(THEME_T.directory.bg)
-                    .add_modifier(THEME_T.directory.modifier),
-                FileType::File => file_style(entry),
-            },
-        }
+    match linktype {
+        LinkType::Symlink(_, true) => Style::default()
+            .fg(THEME_T.link.fg)
+            .bg(THEME_T.link.bg)
+            .add_modifier(THEME_T.link.modifier),
+        LinkType::Symlink(_, false) => Style::default()
+            .fg(THEME_T.link_invalid.fg)
+            .bg(THEME_T.link_invalid.bg)
+            .add_modifier(THEME_T.link_invalid.modifier),
+        LinkType::Normal => match filetype {
+            FileType::Directory => Style::default()
+                .fg(THEME_T.directory.fg)
+                .bg(THEME_T.directory.bg)
+                .add_modifier(THEME_T.directory.modifier),
+            FileType::File => file_style(entry),
+        },
     }
 }
 

@@ -9,6 +9,7 @@ use dizi_lib::player::PlayerState;
 use dizi_lib::song::Song;
 
 use crate::util::string::UnicodeTruncate;
+use crate::util::style;
 
 const MIN_LEFT_LABEL_WIDTH: i32 = 15;
 
@@ -36,7 +37,7 @@ impl<'a> TuiPlaylist<'a> {
         let drawing_width = area.width as usize;
         let skip_dist = playlist.first_index_for_viewport(area.height as usize);
 
-        let style = Style::default().fg(Color::Magenta);
+        let style = style::playlist_style();
 
         // draw every entry
         playlist
@@ -77,8 +78,7 @@ impl<'a> TuiPlaylist<'a> {
                 let drawing_width = area.width as usize;
                 let skip_dist = playlist.first_index_for_viewport(area.height as usize);
 
-                let style = Style::default()
-                    .fg(Color::Magenta)
+                let style = style::playlist_style()
                     .add_modifier(Modifier::REVERSED);
 
                 // draw selected entry in a different style
@@ -122,10 +122,7 @@ impl<'a> TuiPlaylist<'a> {
                 // draw selected entry in a different style
                 let screen_index = playing_index % area.height as usize;
 
-                let style = Style::default()
-                    .bg(Color::Black)
-                    .fg(Color::Yellow)
-                    .add_modifier(Modifier::BOLD);
+                let style = style::playing_style();
 
                 let space_fill = " ".repeat(drawing_width);
                 buf.set_string(x, y + screen_index as u16, space_fill.as_str(), style);
