@@ -39,10 +39,7 @@ impl<'a> Widget for TuiFolderView<'a> {
 
         // render current view
         if let Some(list) = curr_list.as_ref() {
-            TuiDirListDetailed::new(list,
-                display_options,
-                currently_playing,
-                self.focused)
+            TuiDirListDetailed::new(list, display_options, currently_playing, self.focused)
                 .render(area, buf);
             let _rect = Rect {
                 x: 0,

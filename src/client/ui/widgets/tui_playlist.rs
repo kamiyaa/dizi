@@ -78,8 +78,7 @@ impl<'a> TuiPlaylist<'a> {
                 let drawing_width = area.width as usize;
                 let skip_dist = playlist.first_index_for_viewport(area.height as usize);
 
-                let style = style::playlist_style()
-                    .add_modifier(Modifier::REVERSED);
+                let style = style::playlist_style().add_modifier(Modifier::REVERSED);
 
                 // draw selected entry in a different style
                 let screen_index = curr_index % area.height as usize;
