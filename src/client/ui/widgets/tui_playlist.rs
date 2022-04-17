@@ -1,6 +1,6 @@
 use tui::buffer::Buffer;
 use tui::layout::Rect;
-use tui::style::{Color, Modifier, Style};
+use tui::style::{Modifier, Style};
 use tui::widgets::Widget;
 
 use unicode_width::UnicodeWidthStr;
@@ -30,13 +30,9 @@ impl<'a> TuiPlaylist<'a> {
         let y = area.top();
 
         let playlist = self.player.playlist_ref();
-        let playlist_len = playlist.len();
-
-        let curr_index = playlist.get_cursor_index();
 
         let drawing_width = area.width as usize;
         let skip_dist = playlist.first_index_for_viewport(area.height as usize);
-
         let style = style::playlist_style();
 
         // draw every entry
@@ -103,9 +99,6 @@ impl<'a> TuiPlaylist<'a> {
         let y = area.top();
 
         let playlist = self.player.playlist_ref();
-        let playlist_len = playlist.len();
-
-        let curr_index = playlist.get_cursor_index();
 
         let drawing_width = area.width as usize;
         let skip_dist = playlist.first_index_for_viewport(area.height as usize);

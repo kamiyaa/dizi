@@ -3,7 +3,7 @@ use dizi_lib::song::Song;
 
 use crate::playlist::playlist_directory::PlaylistDirectory;
 use crate::playlist::playlist_file::PlaylistFile;
-use crate::playlist::traits::{OrderedPlaylist, OrderedPlaylistEntry, ShufflePlaylist};
+use crate::playlist::traits::{OrderedPlaylist, OrderedPlaylistEntry};
 
 #[derive(Clone, Debug)]
 pub struct PlaylistContext {

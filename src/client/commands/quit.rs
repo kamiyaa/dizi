@@ -11,7 +11,7 @@ pub fn close(context: &mut AppContext) -> DiziResult<()> {
 
 pub fn server_quit(context: &mut AppContext) -> DiziResult<()> {
     let request = ClientRequest::ServerQuit;
-    send_client_request(context, &request);
+    let _ = send_client_request(context, &request);
     context.quit = QuitType::Server;
     Ok(())
 }

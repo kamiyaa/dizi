@@ -8,9 +8,6 @@ use std::fs;
 use std::io;
 use std::path::Path;
 
-use rand::seq::SliceRandom;
-use rand::thread_rng;
-
 use dizi_lib::song::Song;
 
 #[derive(Clone, Debug)]

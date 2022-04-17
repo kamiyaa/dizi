@@ -4,12 +4,8 @@ mod impl_shuffle_playlist;
 pub use impl_ordered_playlist::*;
 pub use impl_shuffle_playlist::*;
 
-use std::fs;
 use std::io;
 use std::path::Path;
-
-use rand::seq::SliceRandom;
-use rand::thread_rng;
 
 use dizi_lib::playlist::FilePlaylist;
 use dizi_lib::song::Song;

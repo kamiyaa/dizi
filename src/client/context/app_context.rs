@@ -1,6 +1,6 @@
 use std::io;
 use std::os::unix::net::UnixStream;
-use std::path::{Path, PathBuf};
+use std::path::PathBuf;
 use std::sync::mpsc;
 use tui::layout::Rect;
 

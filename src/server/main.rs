@@ -5,8 +5,8 @@ mod context;
 mod events;
 mod playlist;
 mod server;
-mod server_command;
 mod server_commands;
+mod server_util;
 mod util;
 
 use std::path::PathBuf;

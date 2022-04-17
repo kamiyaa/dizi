@@ -1,8 +1,6 @@
 use serde_derive::Deserialize;
 use std::collections::HashMap;
 
-use tui::style::{Color, Modifier};
-
 use dizi_lib::error::DiziResult;
 
 use super::DEFAULT_CONFIG_FILE_PATH;

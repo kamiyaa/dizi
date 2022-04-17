@@ -241,11 +241,6 @@ pub fn process_server_event(context: &mut AppContext, s: &str) -> DiziResult<()>
                 player.playlist_mut().set_playing_index(Some(index));
             }
         }
-        s => {
-            context
-                .message_queue_mut()
-                .push_error(format!("Unimplemented command: {:?}", s));
-        }
     }
     Ok(())
 }

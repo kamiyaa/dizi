@@ -6,7 +6,7 @@ use dizi_lib::error::DiziResult;
 use dizi_lib::player::PlayerStatus;
 
 use crate::context::AppContext;
-use crate::server::run_on_song_change;
+use crate::server_util::run_on_song_change;
 
 pub fn player_play(context: &mut AppContext, path: &Path) -> DiziResult<()> {
     context.player_mut().play_directory(path)?;

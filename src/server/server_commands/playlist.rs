@@ -8,10 +8,9 @@ use dizi_lib::error::{DiziError, DiziErrorKind, DiziResult};
 use dizi_lib::song::Song;
 
 use crate::context::AppContext;
-use crate::playlist::playlist_directory::PlaylistDirectory;
 use crate::playlist::playlist_file::PlaylistFile;
 use crate::playlist::traits::{OrderedPlaylist, OrderedPlaylistEntry, ShufflePlaylist};
-use crate::server::run_on_song_change;
+use crate::server_util::run_on_song_change;
 use crate::util::mimetype::is_playable;
 
 pub fn playlist_play(context: &mut AppContext, index: usize) -> DiziResult<()> {

@@ -4,18 +4,14 @@ use serde_derive::Deserialize;
 
 use crate::config::option::DisplayOption;
 
-use super::sort_crude::SortOptionCrude;
+use super::sort_raw::SortOptionRaw;
 
 const fn default_scroll_offset() -> usize {
     4
 }
 
-const fn default_true() -> bool {
-    true
-}
-
 #[derive(Clone, Debug, Deserialize)]
-pub struct DisplayOptionCrude {
+pub struct DisplayOptionRaw {
     #[serde(default = "default_scroll_offset")]
     scroll_offset: usize,
 
@@ -26,26 +22,26 @@ pub struct DisplayOptionCrude {
     show_icons: bool,
 
     #[serde(default, rename = "sort")]
-    sort_options: SortOptionCrude,
+    sort_options: SortOptionRaw,
 }
 
-impl From<DisplayOptionCrude> for DisplayOption {
-    fn from(crude: DisplayOptionCrude) -> Self {
+impl From<DisplayOptionRaw> for DisplayOption {
+    fn from(raw: DisplayOptionRaw) -> Self {
         Self {
-            _show_hidden: crude.show_hidden,
-            _show_icons: crude.show_icons,
-            _sort_options: crude.sort_options.into(),
-            _scroll_offset: crude.scroll_offset,
+            _show_hidden: raw.show_hidden,
+            _show_icons: raw.show_icons,
+            _sort_options: raw.sort_options.into(),
+            _scroll_offset: raw.scroll_offset,
         }
     }
 }
 
-impl std::default::Default for DisplayOptionCrude {
+impl std::default::Default for DisplayOptionRaw {
     fn default() -> Self {
         Self {
             show_hidden: false,
             show_icons: false,
-            sort_options: SortOptionCrude::default(),
+            sort_options: SortOptionRaw::default(),
             scroll_offset: default_scroll_offset(),
         }
     }

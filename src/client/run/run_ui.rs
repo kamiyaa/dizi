@@ -14,7 +14,6 @@ use crate::key_command::{AppExecute, Command, CommandKeybind};
 use crate::preview::preview_default;
 use crate::ui::views;
 use crate::ui::views::TuiView;
-use crate::ui::PreviewArea;
 use crate::ui::TuiBackend;
 use crate::util::input;
 use crate::util::request::send_client_request;
@@ -25,7 +24,7 @@ pub fn run_ui(
     context: &mut AppContext,
     keymap_t: AppKeyMapping,
 ) -> DiziResult<()> {
-    context.flush_stream();
+    let _ = context.flush_stream();
 
     // server listener
     {
@@ -35,7 +34,7 @@ pub fn run_ui(
         let _ = thread::spawn(move || {
             let cursor = BufReader::new(stream);
             for line in cursor.lines().flatten() {
-                event_tx.send(AppEvent::Server(line));
+                let _ = event_tx.send(AppEvent::Server(line));
             }
         });
 
@@ -124,8 +123,6 @@ fn calculate_ui_context(context: &mut AppContext, area: Rect) {
         height: area.height - 2,
         ..area
     };
-    let config = context.config_ref();
-    let display_options = config.display_options_ref();
 
     let column_ratio = (1, 3, 4);
     let total = (column_ratio.0 + column_ratio.1 + column_ratio.2) as u32;

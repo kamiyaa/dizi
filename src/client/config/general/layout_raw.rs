@@ -6,7 +6,7 @@ use crate::config::{parse_json_to_config, JsonConfigFile};
 
 #[derive(Clone, Debug, Deserialize)]
 #[serde(tag = "type")]
-pub enum LayoutCompositionCrude {
+pub enum LayoutCompositionRaw {
     #[serde(rename = "simple")]
     Simple {
         widget: String,
@@ -25,8 +25,8 @@ pub enum LayoutCompositionCrude {
 }
 
 #[derive(Clone, Debug, Deserialize)]
-pub struct AppLayoutCrude {
-    pub layout: LayoutCompositionCrude,
+pub struct AppLayoutRaw {
+    pub layout: LayoutCompositionRaw,
 }
 
 #[derive(Clone, Debug)]
@@ -41,9 +41,9 @@ impl std::default::Default for AppLayout {
     }
 }
 
-impl From<AppLayoutCrude> for AppLayout {
-    fn from(crude: AppLayoutCrude) -> Self {
-        let res = LayoutComposition::from(&crude.layout);
+impl From<AppLayoutRaw> for AppLayout {
+    fn from(raw: AppLayoutRaw) -> Self {
+        let res = LayoutComposition::from(&raw.layout);
 
         let layout = res.unwrap_or_else(|_| LayoutComposition::default());
         Self { layout }
@@ -52,6 +52,6 @@ impl From<AppLayoutCrude> for AppLayout {
 
 impl JsonConfigFile for AppLayout {
     fn get_config(file_name: &str) -> Self {
-        parse_json_to_config::<AppLayoutCrude, AppLayout>(file_name).unwrap_or_else(Self::default)
+        parse_json_to_config::<AppLayoutRaw, AppLayout>(file_name).unwrap_or_else(Self::default)
     }
 }

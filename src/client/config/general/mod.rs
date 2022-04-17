@@ -1,9 +1,9 @@
 pub mod app;
 pub mod client;
-pub mod display_crude;
-pub mod layout_crude;
-pub mod sort_crude;
+pub mod display_raw;
+pub mod layout_raw;
+pub mod sort_raw;
 
 pub use self::app::AppConfig;
 pub use self::client::ClientConfig;
-pub use self::layout_crude::*;
+pub use self::layout_raw::*;

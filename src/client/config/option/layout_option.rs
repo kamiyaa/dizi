@@ -4,7 +4,7 @@ use tui::layout::Direction;
 
 use dizi_lib::error::{DiziError, DiziErrorKind, DiziResult};
 
-use crate::config::general::LayoutCompositionCrude;
+use crate::config::general::LayoutCompositionRaw;
 
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub enum WidgetType {
@@ -50,9 +50,9 @@ impl LayoutComposition {
             LayoutComposition::Composite { ratio, .. } => *ratio,
         }
     }
-    pub fn from(crude: &LayoutCompositionCrude) -> DiziResult<Self> {
-        match crude {
-            LayoutCompositionCrude::Simple {
+    pub fn from(raw: &LayoutCompositionRaw) -> DiziResult<Self> {
+        match raw {
+            LayoutCompositionRaw::Simple {
                 widget,
                 ratio,
                 border,
@@ -66,7 +66,7 @@ impl LayoutComposition {
                     title: *title,
                 })
             }
-            LayoutCompositionCrude::Composite {
+            LayoutCompositionRaw::Composite {
                 direction,
                 widgets,
                 ratio,

@@ -42,8 +42,8 @@ impl AppKeyMapping {
     }
 
     pub fn default_res() -> DiziResult<Self> {
-        let crude: AppKeyMappingCrude = toml::from_str(DEFAULT_KEYMAP)?;
-        let keymapping: Self = Self::from(crude);
+        let raw: AppKeyMappingCrude = toml::from_str(DEFAULT_KEYMAP)?;
+        let keymapping: Self = Self::from(raw);
         Ok(keymapping)
     }
 }
@@ -61,9 +61,9 @@ impl AsMut<HashMap<Event, CommandKeybind>> for AppKeyMapping {
 }
 
 impl From<AppKeyMappingCrude> for AppKeyMapping {
-    fn from(crude: AppKeyMappingCrude) -> Self {
+    fn from(raw: AppKeyMappingCrude) -> Self {
         let mut keymaps = Self::new();
-        for m in crude.keymap {
+        for m in raw.keymap {
             match Command::from_keymap(&m) {
                 Ok(command) => {
                     let events: Vec<Event> = m

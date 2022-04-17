@@ -1,4 +1,4 @@
-use std::cmp::{min, Ordering};
+use std::cmp::Ordering;
 
 use tui::buffer::Buffer;
 use tui::layout::Rect;
@@ -53,13 +53,6 @@ impl<'a> TuiDirListDetailed<'a> {
 
         let drawing_width = area.width as usize;
         let skip_dist = self.dirlist.first_index_for_viewport();
-        let line_num_style = false; // self.display_options.line_nums();
-                                    // Length (In chars) of the last entry's index on current page.
-                                    // Using this to align all elements
-        let max_index_length = (skip_dist
-            + min(self.dirlist.len() - skip_dist, area.height as usize))
-        .to_string()
-        .len();
 
         let space_fill = " ".repeat(drawing_width);
 

@@ -3,28 +3,22 @@ use serde_derive::Deserialize;
 use crate::config::option::{DisplayOption, SortOption};
 use crate::config::{parse_toml_to_config, TomlConfigFile};
 
-use super::client::{ClientConfig, ClientConfigCrude};
+use super::client::{ClientConfig, ClientConfigRaw};
 
-const fn default_true() -> bool {
-    true
-}
-const fn default_scroll_offset() -> usize {
-    6
-}
 const fn default_max_preview_size() -> u64 {
     2 * 1024 * 1024 // 2 MB
 }
 
 #[derive(Clone, Debug, Deserialize)]
-pub struct AppConfigCrude {
+pub struct AppConfigRaw {
     #[serde(default)]
-    pub client: ClientConfigCrude,
+    pub client: ClientConfigRaw,
 }
 
-impl From<AppConfigCrude> for AppConfig {
-    fn from(crude: AppConfigCrude) -> Self {
+impl From<AppConfigRaw> for AppConfig {
+    fn from(raw: AppConfigRaw) -> Self {
         Self {
-            _client: ClientConfig::from(crude.client),
+            _client: ClientConfig::from(raw.client),
         }
     }
 }
@@ -72,6 +66,6 @@ impl std::default::Default for AppConfig {
 
 impl TomlConfigFile for AppConfig {
     fn get_config(file_name: &str) -> Self {
-        parse_toml_to_config::<AppConfigCrude, AppConfig>(file_name).unwrap_or_else(Self::default)
+        parse_toml_to_config::<AppConfigRaw, AppConfig>(file_name).unwrap_or_else(Self::default)
     }
 }

@@ -140,7 +140,7 @@ fn run_app(args: Args) -> DiziResult<()> {
         // connect to stream
         let stream = UnixStream::connect(&config.client_ref().socket)?;
         let mut context = create_context(config, &cwd, stream);
-        run::run_control(&mut context, &args);
+        run::run_control(&mut context, &args)?;
     } else {
         let mut stream = UnixStream::connect(&config.client_ref().socket);
         if stream.is_err() {

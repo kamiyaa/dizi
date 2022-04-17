@@ -208,10 +208,10 @@ pub fn player_stream(
                         // spawn new listening thread for new song
                         let stream_listeners2 = stream_listeners.clone();
                         let listener = thread::spawn(move || {
-                            receiver.recv();
+                            let _ = receiver.recv();
                             if let Ok(stream_listeners) = stream_listeners2.lock() {
                                 for stream_listener in stream_listeners.iter() {
-                                    (*stream_listener).send(ServerEvent::PlayerDone);
+                                    let _ = (*stream_listener).send(ServerEvent::PlayerDone);
                                 }
                             }
                         });
@@ -228,25 +228,20 @@ pub fn player_stream(
                 };
             }
             PlayerRequest::Pause => {
-                player_stream.pause();
+                player_stream.pause()?;
                 player_stream.player_res().send(Ok(()))?;
             }
             PlayerRequest::Stop => {
-                player_stream.stop();
+                player_stream.stop()?;
                 player_stream.player_res().send(Ok(()))?;
             }
             PlayerRequest::Resume => {
-                player_stream.resume();
+                player_stream.resume()?;
                 player_stream.player_res().send(Ok(()))?;
             }
             PlayerRequest::SetVolume(volume) => {
                 player_stream.set_volume(volume);
                 player_stream.player_res().send(Ok(()))?;
-            }
-            s => {
-                if log_enabled!(Level::Debug) {
-                    debug!("Not implemented '{:?}'", s);
-                }
             }
         }
     }

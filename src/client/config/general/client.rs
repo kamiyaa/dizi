@@ -6,44 +6,44 @@ use shellexpand::tilde_with_context;
 
 use crate::config::option::DisplayOption;
 
-use super::display_crude::DisplayOptionCrude;
+use super::display_raw::DisplayOptionRaw;
 
 const fn default_true() -> bool {
     true
 }
 
 #[derive(Clone, Debug, Deserialize)]
-pub struct ClientConfigCrude {
+pub struct ClientConfigRaw {
     #[serde(default)]
     pub socket: String,
     #[serde(default)]
     pub home_dir: Option<String>,
 
     #[serde(default, rename = "display")]
-    pub display_options: DisplayOptionCrude,
+    pub display_options: DisplayOptionRaw,
 }
 
-impl std::default::Default for ClientConfigCrude {
+impl std::default::Default for ClientConfigRaw {
     fn default() -> Self {
         Self {
             socket: "".to_string(),
             home_dir: None,
-            display_options: DisplayOptionCrude::default(),
+            display_options: DisplayOptionRaw::default(),
         }
     }
 }
 
-impl From<ClientConfigCrude> for ClientConfig {
-    fn from(crude: ClientConfigCrude) -> Self {
-        let socket = PathBuf::from(tilde_with_context(&crude.socket, dirs_next::home_dir).as_ref());
-        let home_dir = crude.home_dir.map(|home_dir| {
+impl From<ClientConfigRaw> for ClientConfig {
+    fn from(raw: ClientConfigRaw) -> Self {
+        let socket = PathBuf::from(tilde_with_context(&raw.socket, dirs_next::home_dir).as_ref());
+        let home_dir = raw.home_dir.map(|home_dir| {
             PathBuf::from(tilde_with_context(&home_dir, dirs_next::home_dir).as_ref())
         });
 
         Self {
             socket,
             home_dir,
-            display_options: DisplayOption::from(crude.display_options),
+            display_options: DisplayOption::from(raw.display_options),
         }
     }
 }
