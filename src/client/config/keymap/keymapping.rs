@@ -20,7 +20,7 @@ use super::default_keymap::DEFAULT_KEYMAP;
 pub struct CommandKeymap {
     pub keys: Vec<String>,
     pub command: String,
-    pub json: Option<ClientRequest>,
+    pub request: Option<ClientRequest>,
 }
 
 #[derive(Debug, Deserialize)]

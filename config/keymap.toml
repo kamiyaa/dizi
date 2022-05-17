@@ -133,71 +133,71 @@ command = "cd ~/"
 [[keymap]]
 keys = [ "Q" ]
 command = "server_request"
-json.request = "/server/quit"
+request.api = "/server/quit"
 
 [[keymap]]
 keys = [ " " ]
 command = "server_request"
-json.request = "/player/toggle/play"
+request.api = "/player/toggle/play"
 
 [[keymap]]
 keys = [ "0" ]
 command = "server_request"
-json.request = "/player/volume/increase"
-json.amount = 1
+request.api = "/player/volume/increase"
+request.amount = 1
 
 [[keymap]]
 keys = [ "9" ]
 command = "server_request"
-json.request = "/player/volume/decrease"
-json.amount = 1
+request.api = "/player/volume/decrease"
+request.amount = 1
 
 [[keymap]]
 keys = [ "S" ]
 command = "server_request"
-json.request = "/player/toggle/shuffle"
+request.api = "/player/toggle/shuffle"
 
 [[keymap]]
 keys = [ "R" ]
 command = "server_request"
-json.request = "/player/toggle/repeat"
+request.api = "/player/toggle/repeat"
 
 [[keymap]]
 keys = [ "N" ]
 command = "server_request"
-json.request = "/player/toggle/next"
+request.api = "/player/toggle/next"
 
 [[keymap]]
 keys = [ "n" ]
 command = "server_request"
-json.request = "/player/play/next"
+request.api = "/player/play/next"
 
 [[keymap]]
 keys = [ "p" ]
 command = "server_request"
-json.request = "/player/play/previous"
+request.api = "/player/play/previous"
 
 [[keymap]]
 keys = [ "a" ]
 command = "server_request"
-json.request = "/playlist/append"
+request.api = "/playlist/append"
 
 [[keymap]]
 keys = [ "d" ]
 command = "server_request"
-json.request = "/playlist/remove"
+request.api = "/playlist/remove"
 
 [[keymap]]
 keys = [ "C" ]
 command = "server_request"
-json.request = "/playlist/clear"
+request.api = "/playlist/clear"
 
 [[keymap]]
 keys = [ "w" ]
 command = "server_request"
-json.request = "/playlist/move_up"
+request.api = "/playlist/move_up"
 
 [[keymap]]
 keys = [ "s" ]
 command = "server_request"
-json.request = "/playlist/move_down"
+request.api = "/playlist/move_down"

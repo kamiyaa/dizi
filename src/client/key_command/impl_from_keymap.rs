@@ -36,8 +36,8 @@ impl Command {
 
         // server requests
         if command == "server_request" {
-            match &keymap.json {
-                Some(json) => return Ok(Self::Request(json.clone())),
+            match &keymap.request {
+                Some(req) => return Ok(Self::Request(req.clone())),
                 None => {
                     return Err(DiziError::new(
                         DiziErrorKind::InvalidParameters,
