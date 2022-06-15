@@ -48,7 +48,7 @@ pub fn process_server_event(context: &mut AppContext, event: ServerEvent) -> Diz
 
 pub fn process_client_request(
     context: &mut AppContext,
-    uuid: String,
+    uuid: &str,
     event: ClientRequest,
 ) -> DiziResult<()> {
     if log_enabled!(Level::Debug) {
@@ -65,16 +65,7 @@ pub fn process_client_request(
                 .broadcast_event(ServerBroadcastEvent::ServerQuery { query: res });
         }
         ClientRequest::ClientLeave { uuid } => {
-            let index = context
-                .events
-                .server_broadcast_listeners
-                .iter()
-                .enumerate()
-                .find(|(_, (listener_uuid, _))| listener_uuid == &uuid)
-                .map(|(i, ..)| i);
-            if let Some(index) = index {
-                context.events.server_broadcast_listeners.remove(index);
-            }
+            let _ = context.events.server_broadcast_listeners.remove(&uuid);
         }
         ClientRequest::PlayerState => {
             let state = context.player_ref().clone_player_state();

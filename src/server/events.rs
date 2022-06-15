@@ -1,3 +1,4 @@
+use std::collections::HashMap;
 use std::os::unix::net::UnixStream;
 use std::sync::mpsc;
 use std::thread;
@@ -52,7 +53,7 @@ pub struct Events {
     pub app_event_tx: AppEventSender,
     pub app_event_rx: AppEventReceiver,
 
-    pub server_broadcast_listeners: Vec<(String, ServerBroadcastEventSender)>,
+    pub server_broadcast_listeners: HashMap<String, ServerBroadcastEventSender>,
 }
 
 impl Events {
@@ -87,7 +88,7 @@ impl Events {
             server_event_tx,
             app_event_tx,
             app_event_rx,
-            server_broadcast_listeners: Vec::with_capacity(4),
+            server_broadcast_listeners: HashMap::new(),
         }
     }
 
@@ -104,7 +105,7 @@ impl Events {
     }
 
     pub fn add_broadcast_listener(&mut self, uuid: String, server_tx: ServerBroadcastEventSender) {
-        self.server_broadcast_listeners.push((uuid, server_tx));
+        self.server_broadcast_listeners.insert(uuid, server_tx);
     }
 
     pub fn broadcast_event(&mut self, event: ServerBroadcastEvent) {

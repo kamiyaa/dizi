@@ -41,7 +41,7 @@ pub fn serve(config: AppConfig) -> DiziResult<()> {
 
         match event {
             AppEvent::Client { uuid, request } => {
-                let res = server_util::process_client_request(&mut context, uuid, request);
+                let res = server_util::process_client_request(&mut context, &uuid, request);
                 if let Err(err) = res {
                     if log_enabled!(Level::Debug) {
                         debug!("Error: {:?}", err);

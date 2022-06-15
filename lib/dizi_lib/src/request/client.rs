@@ -3,8 +3,6 @@ use std::time;
 
 use serde_derive::{Deserialize, Serialize};
 
-use crate::error::{DiziError, DiziErrorKind, DiziResult};
-
 #[derive(Clone, Debug, Deserialize, Serialize)]
 #[serde(tag = "api")]
 pub enum ClientRequest {
