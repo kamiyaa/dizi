@@ -69,7 +69,7 @@ fn set_curr_dirlist_index(context: &mut AppContext, new_index: usize) {
     }
 }
 
-fn get_playlist_index(context: &AppContext) -> Option<usize> {
+pub fn get_playlist_index(context: &AppContext) -> Option<usize> {
     context
         .server_state_ref()
         .player_ref()
@@ -79,7 +79,7 @@ fn get_playlist_index(context: &AppContext) -> Option<usize> {
 fn get_playlist_len(context: &AppContext) -> usize {
     context.server_state_ref().player_ref().playlist_ref().len()
 }
-fn set_playlist_index(context: &mut AppContext, new_index: usize) {
+pub fn set_playlist_index(context: &mut AppContext, new_index: usize) {
     let playlist_len = context.server_state_ref().player_ref().playlist_ref().len();
     if playlist_len <= new_index {
         context

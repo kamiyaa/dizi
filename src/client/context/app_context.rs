@@ -34,7 +34,6 @@ pub struct AppContext {
     // app config
     config: config::AppConfig,
 
-    _cwd: PathBuf,
     // context related to tabs
     tab_context: TabContext,
 
@@ -62,7 +61,6 @@ impl AppContext {
             stream,
             view_widget: WidgetType::FileBrowser,
             events,
-            _cwd: cwd,
             commandline_context,
             search_context: None,
             tab_context: TabContext::new(),

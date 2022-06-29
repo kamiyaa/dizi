@@ -260,6 +260,10 @@ impl<'a> TuiTextField<'a> {
                             Key::Char('\n') => {
                                 break;
                             }
+                            Key::Char(c) => {
+                                let dirty = line_buffer.insert(c, 1).is_some();
+                                dirty
+                            }
                             _ => false,
                         };
                         if dirty {

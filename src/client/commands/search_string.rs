@@ -6,6 +6,27 @@ use crate::util::search::SearchPattern;
 
 use super::cursor_move;
 
+fn _search_exact(curr_tab: &JoshutoTab, pattern: &str) -> Option<usize> {
+    let curr_list = curr_tab.curr_list_ref()?;
+
+    let contents_len = curr_list.contents.len();
+    for i in 0..contents_len {
+        let file_name = curr_list.contents[i].file_name();
+        if file_name == pattern {
+            return Some(i);
+        }
+    }
+    None
+}
+
+pub fn search_exact(context: &mut AppContext, pattern: &str) -> DiziResult<()> {
+    let index = _search_exact(context.tab_context_ref().curr_tab_ref(), pattern);
+    if let Some(index) = index {
+        let _ = cursor_move::cursor_move(context, index);
+    }
+    Ok(())
+}
+
 pub fn search_string_fwd(curr_tab: &JoshutoTab, pattern: &str) -> Option<usize> {
     let curr_list = curr_tab.curr_list_ref()?;
 
