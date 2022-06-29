@@ -10,7 +10,7 @@ use dizi_lib::error::{DiziError, DiziErrorKind, DiziResult};
 use crate::commands::cursor_move;
 use crate::config::option::WidgetType;
 use crate::context::AppContext;
-use crate::ui::TuiBackend;
+use crate::ui::AppBackend;
 use crate::util::search::SearchPattern;
 
 #[derive(Clone, Debug)]
@@ -25,7 +25,7 @@ impl SkimItem for DiziSkimItem {
     }
 }
 
-pub fn search_skim(context: &mut AppContext, backend: &mut TuiBackend) -> DiziResult<()> {
+pub fn search_skim(context: &mut AppContext, backend: &mut AppBackend) -> DiziResult<()> {
     let widget = context.get_view_widget();
 
     match widget {
@@ -38,7 +38,7 @@ pub fn search_skim(context: &mut AppContext, backend: &mut TuiBackend) -> DiziRe
 
 fn search_playlist_skim(
     context: &mut AppContext,
-    backend: &mut TuiBackend,
+    backend: &mut AppBackend,
     widget: WidgetType,
 ) -> DiziResult<()> {
     let options = SkimOptionsBuilder::default()
@@ -114,7 +114,7 @@ fn search_playlist_skim(
 
 fn search_directory_skim(
     context: &mut AppContext,
-    backend: &mut TuiBackend,
+    backend: &mut AppBackend,
     widget: WidgetType,
 ) -> DiziResult<()> {
     let options = SkimOptionsBuilder::default()

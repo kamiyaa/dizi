@@ -2,13 +2,13 @@ use dizi_lib::error::DiziResult;
 
 use crate::config::AppKeyMapping;
 use crate::context::AppContext;
-use crate::ui::TuiBackend;
+use crate::ui::AppBackend;
 
 pub trait AppExecute {
     fn execute(
         &self,
         context: &mut AppContext,
-        backend: &mut TuiBackend,
+        backend: &mut AppBackend,
         keymap_t: &AppKeyMapping,
     ) -> DiziResult<()>;
 }

@@ -172,7 +172,7 @@ fn run_app(args: Args) -> DiziResult<()> {
                 )?;
                 context.tab_context_mut().push_tab(tab);
 
-                let mut backend: ui::TuiBackend = ui::TuiBackend::new()?;
+                let mut backend: ui::AppBackend = ui::AppBackend::new()?;
                 run::run_ui(&mut backend, &mut context, keymap)?;
             }
         }

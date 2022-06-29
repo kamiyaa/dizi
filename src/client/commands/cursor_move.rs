@@ -2,7 +2,7 @@ use dizi_lib::error::DiziResult;
 
 use crate::config::option::WidgetType;
 use crate::context::AppContext;
-use crate::ui::TuiBackend;
+use crate::ui::AppBackend;
 
 pub fn safe_subtract(a: usize, b: usize) -> usize {
     if a > b {
@@ -154,11 +154,11 @@ pub fn end(context: &mut AppContext) -> DiziResult<()> {
     Ok(())
 }
 
-fn get_page_size(_context: &AppContext, _backend: &TuiBackend) -> Option<usize> {
+fn get_page_size(_context: &AppContext, _backend: &AppBackend) -> Option<usize> {
     Some(10)
 }
 
-pub fn page_up(context: &mut AppContext, backend: &mut TuiBackend) -> DiziResult<()> {
+pub fn page_up(context: &mut AppContext, backend: &mut AppBackend) -> DiziResult<()> {
     let widget = context.get_view_widget();
     let index = cursor_index(context, widget);
 
@@ -171,7 +171,7 @@ pub fn page_up(context: &mut AppContext, backend: &mut TuiBackend) -> DiziResult
     Ok(())
 }
 
-pub fn page_down(context: &mut AppContext, backend: &mut TuiBackend) -> DiziResult<()> {
+pub fn page_down(context: &mut AppContext, backend: &mut AppBackend) -> DiziResult<()> {
     let widget = context.get_view_widget();
     let index = cursor_index(context, widget);
 

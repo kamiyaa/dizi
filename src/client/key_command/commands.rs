@@ -19,6 +19,8 @@ pub enum Command {
     CursorMovePageUp,
     CursorMovePageDown,
 
+    GoToPlaying,
+
     OpenFile,
     ParentDirectory,
 
@@ -30,6 +32,8 @@ pub enum Command {
     SearchNext,
     SearchPrev,
 
+    ServerRequest(ClientRequest),
+
     SelectFiles(String, SelectOption),
 
     Sort(SortType),
@@ -37,6 +41,4 @@ pub enum Command {
 
     ToggleView,
     ToggleHiddenFiles,
-
-    Request(ClientRequest),
 }

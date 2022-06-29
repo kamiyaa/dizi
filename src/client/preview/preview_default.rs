@@ -3,11 +3,11 @@ use std::path;
 use crate::context::AppContext;
 use crate::fs::JoshutoMetadata;
 use crate::preview::preview_dir;
-use crate::ui::TuiBackend;
+use crate::ui::AppBackend;
 
 pub fn load_preview_path(
     context: &mut AppContext,
-    _backend: &mut TuiBackend,
+    _backend: &mut AppBackend,
     p: path::PathBuf,
     metadata: JoshutoMetadata,
 ) {
@@ -26,7 +26,7 @@ pub fn load_preview_path(
     }
 }
 
-pub fn load_preview(context: &mut AppContext, backend: &mut TuiBackend) {
+pub fn load_preview(context: &mut AppContext, backend: &mut AppBackend) {
     let mut load_list = Vec::with_capacity(2);
 
     match context.tab_context_ref().curr_tab_ref().curr_list_ref() {

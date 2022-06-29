@@ -43,6 +43,9 @@ impl std::str::FromStr for Command {
             CMD_CURSOR_MOVE_PAGEDOWN,
             Self::CursorMovePageDown
         );
+
+        simple_command_conversion_case!(command, CMD_GO_TO_PLAYING, Self::GoToPlaying);
+
         simple_command_conversion_case!(command, CMD_OPEN_FILE, Self::OpenFile);
 
         simple_command_conversion_case!(command, CMD_SEARCH_SKIM, Self::SearchSkim);

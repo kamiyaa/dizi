@@ -16,6 +16,8 @@ impl AppCommand for Command {
             Self::CursorMovePageUp => CMD_CURSOR_MOVE_PAGEUP,
             Self::CursorMovePageDown => CMD_CURSOR_MOVE_PAGEDOWN,
 
+            Self::GoToPlaying => CMD_GO_TO_PLAYING,
+
             Self::OpenFile => CMD_OPEN_FILE,
             Self::ParentDirectory => CMD_PARENT_DIRECTORY,
 
@@ -35,7 +37,7 @@ impl AppCommand for Command {
             Self::ToggleHiddenFiles => CMD_TOGGLE_HIDDEN,
             Self::ToggleView => CMD_TOGGLE_VIEW,
 
-            Self::Request(request) => request.api_path(),
+            Self::ServerRequest(request) => request.api_path(),
         }
     }
 }

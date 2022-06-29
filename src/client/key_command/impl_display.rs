@@ -14,6 +14,7 @@ impl std::fmt::Display for Command {
                 write!(f, "{} {} {}", self.command(), pattern, options)
             }
             Self::Sort(t) => write!(f, "{} {}", self.command(), t),
+            Self::ServerRequest(request) => write!(f, "{} {}", self.command(), request.api_path()),
             _ => write!(f, "{}", self.command()),
         }
     }

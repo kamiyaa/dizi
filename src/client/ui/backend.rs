@@ -37,13 +37,13 @@ impl New for Screen {
     }
 }
 
-pub type JoshutoTerminal = tui::Terminal<TermionBackend<Screen>>;
+pub type AppTerminal = tui::Terminal<TermionBackend<Screen>>;
 
-pub struct TuiBackend {
-    pub terminal: Option<JoshutoTerminal>,
+pub struct AppBackend {
+    pub terminal: Option<AppTerminal>,
 }
 
-impl TuiBackend {
+impl AppBackend {
     pub fn new() -> std::io::Result<Self> {
         let mut alt_screen = Screen::new()?;
         // clears the screen of artifacts
@@ -67,11 +67,11 @@ impl TuiBackend {
         });
     }
 
-    pub fn terminal_ref(&self) -> &JoshutoTerminal {
+    pub fn terminal_ref(&self) -> &AppTerminal {
         self.terminal.as_ref().unwrap()
     }
 
-    pub fn terminal_mut(&mut self) -> &mut JoshutoTerminal {
+    pub fn terminal_mut(&mut self) -> &mut AppTerminal {
         self.terminal.as_mut().unwrap()
     }
 
@@ -81,7 +81,7 @@ impl TuiBackend {
     }
 
     pub fn terminal_restore(&mut self) -> std::io::Result<()> {
-        let mut new_backend = TuiBackend::new()?;
+        let mut new_backend = AppBackend::new()?;
         std::mem::swap(&mut self.terminal, &mut new_backend.terminal);
         Ok(())
     }

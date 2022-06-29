@@ -8,7 +8,7 @@ use dizi_lib::utils;
 
 use crate::config;
 use crate::config::option::WidgetType;
-use crate::context::{MessageQueue, ServerState, TabContext};
+use crate::context::{CommandLineContext, MessageQueue, ServerState, TabContext};
 use crate::event::{AppEvent, Events};
 use crate::util::search::SearchPattern;
 
@@ -38,6 +38,7 @@ pub struct AppContext {
     // context related to tabs
     tab_context: TabContext,
 
+    commandline_context: CommandLineContext,
     // user interface context; data which is input to both, the UI rendering and the app state
     ui_context: UiContext,
     // context related to searching
@@ -52,6 +53,9 @@ impl AppContext {
     pub fn new(config: config::AppConfig, cwd: PathBuf, stream: UnixStream) -> Self {
         let events = Events::new();
 
+        let mut commandline_context = CommandLineContext::new();
+        commandline_context.history_mut().set_max_len(20);
+
         Self {
             quit: QuitType::DoNot,
             config,
@@ -59,6 +63,7 @@ impl AppContext {
             view_widget: WidgetType::FileBrowser,
             events,
             _cwd: cwd,
+            commandline_context,
             search_context: None,
             tab_context: TabContext::new(),
             ui_context: UiContext { layout: vec![] },
@@ -127,6 +132,13 @@ impl AppContext {
     }
     pub fn ui_context_mut(&mut self) -> &mut UiContext {
         &mut self.ui_context
+    }
+
+    pub fn commandline_context_ref(&self) -> &CommandLineContext {
+        &self.commandline_context
+    }
+    pub fn commandline_context_mut(&mut self) -> &mut CommandLineContext {
+        &mut self.commandline_context
     }
 
     pub fn get_view_widget(&self) -> WidgetType {

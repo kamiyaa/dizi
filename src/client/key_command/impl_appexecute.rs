@@ -5,7 +5,7 @@ use crate::commands::*;
 use crate::config::option::WidgetType;
 use crate::config::AppKeyMapping;
 use crate::context::AppContext;
-use crate::ui::TuiBackend;
+use crate::ui::AppBackend;
 use crate::util::request::send_client_request;
 
 use super::{AppExecute, Command};
@@ -14,7 +14,7 @@ impl AppExecute for Command {
     fn execute(
         &self,
         context: &mut AppContext,
-        backend: &mut TuiBackend,
+        backend: &mut AppBackend,
         keymap_t: &AppKeyMapping,
     ) -> DiziResult<()> {
         match &*self {
@@ -32,6 +32,8 @@ impl AppExecute for Command {
             Self::CursorMovePageUp => cursor_move::page_up(context, backend)?,
             Self::CursorMovePageDown => cursor_move::page_down(context, backend)?,
 
+            Self::GoToPlaying => goto::goto_playing(context, backend)?,
+
             Self::ParentDirectory => change_directory::parent_directory(context)?,
 
             Self::Close => quit::close(context)?,
@@ -48,6 +50,8 @@ impl AppExecute for Command {
                 selection::select_files(context, pattern.as_str(), options)?
             }
 
+            Self::ServerRequest(request) => execute_request(context, &request)?,
+
             Self::ToggleHiddenFiles => show_hidden::toggle_hidden(context)?,
             Self::ToggleView => {
                 let new_widget = match context.get_view_widget() {
@@ -61,7 +65,6 @@ impl AppExecute for Command {
             Self::SortReverse => sort::toggle_reverse(context)?,
 
             Self::OpenFile => open_file::open(context)?,
-            Self::Request(request) => execute_request(context, &request)?,
         }
         Ok(())
     }

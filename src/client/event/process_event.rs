@@ -16,7 +16,7 @@ use crate::ui;
 use crate::ui::views::TuiCommandMenu;
 
 pub fn get_input_while_composite<'a>(
-    backend: &mut ui::TuiBackend,
+    backend: &mut ui::AppBackend,
     context: &mut AppContext,
     keymap: &'a AppKeyMapping,
 ) -> Option<&'a Command> {

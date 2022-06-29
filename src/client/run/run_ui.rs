@@ -9,18 +9,18 @@ use dizi_lib::request::client::ClientRequest;
 
 use crate::config::AppKeyMapping;
 use crate::context::{AppContext, QuitType};
+use crate::event::process_event;
 use crate::event::AppEvent;
 use crate::key_command::{AppExecute, Command, CommandKeybind};
 use crate::preview::preview_default;
 use crate::ui::views;
 use crate::ui::views::TuiView;
-use crate::ui::TuiBackend;
-use crate::util::input;
+use crate::ui::AppBackend;
 use crate::util::request::send_client_request;
 use crate::util::to_string::ToString;
 
 pub fn run_ui(
-    backend: &mut TuiBackend,
+    backend: &mut AppBackend,
     context: &mut AppContext,
     keymap_t: AppKeyMapping,
 ) -> DiziResult<()> {
@@ -93,7 +93,7 @@ pub fn run_ui(
                             }
                         }
                         Some(CommandKeybind::CompositeKeybind(m)) => {
-                            let cmd = input::get_input_while_composite(backend, context, m);
+                            let cmd = process_event::get_input_while_composite(backend, context, m);
 
                             if let Some(command) = cmd {
                                 if let Err(e) = command.execute(context, backend, &keymap_t) {
@@ -107,11 +107,11 @@ pub fn run_ui(
                 context.flush_event();
             }
             AppEvent::Server(message) => {
-                if let Err(err) = input::process_server_event(context, message.as_str()) {
+                if let Err(err) = process_event::process_server_event(context, message.as_str()) {
                     context.message_queue_mut().push_error(err.to_string());
                 }
             }
-            event => input::process_noninteractive(event, context),
+            event => process_event::process_noninteractive(event, context),
         }
     }
     Ok(())

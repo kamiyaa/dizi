@@ -35,9 +35,9 @@ impl Command {
         };
 
         // server requests
-        if command == "server_request" {
+        if command == CMD_SERVER_REQUEST {
             match &keymap.request {
-                Some(req) => return Ok(Self::Request(req.clone())),
+                Some(req) => return Ok(Self::ServerRequest(req.clone())),
                 None => {
                     return Err(DiziError::new(
                         DiziErrorKind::InvalidParameters,
@@ -57,6 +57,8 @@ impl Command {
             CMD_CURSOR_MOVE_PAGEDOWN,
             Self::CursorMovePageDown
         );
+        simple_command_conversion_case!(command, CMD_GO_TO_PLAYING, Self::GoToPlaying);
+
         simple_command_conversion_case!(command, CMD_OPEN_FILE, Self::OpenFile);
 
         simple_command_conversion_case!(command, CMD_SEARCH_SKIM, Self::SearchSkim);

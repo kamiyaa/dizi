@@ -1,10 +1,10 @@
 use std::path;
 
-mod tui_backend;
+pub mod backend;
 pub mod views;
 pub mod widgets;
 
-pub use tui_backend::*;
+pub use backend::*;
 
 #[derive(Debug, Clone, Copy, Hash, PartialEq, Eq)]
 pub struct Rect {
