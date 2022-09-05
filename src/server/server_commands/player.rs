@@ -28,27 +28,24 @@ pub fn player_toggle_play(context: &mut AppContext) -> DiziResult<PlayerStatus> 
     Ok(status)
 }
 
-pub fn player_get_volume(context: &mut AppContext) -> f32 {
+pub fn player_get_volume(context: &mut AppContext) -> usize {
     context.player_mut().get_volume()
 }
 
-pub fn player_set_volume(context: &mut AppContext, volume: f32) -> DiziResult {
+pub fn player_set_volume(context: &mut AppContext, volume: usize) -> DiziResult {
     context.player_mut().set_volume(volume)?;
     Ok(())
 }
 
-pub fn player_volume_increase(context: &mut AppContext, amount: usize) -> DiziResult<f32> {
+pub fn player_volume_increase(context: &mut AppContext, amount: usize) -> DiziResult<usize> {
     let volume = player_get_volume(context);
 
-    let amount: f32 = amount as f32 / 100.0;
-    let volume = if volume + amount > 1.0 {
-        1.0
+    let volume = if volume + amount > 100 {
+        100
     } else {
         volume + amount
     };
     player_set_volume(context, volume)?;
-
-    let volume = volume * 100.0;
 
     if log_enabled!(Level::Debug) {
         debug!("volume is now: {}", volume);
@@ -56,18 +53,12 @@ pub fn player_volume_increase(context: &mut AppContext, amount: usize) -> DiziRe
     Ok(volume)
 }
 
-pub fn player_volume_decrease(context: &mut AppContext, amount: usize) -> DiziResult<f32> {
+pub fn player_volume_decrease(context: &mut AppContext, amount: usize) -> DiziResult<usize> {
     let volume = player_get_volume(context);
 
-    let amount: f32 = amount as f32 / 100.0;
-    let volume = if volume - amount < 0.0 {
-        0.0
-    } else {
-        volume - amount
-    };
+    let volume = if amount > volume { 0 } else { volume - amount };
     player_set_volume(context, volume)?;
 
-    let volume = volume * 100.0;
     if log_enabled!(Level::Debug) {
         debug!("volume is now: {}", volume);
     }

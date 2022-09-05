@@ -58,7 +58,7 @@ impl Player {
         state.next = player_config.next;
         state.repeat = player_config.repeat;
         state.shuffle = player_config.shuffle;
-        let volume = config_t.server_ref().player_ref().volume as f32 / 100.0;
+        let volume = config_t.server_ref().player_ref().volume;
         state.volume = volume;
 
         Self {
@@ -154,12 +154,12 @@ impl Player {
         }
     }
 
-    pub fn get_volume(&self) -> f32 {
+    pub fn get_volume(&self) -> usize {
         self.state.volume
     }
-    pub fn set_volume(&mut self, volume: f32) -> DiziResult {
+    pub fn set_volume(&mut self, volume: usize) -> DiziResult {
         self.player_stream_req()
-            .send(PlayerRequest::SetVolume(volume))?;
+            .send(PlayerRequest::SetVolume(volume as f32 / 100.0))?;
 
         self.player_stream_res().recv()??;
         self.state.volume = volume;

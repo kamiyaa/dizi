@@ -35,7 +35,7 @@ pub struct PlayerState {
     pub status: PlayerStatus,
     pub playlist_status: PlaylistType,
 
-    pub volume: f32,
+    pub volume: usize,
 
     pub next: bool,
     pub repeat: bool,
@@ -78,10 +78,10 @@ impl PlayerState {
         self.playlist_status = status;
     }
 
-    pub fn get_volume(&self) -> f32 {
+    pub fn get_volume(&self) -> usize {
         self.volume
     }
-    pub fn set_volume(&mut self, volume: f32) {
+    pub fn set_volume(&mut self, volume: usize) {
         self.volume = volume;
     }
 
@@ -192,12 +192,12 @@ impl std::default::Default for PlayerState {
             status: PlayerStatus::Stopped,
             playlist_status: PlaylistType::PlaylistFile,
             elapsed: time::Duration::from_secs(0),
-            volume: 50.0,
+            volume: 50,
             next: true,
             repeat: false,
             shuffle: false,
             playlist: FilePlaylist::new(),
-            audio_host: "Unknown".to_string(),
+            audio_host: "UNKNOWN".to_string(),
         }
     }
 }

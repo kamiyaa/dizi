@@ -81,7 +81,7 @@ impl<'a> Widget for TuiPlayer<'a> {
         buf.set_string(
             area.x,
             area.y + 3,
-            format!("Volume: {}%", (self.player.get_volume() * 100.0) as usize),
+            format!("Volume: {}%", self.player.get_volume()),
             player_status_style,
         );
 

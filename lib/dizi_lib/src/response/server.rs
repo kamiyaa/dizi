@@ -27,7 +27,7 @@ pub enum ServerBroadcastEvent {
     PlayerShuffle { on: bool },
     PlayerNext { on: bool },
 
-    PlayerVolumeUpdate { volume: f32 },
+    PlayerVolumeUpdate { volume: usize },
     PlayerProgressUpdate { elapsed: time::Duration },
 
     // playlist
