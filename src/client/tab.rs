@@ -12,6 +12,7 @@ pub enum TabHomePage {
     Root,
 }
 
+#[derive(Debug)]
 pub struct JoshutoTab {
     history: JoshutoHistory,
     _cwd: path::PathBuf,

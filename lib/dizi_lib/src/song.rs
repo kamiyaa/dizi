@@ -1,8 +1,10 @@
 use std::collections::HashMap;
-use std::fs::File;
-use std::io::BufReader;
 use std::path::{Path, PathBuf};
 use std::time;
+#[cfg(not(feature = "symphonia-backend"))]
+use std::fs::File;
+#[cfg(not(feature = "symphonia-backend"))]
+use std::io::BufReader;
 
 #[cfg(not(feature = "symphonia-backend"))]
 use rodio::decoder::Decoder;
@@ -10,9 +12,7 @@ use rodio::decoder::Decoder;
 use rodio::source::Source;
 
 #[cfg(feature = "symphonia-backend")]
-use symphonia::core::codecs::{CodecParameters, DecoderOptions, CODEC_TYPE_NULL};
-#[cfg(feature = "symphonia-backend")]
-use symphonia::core::errors::Error;
+use symphonia::core::codecs::{CodecParameters, CODEC_TYPE_NULL};
 #[cfg(feature = "symphonia-backend")]
 use symphonia::core::formats::FormatOptions;
 #[cfg(feature = "symphonia-backend")]
@@ -23,7 +23,6 @@ use symphonia::core::meta::{MetadataOptions, MetadataRevision};
 use symphonia::core::probe::Hint;
 
 use serde_derive::{Deserialize, Serialize};
-use symphonia::core::units::TimeBase;
 
 use crate::error::DiziResult;
 
@@ -92,7 +91,7 @@ impl Song {
         let meta_opts: MetadataOptions = Default::default();
         let fmt_opts: FormatOptions = Default::default();
 
-        let src = std::fs::File::open(self.file_path()).expect("failed to open media");
+        let src = std::fs::File::open(self.file_path())?;
 
         // Create the media source stream.
         let mss = MediaSourceStream::new(Box::new(src), Default::default());

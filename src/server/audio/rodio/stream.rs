@@ -51,7 +51,7 @@ impl PlayerStream {
 
     pub fn pause(&self) -> Result<(), mpsc::SendError<PlayerRequest>> {
         if let Some(source_tx) = self.source_tx.as_ref() {
-            let _ = source_tx.send(PlayerRequest::Pause)?;
+            source_tx.send(PlayerRequest::Pause)?;
         }
         Ok(())
     }
@@ -172,9 +172,8 @@ pub fn player_stream(
                 // Before playing new song, make sure to clear any listeners waiting for previous
                 // song to finish. This prevents a loop where new song triggers the end of previous
                 // song which triggers a new song, and repeat.
-                match stream_listeners.lock() {
-                    Ok(mut vec) => vec.clear(),
-                    _ => {}
+                if let Ok(mut vec) = stream_listeners.lock() {
+                    vec.clear();
                 }
 
                 let res = player_stream.play(&queue_tx, song.file_path());
@@ -201,9 +200,8 @@ pub fn player_stream(
                         done_listener = Some(listener);
 
                         // add server events to listeners
-                        match stream_listeners.lock() {
-                            Ok(mut vec) => vec.push(player_stream.event_tx.clone()),
-                            _ => {}
+                        if let Ok(mut vec) = stream_listeners.lock() {
+                            vec.push(player_stream.event_tx.clone());
                         }
                         player_stream.player_res().send(Ok(()))?;
                     }

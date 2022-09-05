@@ -1,3 +1,5 @@
+use std::cmp::Ordering;
+
 use tui::buffer::Buffer;
 use tui::layout::Rect;
 use tui::style::{Modifier, Style};
@@ -72,8 +74,6 @@ impl<'a> TuiPlaylist<'a> {
                 let y = area.top();
 
                 let drawing_width = area.width as usize;
-                let skip_dist = playlist.first_index_for_viewport(area.height as usize);
-
                 let style = style::playlist_style().add_modifier(Modifier::REVERSED);
 
                 // draw selected entry in a different style
@@ -217,17 +217,19 @@ pub fn trim_file_label(name: &str, drawing_width: usize) -> String {
         truncated
     } else {
         let ext_width = extension.width();
-        if ext_width > drawing_width {
-            // file ext does not fit
-            let stem_width = drawing_width;
-            let truncated_stem = stem.trunc(stem_width - 3);
-            format!("{}{}.{}", truncated_stem, ELLIPSIS, ELLIPSIS)
-        } else if ext_width == drawing_width {
-            extension.replacen('.', ELLIPSIS, 1)
-        } else {
-            let stem_width = drawing_width - ext_width;
-            let truncated_stem = stem.trunc(stem_width - 1);
-            format!("{}{}{}", truncated_stem, ELLIPSIS, extension)
+        match ext_width.cmp(&drawing_width) {
+            Ordering::Greater => {
+                // file ext does not fit
+                let stem_width = drawing_width;
+                let truncated_stem = stem.trunc(stem_width - 3);
+                format!("{}{}.{}", truncated_stem, ELLIPSIS, ELLIPSIS)
+            }
+            Ordering::Equal => extension.replacen('.', ELLIPSIS, 1),
+            Ordering::Less => {
+                let stem_width = drawing_width - ext_width;
+                let truncated_stem = stem.trunc(stem_width - 1);
+                format!("{}{}{}", truncated_stem, ELLIPSIS, extension)
+            }
         }
     }
 }

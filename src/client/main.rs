@@ -151,6 +151,10 @@ fn run_app(args: Args) -> DiziResult {
         let mut context = create_context(config, &cwd, stream);
         run::run_control(&mut context, &args)?;
     } else {
+        lazy_static::initialize(&HOME_DIR);
+        lazy_static::initialize(&THEME_T);
+        lazy_static::initialize(&LAYOUT_T);
+
         let mut stream = UnixStream::connect(config.client_ref().socket_ref());
         if stream.is_err() {
             start_server()?;

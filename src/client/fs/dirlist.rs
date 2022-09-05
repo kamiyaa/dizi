@@ -99,7 +99,7 @@ impl JoshutoDirList {
             return;
         }
         self.index = index;
-        if ui_context.layout.len() != 0 {
+        if !ui_context.layout.is_empty() {
             self.update_viewport(ui_context, options);
         }
     }

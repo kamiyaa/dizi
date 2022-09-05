@@ -19,14 +19,8 @@ pub enum AppEvent {
     Server(String),
 }
 
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Default, Clone, Copy)]
 pub struct Config {}
-
-impl Default for Config {
-    fn default() -> Config {
-        Config {}
-    }
-}
 
 pub struct Events {
     pub event_tx: mpsc::Sender<AppEvent>,

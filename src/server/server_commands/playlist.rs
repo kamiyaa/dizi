@@ -9,7 +9,7 @@ use dizi_lib::song::Song;
 
 use crate::context::AppContext;
 use crate::playlist::playlist_file::PlaylistFile;
-use crate::playlist::traits::{OrderedPlaylist, OrderedPlaylistEntry, ShufflePlaylist};
+use crate::playlist::traits::{OrderedPlaylist, ShufflePlaylist};
 use crate::server_util::run_on_song_change;
 use crate::util::mimetype::is_playable;
 

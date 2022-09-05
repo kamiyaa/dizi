@@ -17,7 +17,7 @@ impl AppExecute for Command {
         backend: &mut AppBackend,
         keymap_t: &AppKeyMapping,
     ) -> DiziResult {
-        match &*self {
+        match self {
             Self::ChangeDirectory(p) => {
                 change_directory::change_directory(context, p.as_path())?;
             }
@@ -135,7 +135,7 @@ pub fn execute_request(context: &mut AppContext, request: &ClientRequest) -> Diz
             }
         }
         request => {
-            send_client_request(context, &request)?;
+            send_client_request(context, request)?;
         }
     }
     Ok(())

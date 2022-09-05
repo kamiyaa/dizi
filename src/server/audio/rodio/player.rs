@@ -3,7 +3,7 @@ use std::sync::mpsc;
 use std::thread;
 use std::time;
 
-use cpal::traits::{DeviceTrait, HostTrait, StreamTrait};
+use cpal::traits::HostTrait;
 
 use log::{debug, log_enabled, Level};
 
@@ -69,16 +69,22 @@ impl Player {
         let server_config = config_t.server_ref();
         let player_config = server_config.player_ref();
 
-        let mut playlist_context = PlaylistContext::default();
-        playlist_context.file_playlist =
-            PlaylistFile::from_file(&PathBuf::from("/"), server_config.playlist_ref())
-                .unwrap_or_else(|_| PlaylistFile::new(Vec::new()));
+        let playlist_context = PlaylistContext {
+            file_playlist: PlaylistFile::from_file(
+                &PathBuf::from("/"),
+                server_config.playlist_ref(),
+            )
+            .unwrap_or_else(|_| PlaylistFile::new(Vec::new())),
+            ..Default::default()
+        };
 
-        let mut state = PlayerState::default();
-        state.next = player_config.next;
-        state.repeat = player_config.repeat;
-        state.shuffle = player_config.shuffle;
-        state.audio_host = String::from(audio_host.id().name());
+        let state = PlayerState {
+            next: player_config.next,
+            repeat: player_config.repeat,
+            shuffle: player_config.shuffle,
+            audio_host: String::from(audio_host.id().name()),
+            ..PlayerState::default()
+        };
 
         let mut player = Self {
             state,
@@ -114,7 +120,7 @@ impl Player {
     fn play(&mut self, song: &Song) -> DiziResult {
         self.player_stream_req()
             .send(PlayerRequest::Play(song.clone()))?;
-        let _resp = self.player_stream_res().recv()??;
+        self.player_stream_res().recv()??;
 
         self.state.status = PlayerStatus::Playing;
         self.state.song = Some(song.clone());

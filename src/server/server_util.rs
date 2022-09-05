@@ -52,7 +52,7 @@ pub fn process_client_request(
     event: ClientRequest,
 ) -> DiziResult {
     if log_enabled!(Level::Debug) {
-        debug!("request: {:?}", event);
+        debug!("request: {:?} {:?}", uuid, event);
     }
     match event {
         ClientRequest::ServerQuit => {

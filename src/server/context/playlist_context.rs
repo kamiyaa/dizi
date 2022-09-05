@@ -1,5 +1,4 @@
 use dizi_lib::playlist::PlaylistType;
-use dizi_lib::song::Song;
 
 use crate::playlist::playlist_directory::PlaylistDirectory;
 use crate::playlist::playlist_file::PlaylistFile;
@@ -27,9 +26,6 @@ impl PlaylistContext {
         &mut self.file_playlist
     }
 
-    pub fn directory_playlist_ref(&self) -> &PlaylistDirectory {
-        &self.directory_playlist
-    }
     pub fn directory_playlist_mut(&mut self) -> &mut PlaylistDirectory {
         &mut self.directory_playlist
     }

@@ -1,5 +1,5 @@
 use cpal::traits::{DeviceTrait, HostTrait, StreamTrait};
-use cpal::{Data, Sample, SampleFormat};
+use cpal::Sample;
 use log::{debug, log_enabled, Level};
 
 pub fn get_default_host(host_id: cpal::HostId) -> cpal::Host {
@@ -16,12 +16,6 @@ pub fn get_default_host(host_id: cpal::HostId) -> cpal::Host {
             .unwrap(),
     )
     .unwrap_or_else(|_| cpal::default_host())
-}
-
-pub fn get_default_output_device(host_id: cpal::HostId) -> cpal::Device {
-    let host = get_default_host(host_id);
-    let device = host.default_output_device();
-    device.unwrap()
 }
 
 pub fn play_stream(device: &cpal::Device) {
