@@ -73,7 +73,7 @@ pub fn reload(context: &mut AppContext, index: usize) -> std::io::Result<()> {
     Ok(())
 }
 
-pub fn reload_dirlist(context: &mut AppContext) -> DiziResult<()> {
+pub fn reload_dirlist(context: &mut AppContext) -> DiziResult {
     reload(context, context.tab_context_ref().index)?;
     Ok(())
 }

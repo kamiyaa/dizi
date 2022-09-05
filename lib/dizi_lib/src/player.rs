@@ -35,28 +35,20 @@ pub struct PlayerState {
     pub status: PlayerStatus,
     pub playlist_status: PlaylistType,
 
-    pub volume: usize,
+    pub volume: f32,
 
     pub next: bool,
     pub repeat: bool,
     pub shuffle: bool,
 
     pub playlist: FilePlaylist,
+
+    pub audio_host: String,
 }
 
 impl PlayerState {
     pub fn new() -> Self {
-        Self {
-            song: None,
-            status: PlayerStatus::Stopped,
-            playlist_status: PlaylistType::PlaylistFile,
-            elapsed: time::Duration::from_secs(0),
-            volume: 50,
-            next: true,
-            repeat: false,
-            shuffle: false,
-            playlist: FilePlaylist::new(),
-        }
+        Self::default()
     }
 
     pub fn get_song(&self) -> Option<&Song> {
@@ -86,10 +78,10 @@ impl PlayerState {
         self.playlist_status = status;
     }
 
-    pub fn get_volume(&self) -> usize {
+    pub fn get_volume(&self) -> f32 {
         self.volume
     }
-    pub fn set_volume(&mut self, volume: usize) {
+    pub fn set_volume(&mut self, volume: f32) {
         self.volume = volume;
     }
 
@@ -146,6 +138,7 @@ impl PlayerState {
             "player_shuffle".to_string(),
             format!("{}", player_state.shuffle_enabled()),
         );
+        vars.insert("audio_host".to_string(), player_state.audio_host.clone());
 
         if let Some(song) = player_state.get_song() {
             vars.insert("file_name".to_string(), song.file_name().to_string());
@@ -170,10 +163,27 @@ impl PlayerState {
 
         match strfmt(&query, &vars) {
             Ok(s) => Ok(s),
-            Err(_e) => Err(DiziError::new(
+            Err(e) => Err(DiziError::new(
                 DiziErrorKind::InvalidParameters,
-                "Failed to process query".to_string(),
+                format!("Failed to process query '{}', Reason: '{}'", query, e.to_string()),
             )),
+        }
+    }
+}
+
+impl std::default::Default for PlayerState {
+    fn default() -> Self {
+        Self {
+            song: None,
+            status: PlayerStatus::Stopped,
+            playlist_status: PlaylistType::PlaylistFile,
+            elapsed: time::Duration::from_secs(0),
+            volume: 50.0,
+            next: true,
+            repeat: false,
+            shuffle: false,
+            playlist: FilePlaylist::new(),
+            audio_host: "Unknown".to_string(),
         }
     }
 }

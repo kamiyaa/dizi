@@ -14,7 +14,7 @@ pub fn read_and_execute(
     keymap_t: &AppKeyMapping,
     prefix: &str,
     suffix: &str,
-) -> DiziResult<()> {
+) -> DiziResult {
     context.flush_event();
     let user_input: Option<String> = TuiTextField::default()
         .prompt(":")

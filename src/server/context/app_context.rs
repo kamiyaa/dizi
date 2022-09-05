@@ -1,4 +1,4 @@
-use crate::audio::Player;
+use crate::audio::player::Player;
 use crate::config;
 use crate::events::Events;
 

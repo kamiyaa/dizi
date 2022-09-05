@@ -13,13 +13,13 @@ use crate::playlist::traits::{OrderedPlaylist, OrderedPlaylistEntry, ShufflePlay
 use crate::server_util::run_on_song_change;
 use crate::util::mimetype::is_playable;
 
-pub fn playlist_play(context: &mut AppContext, index: usize) -> DiziResult<()> {
+pub fn playlist_play(context: &mut AppContext, index: usize) -> DiziResult {
     context.player_mut().play_from_playlist(index)?;
     run_on_song_change(context);
     Ok(())
 }
 
-pub fn playlist_load(context: &mut AppContext, cwd: &Path, path: &Path) -> DiziResult<()> {
+pub fn playlist_load(context: &mut AppContext, cwd: &Path, path: &Path) -> DiziResult {
     let shuffle_enabled = context.player_ref().shuffle_enabled();
     let playlist = context.player_mut().playlist_mut();
     if !playlist.file_playlist.is_empty() {
@@ -35,7 +35,7 @@ pub fn playlist_load(context: &mut AppContext, cwd: &Path, path: &Path) -> DiziR
     Ok(())
 }
 
-pub fn playlist_clear(context: &mut AppContext) -> DiziResult<()> {
+pub fn playlist_clear(context: &mut AppContext) -> DiziResult {
     context.player_mut().playlist_mut().file_playlist.clear();
     Ok(())
 }
@@ -64,7 +64,7 @@ pub fn playlist_append(context: &mut AppContext, path: &Path) -> DiziResult<Vec<
     }
 }
 
-pub fn playlist_remove(context: &mut AppContext, index: usize) -> DiziResult<()> {
+pub fn playlist_remove(context: &mut AppContext, index: usize) -> DiziResult {
     let len = context.player_ref().playlist_ref().file_playlist.len();
     if index <= len {
         context
@@ -76,7 +76,7 @@ pub fn playlist_remove(context: &mut AppContext, index: usize) -> DiziResult<()>
     Ok(())
 }
 
-pub fn playlist_move_up(context: &mut AppContext, index: usize) -> DiziResult<()> {
+pub fn playlist_move_up(context: &mut AppContext, index: usize) -> DiziResult {
     if index == 0 {
         return Err(DiziError::new(
             DiziErrorKind::InvalidParameters,
@@ -97,7 +97,7 @@ pub fn playlist_move_up(context: &mut AppContext, index: usize) -> DiziResult<()
     Ok(())
 }
 
-pub fn playlist_move_down(context: &mut AppContext, index: usize) -> DiziResult<()> {
+pub fn playlist_move_down(context: &mut AppContext, index: usize) -> DiziResult {
     let playlist = context.player_mut().playlist_mut().file_playlist_mut();
 
     if index + 1 >= playlist.len() {

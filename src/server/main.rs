@@ -63,7 +63,7 @@ pub struct Args {
     version: bool,
 }
 
-fn run_server(args: Args) -> DiziResult<()> {
+fn run_server(args: Args) -> DiziResult {
     if args.version {
         let version = env!("CARGO_PKG_VERSION");
         println!("{}", version);

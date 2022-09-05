@@ -95,7 +95,7 @@ pub struct Args {
     toggle_play: bool,
 }
 
-fn start_server() -> DiziResult<()> {
+fn start_server() -> DiziResult {
     println!("Server is not running");
     println!("Starting server...");
     process::Command::new("dizi-server")
@@ -109,7 +109,7 @@ fn create_context(config: AppConfig, cwd: &Path, stream: UnixStream) -> AppConte
     AppContext::new(config, cwd.to_path_buf(), stream)
 }
 
-fn run_app(args: Args) -> DiziResult<()> {
+fn run_app(args: Args) -> DiziResult {
     // print version
     if args.version {
         let version = env!("CARGO_PKG_VERSION");
@@ -186,7 +186,7 @@ fn main() {
     match run_app(args) {
         Ok(_) => {}
         Err(e) => {
-            eprintln!("{}", e.to_string());
+            eprintln!("{}", e);
             process::exit(1);
         }
     }

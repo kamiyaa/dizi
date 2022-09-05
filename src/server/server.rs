@@ -23,7 +23,7 @@ pub fn setup_socket(config: &AppConfig) -> DiziResult<UnixListener> {
     Ok(stream)
 }
 
-pub fn serve(config: AppConfig) -> DiziResult<()> {
+pub fn serve(config: AppConfig) -> DiziResult {
     let mut context = AppContext::new(config);
 
     let listener = setup_socket(context.config_ref())?;
@@ -88,7 +88,7 @@ pub fn serve(config: AppConfig) -> DiziResult<()> {
     Ok(())
 }
 
-pub fn listen_for_clients(listener: UnixListener, event_tx: ServerEventSender) -> DiziResult<()> {
+pub fn listen_for_clients(listener: UnixListener, event_tx: ServerEventSender) -> DiziResult {
     for stream in listener.incoming().flatten() {
         event_tx.send(ServerEvent::NewClient(stream));
     }

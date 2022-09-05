@@ -6,35 +6,20 @@ use std::sync::{Arc, Mutex};
 use std::thread;
 use std::time::Duration;
 
-use cpal::traits::HostTrait;
-
-use log::{debug, log_enabled, Level};
-
 use rodio::queue;
 use rodio::source::{Amplify, Pausable, Source, Stoppable};
 use rodio::{Decoder, OutputStream};
 
 use dizi_lib::error::DiziResult;
-use dizi_lib::song::Song;
 
+use crate::audio::request::PlayerRequest;
 use crate::config;
 use crate::events::{ServerEvent, ServerEventSender};
-
-#[derive(Clone, Debug)]
-pub enum PlayerRequest {
-    Play(Song),
-    Pause,
-    Resume,
-    Stop,
-    SetVolume(f32),
-    //    AddListener(ServerEventSender),
-    //    ClearListeners,
-}
 
 pub struct PlayerStream {
     pub volume: f32,
     pub event_tx: ServerEventSender,
-    pub player_res_tx: mpsc::Sender<DiziResult<()>>,
+    pub player_res_tx: mpsc::Sender<DiziResult>,
     pub player_req_rx: mpsc::Receiver<PlayerRequest>,
     pub source_tx: Option<mpsc::Sender<PlayerRequest>>,
     pub receiver: Option<mpsc::Receiver<()>>,
@@ -42,13 +27,12 @@ pub struct PlayerStream {
 
 impl PlayerStream {
     pub fn new(
-        volume: f32,
         event_tx: ServerEventSender,
-        player_res_tx: mpsc::Sender<DiziResult<()>>,
+        player_res_tx: mpsc::Sender<DiziResult>,
         player_req_rx: mpsc::Receiver<PlayerRequest>,
     ) -> Self {
         Self {
-            volume,
+            volume: 50.0,
             event_tx,
             player_res_tx,
             player_req_rx,
@@ -61,7 +45,7 @@ impl PlayerStream {
         &self.player_req_rx
     }
 
-    pub fn player_res(&self) -> &mpsc::Sender<DiziResult<()>> {
+    pub fn player_res(&self) -> &mpsc::Sender<DiziResult> {
         &self.player_res_tx
     }
 
@@ -166,15 +150,14 @@ pub fn process_msg(
 }
 
 pub fn player_stream(
-    volume: f32,
     config_t: config::AppConfig,
-    player_res_tx: mpsc::Sender<DiziResult<()>>,
+    player_res_tx: mpsc::Sender<DiziResult>,
     player_req_rx: mpsc::Receiver<PlayerRequest>,
     event_tx: ServerEventSender,
-) -> DiziResult<()> {
-    let mut player_stream = PlayerStream::new(volume, event_tx, player_res_tx, player_req_rx);
+    audio_device: cpal::Device,
+) -> DiziResult {
+    let mut player_stream = PlayerStream::new(event_tx, player_res_tx, player_req_rx);
 
-    let audio_device = get_default_output_device(config_t.server_ref().audio_system);
     let (_stream, stream_handle) = OutputStream::try_from_device(&audio_device)?;
 
     let (queue_tx, queue_rx) = rodio::queue::queue(true);
@@ -246,23 +229,4 @@ pub fn player_stream(
         }
     }
     Ok(())
-}
-
-pub fn get_default_output_device(host_id: cpal::HostId) -> cpal::Device {
-    if log_enabled!(Level::Debug) {
-        debug!("Available audio systems:");
-        for host in cpal::available_hosts() {
-            debug!("host: {:?}", host);
-        }
-    }
-    let host = cpal::host_from_id(
-        cpal::available_hosts()
-            .into_iter()
-            .find(|id| *id == host_id)
-            .unwrap(),
-    )
-    .unwrap_or_else(|_| cpal::default_host());
-
-    let device = host.default_output_device();
-    device.unwrap()
 }

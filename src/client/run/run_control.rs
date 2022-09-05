@@ -5,7 +5,7 @@ use crate::context::AppContext;
 use crate::util::request::send_client_request;
 use crate::Args;
 
-pub fn run_control(context: &mut AppContext, args: &Args) -> DiziResult<()> {
+pub fn run_control(context: &mut AppContext, args: &Args) -> DiziResult {
     let request = if args.exit {
         Some(ClientRequest::ServerQuit)
     } else if args.next {

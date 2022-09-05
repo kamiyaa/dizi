@@ -96,7 +96,7 @@ pub fn set_playlist_index(context: &mut AppContext, new_index: usize) {
     }
 }
 
-pub fn up(context: &mut AppContext, u: usize) -> DiziResult<()> {
+pub fn up(context: &mut AppContext, u: usize) -> DiziResult {
     let widget = context.get_view_widget();
     let index = cursor_index(context, widget);
 
@@ -107,7 +107,7 @@ pub fn up(context: &mut AppContext, u: usize) -> DiziResult<()> {
     Ok(())
 }
 
-pub fn down(context: &mut AppContext, u: usize) -> DiziResult<()> {
+pub fn down(context: &mut AppContext, u: usize) -> DiziResult {
     let widget = context.get_view_widget();
     let index = cursor_index(context, widget);
 
@@ -118,7 +118,7 @@ pub fn down(context: &mut AppContext, u: usize) -> DiziResult<()> {
     Ok(())
 }
 
-pub fn home(context: &mut AppContext) -> DiziResult<()> {
+pub fn home(context: &mut AppContext) -> DiziResult {
     let widget = context.get_view_widget();
     let index = cursor_index(context, widget);
 
@@ -131,7 +131,7 @@ pub fn home(context: &mut AppContext) -> DiziResult<()> {
     Ok(())
 }
 
-pub fn end(context: &mut AppContext) -> DiziResult<()> {
+pub fn end(context: &mut AppContext) -> DiziResult {
     let widget = context.get_view_widget();
     let index = match widget {
         WidgetType::FileBrowser => get_curr_dirlist_index(context),
@@ -158,7 +158,7 @@ fn get_page_size(_context: &AppContext, _backend: &AppBackend) -> Option<usize> 
     Some(10)
 }
 
-pub fn page_up(context: &mut AppContext, backend: &mut AppBackend) -> DiziResult<()> {
+pub fn page_up(context: &mut AppContext, backend: &mut AppBackend) -> DiziResult {
     let widget = context.get_view_widget();
     let index = cursor_index(context, widget);
 
@@ -171,7 +171,7 @@ pub fn page_up(context: &mut AppContext, backend: &mut AppBackend) -> DiziResult
     Ok(())
 }
 
-pub fn page_down(context: &mut AppContext, backend: &mut AppBackend) -> DiziResult<()> {
+pub fn page_down(context: &mut AppContext, backend: &mut AppBackend) -> DiziResult {
     let widget = context.get_view_widget();
     let index = cursor_index(context, widget);
 

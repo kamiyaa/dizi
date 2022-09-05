@@ -10,7 +10,7 @@ pub trait AppExecute {
         context: &mut AppContext,
         backend: &mut AppBackend,
         keymap_t: &AppKeyMapping,
-    ) -> DiziResult<()>;
+    ) -> DiziResult;
 }
 
 pub trait AppCommand: AppExecute + std::fmt::Display + std::fmt::Debug {

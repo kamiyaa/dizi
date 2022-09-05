@@ -23,7 +23,7 @@ pub fn run_ui(
     backend: &mut AppBackend,
     context: &mut AppContext,
     keymap_t: AppKeyMapping,
-) -> DiziResult<()> {
+) -> DiziResult {
     let _ = context.flush_stream();
 
     // server listener

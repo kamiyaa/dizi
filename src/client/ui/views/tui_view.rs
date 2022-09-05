@@ -6,7 +6,7 @@ use tui::widgets::{Block, Borders, Paragraph, Widget, Wrap};
 
 use crate::config::option::{LayoutComposition, WidgetType};
 use crate::context::AppContext;
-use crate::ui::widgets::{TuiPlayer, TuiPlaylist, TuiTopBar};
+use crate::ui::widgets::{TuiFooter, TuiPlayer, TuiPlaylist, TuiTopBar};
 
 use crate::LAYOUT_T;
 
@@ -49,6 +49,14 @@ impl<'a> Widget for TuiView<'a> {
             Paragraph::new(text)
                 .wrap(Wrap { trim: true })
                 .render(rect, buf);
+        } else {
+            let rect = Rect {
+                x: 0,
+                y: area.height - 1,
+                width: area.width,
+                height: 1,
+            };
+            TuiFooter::new(self.context.server_state_ref().player_ref()).render(rect, buf);
         }
 
         let topbar_width = area.width;

@@ -16,7 +16,7 @@ impl AppExecute for Command {
         context: &mut AppContext,
         backend: &mut AppBackend,
         keymap_t: &AppKeyMapping,
-    ) -> DiziResult<()> {
+    ) -> DiziResult {
         match &*self {
             Self::ChangeDirectory(p) => {
                 change_directory::change_directory(context, p.as_path())?;
@@ -70,7 +70,7 @@ impl AppExecute for Command {
     }
 }
 
-pub fn execute_request(context: &mut AppContext, request: &ClientRequest) -> DiziResult<()> {
+pub fn execute_request(context: &mut AppContext, request: &ClientRequest) -> DiziResult {
     match request {
         ClientRequest::ServerQuit => {
             quit::server_quit(context)?;

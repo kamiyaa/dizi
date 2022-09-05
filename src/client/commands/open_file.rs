@@ -7,7 +7,7 @@ use crate::util::request::send_client_request;
 
 use super::change_directory;
 
-pub fn open(context: &mut AppContext) -> DiziResult<()> {
+pub fn open(context: &mut AppContext) -> DiziResult {
     let widget = context.get_view_widget();
 
     match widget {
@@ -18,7 +18,7 @@ pub fn open(context: &mut AppContext) -> DiziResult<()> {
     Ok(())
 }
 
-pub fn file_browser_open(context: &mut AppContext) -> DiziResult<()> {
+pub fn file_browser_open(context: &mut AppContext) -> DiziResult {
     if let Some(entry) = context
         .tab_context_ref()
         .curr_tab_ref()
@@ -58,7 +58,7 @@ pub fn file_browser_open(context: &mut AppContext) -> DiziResult<()> {
     Ok(())
 }
 
-pub fn playlist_open(context: &mut AppContext) -> DiziResult<()> {
+pub fn playlist_open(context: &mut AppContext) -> DiziResult {
     if let Some(index) = context
         .server_state_ref()
         .player_ref()

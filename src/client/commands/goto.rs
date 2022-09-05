@@ -8,7 +8,7 @@ use crate::config::option::WidgetType;
 use crate::context::AppContext;
 use crate::ui::AppBackend;
 
-fn _directory_goto_playing(context: &mut AppContext, backend: &mut AppBackend) -> DiziResult<()> {
+fn _directory_goto_playing(context: &mut AppContext, backend: &mut AppBackend) -> DiziResult {
     let player_state = context.server_state_ref().player_ref();
 
     if let Some(song) = player_state.song.clone() {
@@ -22,7 +22,7 @@ fn _directory_goto_playing(context: &mut AppContext, backend: &mut AppBackend) -
     Ok(())
 }
 
-fn _playlist_goto_playing(context: &mut AppContext, backend: &mut AppBackend) -> DiziResult<()> {
+fn _playlist_goto_playing(context: &mut AppContext, backend: &mut AppBackend) -> DiziResult {
     let player_state = context.server_state_ref().player_ref();
 
     match player_state.playlist_status {
@@ -36,7 +36,7 @@ fn _playlist_goto_playing(context: &mut AppContext, backend: &mut AppBackend) ->
     Ok(())
 }
 
-pub fn goto_playing(context: &mut AppContext, backend: &mut AppBackend) -> DiziResult<()> {
+pub fn goto_playing(context: &mut AppContext, backend: &mut AppBackend) -> DiziResult {
     let widget = context.get_view_widget();
     match widget {
         WidgetType::FileBrowser => _directory_goto_playing(context, backend)?,

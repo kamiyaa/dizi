@@ -21,7 +21,7 @@ pub fn handle_client(
     mut stream: UnixStream,
     client_request_tx: ClientRequestSender,
     server_event_rx: ServerBroadcastEventReceiver,
-) -> DiziResult<()> {
+) -> DiziResult {
     let (event_tx, event_rx) = mpsc::channel();
 
     // listen for server events
@@ -78,16 +78,13 @@ pub fn forward_client_request(
     client_request_tx: &ClientRequestSender,
     uuid: &str,
     line: &str,
-) -> DiziResult<()> {
+) -> DiziResult {
     let request: ClientRequest = serde_json::from_str(line)?;
     client_request_tx.send((uuid.to_string(), request))?;
     Ok(())
 }
 
-pub fn process_server_event(
-    stream: &mut UnixStream,
-    event: ServerBroadcastEvent,
-) -> DiziResult<()> {
+pub fn process_server_event(stream: &mut UnixStream, event: ServerBroadcastEvent) -> DiziResult {
     let response = event;
     let json = serde_json::to_string(&response)?;
 

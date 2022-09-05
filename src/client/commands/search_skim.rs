@@ -25,7 +25,7 @@ impl SkimItem for DiziSkimItem {
     }
 }
 
-pub fn search_skim(context: &mut AppContext, backend: &mut AppBackend) -> DiziResult<()> {
+pub fn search_skim(context: &mut AppContext, backend: &mut AppBackend) -> DiziResult {
     let widget = context.get_view_widget();
 
     match widget {
@@ -40,7 +40,7 @@ fn search_playlist_skim(
     context: &mut AppContext,
     backend: &mut AppBackend,
     widget: WidgetType,
-) -> DiziResult<()> {
+) -> DiziResult {
     let options = SkimOptionsBuilder::default()
         .height(Some("100%"))
         .multi(true)
@@ -116,7 +116,7 @@ fn search_directory_skim(
     context: &mut AppContext,
     backend: &mut AppBackend,
     widget: WidgetType,
-) -> DiziResult<()> {
+) -> DiziResult {
     let options = SkimOptionsBuilder::default()
         .height(Some("100%"))
         .multi(true)

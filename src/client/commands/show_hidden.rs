@@ -20,7 +20,7 @@ pub fn _toggle_hidden(context: &mut AppContext) {
     }
 }
 
-pub fn toggle_hidden(context: &mut AppContext) -> DiziResult<()> {
+pub fn toggle_hidden(context: &mut AppContext) -> DiziResult {
     _toggle_hidden(context);
     reload::reload_dirlist(context)
 }

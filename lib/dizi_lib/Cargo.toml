@@ -9,6 +9,7 @@ edition = "2018"
 crossbeam = "^0"
 globset = "^0"
 rodio = { features = [ "symphonia-all" ], git = "https://github.com/RustAudio/rodio.git", version = "^0" }
+symphonia = { version = "^0", optional = true }
 serde = "^1"
 serde_derive = "^1"
 serde_json = "^1"
@@ -16,4 +17,5 @@ strfmt = "^0"
 toml = "^0"
 
 [features]
-default = []
+default = [ "symphonia-backend" ]
+symphonia-backend = [ "symphonia" ]

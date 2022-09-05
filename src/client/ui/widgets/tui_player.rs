@@ -48,7 +48,7 @@ impl<'a> Widget for TuiPlayer<'a> {
             Some(song) => {
                 let duration = song
                     .audio_metadata()
-                    .total_duration()
+                    .total_duration
                     .unwrap_or(time::Duration::from_secs(0));
                 let total_secs = duration.as_secs();
                 let minutes = total_secs / 60;
@@ -81,7 +81,7 @@ impl<'a> Widget for TuiPlayer<'a> {
         buf.set_string(
             area.x,
             area.y + 3,
-            format!("Volume: {}%", self.player.get_volume()),
+            format!("Volume: {}%", (self.player.get_volume() * 100.0) as usize),
             player_status_style,
         );
 

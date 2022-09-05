@@ -1,5 +1,6 @@
-mod player;
-mod stream;
+pub mod device;
+pub mod request;
+pub mod rodio;
+pub mod symphonia;
 
-pub use player::*;
-pub use stream::*;
+pub use self::rodio::*;

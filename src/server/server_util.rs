@@ -18,7 +18,7 @@ use crate::events::ServerEvent;
 use crate::playlist::traits::OrderedPlaylist;
 use crate::server_commands::*;
 
-pub fn process_server_event(context: &mut AppContext, event: ServerEvent) -> DiziResult<()> {
+pub fn process_server_event(context: &mut AppContext, event: ServerEvent) -> DiziResult {
     match event {
         ServerEvent::NewClient(stream) => {
             let client_tx2 = context.events.client_request_sender().clone();
@@ -50,7 +50,7 @@ pub fn process_client_request(
     context: &mut AppContext,
     uuid: &str,
     event: ClientRequest,
-) -> DiziResult<()> {
+) -> DiziResult {
     if log_enabled!(Level::Debug) {
         debug!("request: {:?}", event);
     }
@@ -68,7 +68,7 @@ pub fn process_client_request(
             let _ = context.events.server_broadcast_listeners.remove(&uuid);
         }
         ClientRequest::PlayerState => {
-            let state = context.player_ref().clone_player_state();
+            let state = context.player_ref().player_state();
             context
                 .events
                 .broadcast_event(ServerBroadcastEvent::PlayerState { state });
@@ -181,7 +181,7 @@ pub fn process_client_request(
             path: Some(path),
         } => {
             playlist::playlist_load(context, &cwd, &path)?;
-            let state = context.player_ref().clone_player_state();
+            let state = context.player_ref().player_state();
             context
                 .events
                 .broadcast_event(ServerBroadcastEvent::PlaylistOpen { state });
@@ -216,7 +216,7 @@ pub fn process_client_request(
     Ok(())
 }
 
-pub fn send_latest_song_info(context: &mut AppContext) -> DiziResult<()> {
+pub fn send_latest_song_info(context: &mut AppContext) -> DiziResult {
     match context.player_ref().playlist_ref().get_type() {
         PlaylistType::DirectoryListing => {
             if let Some(song) = context.player_ref().current_song_ref() {
@@ -240,7 +240,7 @@ pub fn send_latest_song_info(context: &mut AppContext) -> DiziResult<()> {
     Ok(())
 }
 
-pub fn process_done_song(context: &mut AppContext) -> DiziResult<()> {
+pub fn process_done_song(context: &mut AppContext) -> DiziResult {
     if log_enabled!(Level::Debug) {
         debug!("Processing done song trigger");
     }

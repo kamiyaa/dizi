@@ -36,6 +36,7 @@ shellexpand = "^2"
 signal-hook = "^0"
 skim = "^0"
 structopt = "^0"
+symphonia = { version = "^0", optional = true }
 termion = "^1"
 toml = "^0"
 tui = { version = "^0", default-features = false, features = ["termion"] }
@@ -60,5 +61,6 @@ cpal = "^0"
 
 
 [features]
-default = [ "devicons" ]
+default = [ "devicons", "symphonia-backend" ]
+symphonia-backend = [ "symphonia" ]
 devicons = [ "phf" ]

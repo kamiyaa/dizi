@@ -13,7 +13,7 @@ pub fn cd(path: &path::Path, context: &mut AppContext) -> io::Result<()> {
     Ok(())
 }
 
-pub fn change_directory(context: &mut AppContext, path: &path::Path) -> DiziResult<()> {
+pub fn change_directory(context: &mut AppContext, path: &path::Path) -> DiziResult {
     let new_cwd = if path.is_absolute() {
         path.canonicalize()?
     } else {
@@ -34,7 +34,7 @@ pub fn change_directory(context: &mut AppContext, path: &path::Path) -> DiziResu
 }
 
 // ParentDirectory command
-pub fn parent_directory(context: &mut AppContext) -> DiziResult<()> {
+pub fn parent_directory(context: &mut AppContext) -> DiziResult {
     if let Some(parent) = context
         .tab_context_ref()
         .curr_tab_ref()

@@ -50,7 +50,7 @@ pub fn get_input_while_composite<'a>(
     }
 }
 
-pub fn process_server_event(context: &mut AppContext, s: &str) -> DiziResult<()> {
+pub fn process_server_event(context: &mut AppContext, s: &str) -> DiziResult {
     let server_broadcast_event: ServerBroadcastEvent = serde_json::from_str(s)?;
 
     match server_broadcast_event {
