@@ -21,6 +21,7 @@ pub enum DiziErrorKind {
     ReceiveError,
 
     DecoderError(rodio::decoder::DecoderError),
+    SymphoniaError(symphonia::core::errors::Error),
     NoDevice,
     UnrecognizedFormat,
     NotAudioFile,
@@ -78,5 +79,11 @@ impl From<serde_json::Error> for DiziErrorKind {
 impl From<toml::de::Error> for DiziErrorKind {
     fn from(_: toml::de::Error) -> Self {
         Self::ParseError
+    }
+}
+
+impl From<symphonia::core::errors::Error> for DiziErrorKind {
+    fn from(e: symphonia::core::errors::Error) -> Self {
+        Self::SymphoniaError(e)
     }
 }

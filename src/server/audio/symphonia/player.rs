@@ -96,7 +96,7 @@ impl Player {
     }
 
     pub fn play_again(&mut self) -> DiziResult {
-        if let Some(entry) = self.playlist_ref().get_current_entry() {
+        if let Some(entry) = self.playlist_ref().current_entry_details() {
             self.play(&entry.entry)?;
         }
         Ok(())

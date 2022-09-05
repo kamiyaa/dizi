@@ -229,7 +229,7 @@ pub fn send_latest_song_info(context: &mut AppContext) -> DiziResult {
         PlaylistType::PlaylistFile => {
             let playlist = &context.player_ref().playlist_ref().file_playlist;
 
-            if let Some(entry) = playlist.get_current_entry() {
+            if let Some(entry) = playlist.current_entry_details() {
                 let index = entry.song_index;
                 context
                     .events

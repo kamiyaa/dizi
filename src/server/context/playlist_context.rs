@@ -36,17 +36,23 @@ impl PlaylistContext {
 
     pub fn play(&mut self, index: usize) {}
 
-    pub fn get_entry(&self, index: usize) -> &Song {
+    pub fn entry_ref(&self, index: usize) -> &Song {
         match self.get_type() {
-            PlaylistType::PlaylistFile => self.file_playlist.get_entry(index),
-            PlaylistType::DirectoryListing => self.directory_playlist.get_entry(index),
+            PlaylistType::PlaylistFile => self.file_playlist.entry_ref(index),
+            PlaylistType::DirectoryListing => self.directory_playlist.entry_ref(index),
+        }
+    }
+    pub fn entry_mut(&mut self, index: usize) -> &Song {
+        match self.get_type() {
+            PlaylistType::PlaylistFile => self.file_playlist.entry_mut(index),
+            PlaylistType::DirectoryListing => self.directory_playlist.entry_mut(index),
         }
     }
 
-    pub fn get_current_entry(&self) -> Option<OrderedPlaylistEntry> {
+    pub fn current_entry_details(&self) -> Option<OrderedPlaylistEntry> {
         match self.get_type() {
-            PlaylistType::PlaylistFile => self.file_playlist.get_current_entry(),
-            PlaylistType::DirectoryListing => self.directory_playlist.get_current_entry(),
+            PlaylistType::PlaylistFile => self.file_playlist.current_entry_details(),
+            PlaylistType::DirectoryListing => self.directory_playlist.current_entry_details(),
         }
     }
 

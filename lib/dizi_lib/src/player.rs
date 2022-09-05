@@ -114,52 +114,7 @@ impl PlayerState {
     }
 
     pub fn query(&self, query: &str) -> DiziResult<String> {
-        let player_state = self;
-
-        let mut vars = HashMap::new();
-
-        vars.insert(
-            "player_status".to_string(),
-            player_state.get_player_status().to_string(),
-        );
-        vars.insert(
-            "player_volume".to_string(),
-            format!("{}", player_state.get_volume()),
-        );
-        vars.insert(
-            "player_next".to_string(),
-            format!("{}", player_state.next_enabled()),
-        );
-        vars.insert(
-            "player_repeat".to_string(),
-            format!("{}", player_state.repeat_enabled()),
-        );
-        vars.insert(
-            "player_shuffle".to_string(),
-            format!("{}", player_state.shuffle_enabled()),
-        );
-        vars.insert("audio_host".to_string(), player_state.audio_host.clone());
-
-        if let Some(song) = player_state.get_song() {
-            vars.insert("file_name".to_string(), song.file_name().to_string());
-            vars.insert(
-                "file_path".to_string(),
-                song.file_path().to_string_lossy().to_string(),
-            );
-        }
-
-        vars.insert(
-            "playlist_status".to_string(),
-            player_state.get_playlist_status().to_string(),
-        );
-
-        if let Some(index) = player_state.playlist_ref().get_playing_index() {
-            vars.insert("playlist_index".to_string(), format!("{}", index));
-        }
-        vars.insert(
-            "playlist_length".to_string(),
-            format!("{}", player_state.playlist_ref().len()),
-        );
+        let vars = self.query_all();
 
         match strfmt(&query, &vars) {
             Ok(s) => Ok(s),
@@ -167,6 +122,65 @@ impl PlayerState {
                 DiziErrorKind::InvalidParameters,
                 format!("Failed to process query '{}', Reason: '{}'", query, e.to_string()),
             )),
+        }
+    }
+
+    pub fn query_all(&self) -> HashMap<String, String> {
+        let mut vars = HashMap::new();
+        Self::load_player_query_vars(&mut vars, self);
+        if let Some(song) = self.get_song() {
+            Self::load_song_query_vars(&mut vars, song);
+        }
+        vars
+    }
+
+    fn load_player_query_vars(vars: &mut HashMap<String, String>, player_state: &PlayerState) {
+        vars.insert(
+            "player.status".to_string(),
+            player_state.get_player_status().to_string(),
+        );
+        vars.insert(
+            "player.volume".to_string(),
+            format!("{}", player_state.get_volume()),
+        );
+        vars.insert(
+            "player.next".to_string(),
+            format!("{}", player_state.next_enabled()),
+        );
+        vars.insert(
+            "player.repeat".to_string(),
+            format!("{}", player_state.repeat_enabled()),
+        );
+        vars.insert(
+            "player.shuffle".to_string(),
+            format!("{}", player_state.shuffle_enabled()),
+        );
+        vars.insert(
+            "playlist.status".to_string(),
+            player_state.get_playlist_status().to_string(),
+        );
+
+        if let Some(index) = player_state.playlist_ref().get_playing_index() {
+            vars.insert("playlist.index".to_string(), format!("{}", index));
+        }
+        vars.insert(
+            "playlist.length".to_string(),
+            format!("{}", player_state.playlist_ref().len()),
+        );
+        vars.insert("audio.host".to_string(), player_state.audio_host.clone());
+    }
+
+    fn load_song_query_vars(vars: &mut HashMap<String, String>, song: &Song) {
+        vars.insert("song.file_name".to_string(), song.file_name().to_string());
+        vars.insert(
+            "song.file_path".to_string(),
+            song.file_path().to_string_lossy().to_string(),
+        );
+        for (tag, value) in song.music_metadata().standard_tags.iter() {
+            vars.insert(format!("song.tag.{}", tag.to_lowercase()), value.to_string());
+        }
+        if let Some(total_duration) = song.audio_metadata().total_duration.as_ref() {
+            vars.insert("song.total_duration".to_string(), total_duration.as_secs().to_string());
         }
     }
 }

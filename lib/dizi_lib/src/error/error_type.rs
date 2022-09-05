@@ -116,3 +116,12 @@ impl From<toml::de::Error> for DiziError {
         }
     }
 }
+
+impl From<symphonia::core::errors::Error> for DiziError {
+    fn from(err: symphonia::core::errors::Error) -> Self {
+        Self {
+            _kind: DiziErrorKind::from(err),
+            _cause: "Symphonia Error".to_string(),
+        }
+    }
+}

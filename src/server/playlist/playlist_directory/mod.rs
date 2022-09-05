@@ -36,7 +36,7 @@ impl PlaylistDirectory {
             .filter_map(|entry| entry.ok())
             .map(|entry| entry.path())
             .filter(|p| p.is_file())
-            .filter_map(|path| Song::new(&path).ok())
+            .map(|path| Song::new(&path))
             .collect();
 
         let len = songs.len();

@@ -147,10 +147,11 @@ impl Player {
             if playlist.shuffle_enabled() {
                 playlist.shuffle();
             }
-            if let Some(entry) = playlist.get_current_entry() {
+            if let Some(entry) = playlist.current_entry_details() {
                 self.play(&entry.entry)?;
             }
             self.playlist_context.directory_playlist = playlist;
+            self.state.playlist_status = PlaylistType::DirectoryListing;
             self.playlist_context
                 .set_type(PlaylistType::DirectoryListing);
         }
@@ -168,8 +169,9 @@ impl Player {
         if playlist.shuffle_enabled() {
             playlist.shuffle();
         }
-        if let Some(entry) = playlist.get_current_entry() {
+        if let Some(entry) = playlist.current_entry_details() {
             self.play(&entry.entry)?;
+            self.state.playlist_status = PlaylistType::PlaylistFile;
             self.playlist_context.set_type(PlaylistType::PlaylistFile);
         }
         Ok(())
@@ -186,8 +188,9 @@ impl Player {
         if playlist.shuffle_enabled() {
             playlist.shuffle();
         }
-        if let Some(entry) = playlist.get_current_entry() {
+        if let Some(entry) = playlist.current_entry_details() {
             self.play(&entry.entry)?;
+            self.state.playlist_status = PlaylistType::DirectoryListing;
             self.playlist_context
                 .set_type(PlaylistType::DirectoryListing);
         }
@@ -195,7 +198,7 @@ impl Player {
     }
 
     pub fn play_again(&mut self) -> DiziResult {
-        if let Some(entry) = self.playlist_ref().get_current_entry() {
+        if let Some(entry) = self.playlist_ref().current_entry_details() {
             self.play(&entry.entry)?;
         }
         Ok(())

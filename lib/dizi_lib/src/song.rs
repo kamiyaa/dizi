@@ -18,8 +18,7 @@ use symphonia::core::formats::FormatOptions;
 #[cfg(feature = "symphonia-backend")]
 use symphonia::core::io::MediaSourceStream;
 #[cfg(feature = "symphonia-backend")]
-use symphonia::core::meta::MetadataOptions;
-use symphonia::core::meta::MetadataRevision;
+use symphonia::core::meta::{MetadataOptions, MetadataRevision};
 #[cfg(feature = "symphonia-backend")]
 use symphonia::core::probe::Hint;
 
@@ -37,6 +36,8 @@ pub struct Song {
     _audio_metadata: AudioMetadata,
     #[serde(rename = "music_metadata")]
     _music_metadata: MusicMetadata,
+    #[serde(rename = "metadata_loaded")]
+    _metadata_loaded: bool,
 }
 
 impl Song {
@@ -58,14 +59,32 @@ impl Song {
         Ok(Self {
             _file_name: file_name,
             _path: path.to_path_buf(),
+            _metadata_loaded: false,
             _audio_metadata: audio_metadata,
             _music_metadata: music_metadata,
         })
     }
     #[cfg(feature = "symphonia-backend")]
-    pub fn new(path: &Path) -> DiziResult<Self> {
+    pub fn new(path: &Path) -> Self {
+        let file_name = path
+            .file_name()
+            .map(|s| s.to_string_lossy())
+            .unwrap()
+            .into_owned();
+        let mut song = Self {
+            _file_name: file_name,
+            _path: path.to_path_buf(),
+            _metadata_loaded: false,
+            _audio_metadata: AudioMetadata::default(),
+            _music_metadata: MusicMetadata::default(),
+        };
+        let _ = song.load_metadata();
+        song
+    }
+
+    pub fn load_metadata(&mut self) -> DiziResult {
         let mut hint = Hint::new();
-        if let Some(ext) = path.extension().and_then(|e| e.to_str()) {
+        if let Some(ext) = self.file_path().extension().and_then(|e| e.to_str()) {
             hint.with_extension(ext);
         };
 
@@ -73,14 +92,13 @@ impl Song {
         let meta_opts: MetadataOptions = Default::default();
         let fmt_opts: FormatOptions = Default::default();
 
-        let src = std::fs::File::open(&path).expect("failed to open media");
+        let src = std::fs::File::open(self.file_path()).expect("failed to open media");
 
         // Create the media source stream.
         let mss = MediaSourceStream::new(Box::new(src), Default::default());
 
         let probed = symphonia::default::get_probe()
-            .format(&hint, mss, &fmt_opts, &meta_opts)
-            .expect("unsupported format");
+            .format(&hint, mss, &fmt_opts, &meta_opts)?;
 
         // Get the instantiated format reader.
         let mut format = probed.format;
@@ -96,19 +114,15 @@ impl Song {
             .map(|metadata| MusicMetadata::from(metadata))
             .unwrap_or_else(|| MusicMetadata::default());
 
-        let file_name = path
-            .file_name()
-            .map(|s| s.to_string_lossy())
-            .unwrap()
-            .into_owned();
-        Ok(Self {
-            _file_name: file_name,
-            _path: path.to_path_buf(),
-            _audio_metadata: audio_metadata,
-            _music_metadata: music_metadata,
-        })
+        self._audio_metadata = audio_metadata;
+        self._music_metadata = music_metadata;
+        self._metadata_loaded = true;
+        Ok(())
     }
 
+    pub fn metadata_loaded(&self) -> bool {
+        self._metadata_loaded
+    }
 
     pub fn file_path(&self) -> &Path {
         self._path.as_path()
@@ -187,18 +201,25 @@ impl std::convert::From<&CodecParameters> for AudioMetadata {
 
 #[derive(Clone, Debug, Default, Serialize, Deserialize)]
 pub struct MusicMetadata {
+    pub standard_tags: HashMap<String, String>,
     pub tags: HashMap<String, String>,
 }
 
 #[cfg(feature = "symphonia-backend")]
 impl std::convert::From<&MetadataRevision> for MusicMetadata {
     fn from(metadata: &MetadataRevision) -> Self {
+        let standard_tags: HashMap<String, String> = metadata.tags()
+            .iter()
+            .filter_map(|tag| tag.std_key.map(|std_key| (format!("{:?}", std_key), tag.value.to_string())))
+            .collect();
         let tags: HashMap<String, String> = metadata.tags()
             .iter()
+            .filter(|tag| tag.std_key.is_none())
             .map(|tag| (tag.key.to_owned(), tag.value.to_string()))
             .collect();
         Self {
-            tags
+            standard_tags,
+            tags,
         }
     }
 }

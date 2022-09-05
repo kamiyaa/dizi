@@ -17,8 +17,10 @@ pub trait OrderedPlaylist {
 
     fn is_end(&self) -> bool;
 
-    fn get_entry(&self, index: usize) -> &Song;
-    fn get_current_entry(&self) -> Option<OrderedPlaylistEntry>;
+    fn entry_ref(&self, index: usize) -> &Song;
+    fn entry_mut(&mut self, index: usize) -> &mut Song;
+
+    fn current_entry_details(&self) -> Option<OrderedPlaylistEntry>;
 
     fn next_song_peak(&self) -> Option<OrderedPlaylistEntry>;
     fn previous_song_peak(&self) -> Option<OrderedPlaylistEntry>;

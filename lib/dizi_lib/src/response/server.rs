@@ -1,3 +1,4 @@
+use std::collections::HashMap;
 use std::time;
 
 use serde_derive::{Deserialize, Serialize};
@@ -11,6 +12,7 @@ pub enum ServerBroadcastEvent {
     ServerQuit,
     ServerError { msg: String },
     ServerQuery { query: String },
+    ServerQueryAll { query_items: HashMap<String, String> },
 
     // player status updates
     PlayerState { state: PlayerState },

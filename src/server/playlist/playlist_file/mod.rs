@@ -37,15 +37,11 @@ impl PlaylistFile {
             match entry {
                 m3u::Entry::Path(p) => {
                     if p.is_absolute() {
-                        if let Ok(song) = Song::new(p) {
-                            songs.push(song);
-                        }
+                        songs.push(Song::new(p));
                     } else {
                         let mut new_path = cwd.to_path_buf();
                         new_path.push(p);
-                        if let Ok(song) = Song::new(&new_path) {
-                            songs.push(song);
-                        }
+                        songs.push(Song::new(&new_path));
                     }
                 }
                 _ => {}

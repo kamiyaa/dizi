@@ -11,6 +11,8 @@ pub enum ClientRequest {
     ServerQuit,
     #[serde(rename = "/server/query")]
     ServerQuery { query: String },
+    #[serde(rename = "/server/query_all")]
+    ServerQueryAll,
 
     // client left
     #[serde(rename = "/client/leave")]
@@ -82,6 +84,7 @@ impl ClientRequest {
             Self::ClientLeave { .. } => "/client/leave",
             Self::ServerQuit => "/server/quit",
             Self::ServerQuery { .. } => "/server/query",
+            Self::ServerQueryAll => "/server/query_all",
 
             Self::PlayerState => "/player/state",
             Self::PlayerFilePlay { .. } => "/player/play/file",

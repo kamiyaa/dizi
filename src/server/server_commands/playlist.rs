@@ -52,7 +52,7 @@ pub fn playlist_append(context: &mut AppContext, path: &Path) -> DiziResult<Vec<
         }
         Ok(songs)
     } else if is_playable(path)? {
-        let song = Song::new(path)?;
+        let song = Song::new(path);
         context
             .player_mut()
             .playlist_mut()
@@ -139,9 +139,7 @@ fn find_songs_rec(songs: &mut Vec<Song>, path: &Path) {
                 if log_enabled!(Level::Debug) {
                     debug!("Adding {:?} to playlist", entry_path);
                 }
-                if let Ok(song) = Song::new(&entry_path) {
-                    songs.push(song);
-                }
+                songs.push(Song::new(&entry_path));
             }
         }
     }

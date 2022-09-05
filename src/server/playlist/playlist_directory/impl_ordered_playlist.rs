@@ -44,18 +44,21 @@ impl OrderedPlaylist for PlaylistDirectory {
         }
     }
 
-    fn get_entry(&self, index: usize) -> &Song {
+    fn entry_ref(&self, index: usize) -> &Song {
         &self.playlist_content_ref()[index]
     }
+    fn entry_mut(&mut self, index: usize) -> &mut Song {
+        &mut self.playlist_content_mut()[index]
+    }
 
-    fn get_current_entry(&self) -> Option<OrderedPlaylistEntry> {
+    fn current_entry_details(&self) -> Option<OrderedPlaylistEntry> {
         let playlist_index = self.get_playlist_index()?;
         let song_index = self.playlist_order_ref()[playlist_index];
 
         Some(OrderedPlaylistEntry {
             song_index,
             playlist_index,
-            entry: self.get_entry(song_index).clone(),
+            entry: self.entry_ref(song_index).clone(),
         })
     }
 
@@ -68,7 +71,7 @@ impl OrderedPlaylist for PlaylistDirectory {
         Some(OrderedPlaylistEntry {
             song_index,
             playlist_index,
-            entry: self.get_entry(song_index).clone(),
+            entry: self.entry_ref(song_index).clone(),
         })
     }
     fn previous_song_peak(&self) -> Option<OrderedPlaylistEntry> {
@@ -80,7 +83,7 @@ impl OrderedPlaylist for PlaylistDirectory {
         Some(OrderedPlaylistEntry {
             song_index,
             playlist_index,
-            entry: self.get_entry(song_index).clone(),
+            entry: self.entry_ref(song_index).clone(),
         })
     }
 
@@ -94,7 +97,7 @@ impl OrderedPlaylist for PlaylistDirectory {
         Some(OrderedPlaylistEntry {
             song_index,
             playlist_index,
-            entry: self.get_entry(song_index).clone(),
+            entry: self.entry_ref(song_index).clone(),
         })
     }
     fn previous_song(&mut self) -> Option<OrderedPlaylistEntry> {
@@ -107,7 +110,7 @@ impl OrderedPlaylist for PlaylistDirectory {
         Some(OrderedPlaylistEntry {
             song_index,
             playlist_index,
-            entry: self.get_entry(song_index).clone(),
+            entry: self.entry_ref(song_index).clone(),
         })
     }
 }

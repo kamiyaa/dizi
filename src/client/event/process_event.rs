@@ -63,6 +63,7 @@ pub fn process_server_event(context: &mut AppContext, s: &str) -> DiziResult {
                 .push_error(format!("Server: {}", msg));
         }
         ServerBroadcastEvent::ServerQuery { .. } => {}
+        ServerBroadcastEvent::ServerQueryAll { .. } => {}
         ServerBroadcastEvent::PlayerState { mut state } => {
             if !state.playlist_ref().is_empty() {
                 let old_state = context.server_state_ref().player_ref();

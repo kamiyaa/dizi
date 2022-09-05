@@ -77,8 +77,11 @@ pub struct Args {
     version: bool,
 
     // query
-    #[structopt(short = "q", long = "query")]
+    #[structopt(short = "Q", long = "query")]
     query: Option<String>,
+    // query
+    #[structopt(long = "query-all")]
+    query_all: bool,
 
     // controls
     #[structopt(long = "exit")]
@@ -124,7 +127,13 @@ fn run_app(args: Args) -> DiziResult {
     let cwd = std::env::current_dir()?;
 
     // query
-    if let Some(query) = args.query {
+    if args.query_all {
+        // connect to stream
+        let stream = UnixStream::connect(&config.client_ref().socket)?;
+        let mut context = create_context(config, &cwd, stream);
+        run::run_query_all(&mut context)?;
+        return Ok(());
+    } else if let Some(query) = args.query {
         // connect to stream
         let stream = UnixStream::connect(&config.client_ref().socket)?;
         let mut context = create_context(config, &cwd, stream);
