@@ -31,10 +31,10 @@ pub type AppEventSender = mpsc::Sender<AppEvent>;
 pub type AppEventReceiver = mpsc::Receiver<AppEvent>;
 
 pub type ClientRequestSender = mpsc::Sender<(String, ClientRequest)>;
-pub type ClientRequestReceiver = mpsc::Receiver<(String, ClientRequest)>;
+// pub type ClientRequestReceiver = mpsc::Receiver<(String, ClientRequest)>;
 
 pub type ServerEventSender = mpsc::Sender<ServerEvent>;
-pub type ServerEventReceiver = mpsc::Receiver<ServerEvent>;
+// pub type ServerEventReceiver = mpsc::Receiver<ServerEvent>;
 
 pub type ServerBroadcastEventSender = mpsc::Sender<ServerBroadcastEvent>;
 pub type ServerBroadcastEventReceiver = mpsc::Receiver<ServerBroadcastEvent>;
@@ -71,7 +71,7 @@ impl Events {
         let app_event_tx2 = app_event_tx.clone();
         let _ = thread::spawn(move || loop {
             if let Ok((uuid, request)) = client_request_rx.recv() {
-                app_event_tx2.send(AppEvent::Client { uuid, request });
+                let _ = app_event_tx2.send(AppEvent::Client { uuid, request });
             }
         });
 
@@ -79,7 +79,7 @@ impl Events {
         let app_event_tx2 = app_event_tx.clone();
         let _ = thread::spawn(move || loop {
             if let Ok(msg) = server_event_rx.recv() {
-                app_event_tx2.send(AppEvent::Server(msg));
+                let _ = app_event_tx2.send(AppEvent::Server(msg));
             }
         });
 

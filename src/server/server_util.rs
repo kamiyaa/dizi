@@ -132,7 +132,7 @@ pub fn process_client_request(
         }
         ClientRequest::PlayerPlayPrevious => {
             player_play_previous(context)?;
-            send_latest_song_info(context);
+            send_latest_song_info(context)?;
         }
         ClientRequest::PlaylistAppend { path: Some(p) } => {
             let songs = playlist::playlist_append(context, &p)?;
@@ -277,7 +277,7 @@ pub fn run_on_song_change(context: &AppContext) {
         let on_song_change_script = path.to_path_buf();
         thread::spawn(move || {
             if let Ok(mut child) = Command::new(on_song_change_script).spawn() {
-                child.wait();
+                let _ = child.wait();
             }
         });
     }

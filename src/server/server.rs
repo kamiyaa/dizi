@@ -15,7 +15,7 @@ use crate::playlist::traits::OrderedPlaylist;
 use crate::server_util;
 
 pub fn setup_socket(config: &AppConfig) -> DiziResult<UnixListener> {
-    let socket = Path::new(config.server_ref().socket.as_path());
+    let socket = Path::new(config.server_ref().socket_ref());
     if socket.exists() {
         fs::remove_file(&socket)?;
     }
@@ -90,7 +90,7 @@ pub fn serve(config: AppConfig) -> DiziResult {
 
 pub fn listen_for_clients(listener: UnixListener, event_tx: ServerEventSender) -> DiziResult {
     for stream in listener.incoming().flatten() {
-        event_tx.send(ServerEvent::NewClient(stream));
+        let _ = event_tx.send(ServerEvent::NewClient(stream));
     }
     Ok(())
 }

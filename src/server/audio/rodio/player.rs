@@ -94,7 +94,7 @@ impl Player {
         };
 
         let volume = config_t.server_ref().player_ref().volume;
-        player.set_volume(volume);
+        let _ = player.set_volume(volume);
         player
     }
 

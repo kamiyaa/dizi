@@ -129,13 +129,13 @@ fn run_app(args: Args) -> DiziResult {
     // query
     if args.query_all {
         // connect to stream
-        let stream = UnixStream::connect(&config.client_ref().socket)?;
+        let stream = UnixStream::connect(config.client_ref().socket_ref())?;
         let mut context = create_context(config, &cwd, stream);
         run::run_query_all(&mut context)?;
         return Ok(());
     } else if let Some(query) = args.query {
         // connect to stream
-        let stream = UnixStream::connect(&config.client_ref().socket)?;
+        let stream = UnixStream::connect(config.client_ref().socket_ref())?;
         let mut context = create_context(config, &cwd, stream);
         run::run_query(&mut context, query)?;
         return Ok(());
@@ -147,17 +147,17 @@ fn run_app(args: Args) -> DiziResult {
         || args.toggle_play
     {
         // connect to stream
-        let stream = UnixStream::connect(&config.client_ref().socket)?;
+        let stream = UnixStream::connect(config.client_ref().socket_ref())?;
         let mut context = create_context(config, &cwd, stream);
         run::run_control(&mut context, &args)?;
     } else {
-        let mut stream = UnixStream::connect(&config.client_ref().socket);
+        let mut stream = UnixStream::connect(config.client_ref().socket_ref());
         if stream.is_err() {
             start_server()?;
         }
         println!("Connecting to server ...");
         for i in 1..11 {
-            stream = UnixStream::connect(&config.client_ref().socket);
+            stream = UnixStream::connect(config.client_ref().socket_ref());
             if stream.is_ok() {
                 break;
             }

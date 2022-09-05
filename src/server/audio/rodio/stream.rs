@@ -83,7 +83,7 @@ impl PlayerStream {
         const POLL_RATE: Duration = Duration::from_millis(200);
         const UPDATE_RATE: Duration = Duration::from_secs(1);
 
-        self.stop();
+        let _ = self.stop();
 
         let mut duration_played = Duration::from_secs(0);
         let mut update_tracker = Duration::from_secs(0);
@@ -185,7 +185,7 @@ pub fn player_stream(
                         // before repopulating listeners list for new song
                         let prev_listener = done_listener.take();
                         if let Some(prev_listener) = prev_listener {
-                            prev_listener.join();
+                            let _ = prev_listener.join();
                         }
 
                         // spawn new listening thread for new song

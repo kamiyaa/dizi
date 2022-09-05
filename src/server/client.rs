@@ -54,7 +54,7 @@ pub fn handle_client(
             uuid: uuid.to_string(),
         };
         let json = serde_json::to_string(&response).unwrap();
-        event_tx_clone.send(ClientMessage::Client(json));
+        let _ = event_tx_clone.send(ClientMessage::Client(json));
     });
 
     // process events
@@ -67,7 +67,7 @@ pub fn handle_client(
                 if line.is_empty() {
                     continue;
                 }
-                forward_client_request(&client_request_tx, &uuid_string, &line);
+                forward_client_request(&client_request_tx, &uuid_string, &line)?;
             }
         }
     }
