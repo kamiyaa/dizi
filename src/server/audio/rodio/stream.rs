@@ -13,7 +13,6 @@ use rodio::{Decoder, OutputStream};
 use dizi_lib::error::DiziResult;
 
 use crate::audio::request::PlayerRequest;
-use crate::config;
 use crate::events::{ServerEvent, ServerEventSender};
 
 pub struct PlayerStream {
@@ -23,6 +22,7 @@ pub struct PlayerStream {
     pub player_req_rx: mpsc::Receiver<PlayerRequest>,
     pub source_tx: Option<mpsc::Sender<PlayerRequest>>,
     pub receiver: Option<mpsc::Receiver<()>>,
+    pub device: cpal::Device,
 }
 
 impl PlayerStream {
@@ -30,6 +30,7 @@ impl PlayerStream {
         event_tx: ServerEventSender,
         player_res_tx: mpsc::Sender<DiziResult>,
         player_req_rx: mpsc::Receiver<PlayerRequest>,
+        device: cpal::Device,
     ) -> Self {
         Self {
             volume: 50.0,
@@ -38,7 +39,80 @@ impl PlayerStream {
             player_req_rx,
             source_tx: None,
             receiver: None,
+            device,
         }
+    }
+
+    pub fn listen_for_events(&mut self) -> DiziResult {
+        let (_stream, stream_handle) = OutputStream::try_from_device(&self.device)?;
+
+        let (queue_tx, queue_rx) = rodio::queue::queue(true);
+        let _ = stream_handle.play_raw(queue_rx);
+
+        let stream_listeners: Arc<Mutex<Vec<ServerEventSender>>> = Arc::new(Mutex::new(vec![]));
+        let mut done_listener: Option<thread::JoinHandle<()>> = None;
+
+        while let Ok(msg) = self.player_req().recv() {
+            match msg {
+                PlayerRequest::Play(song) => {
+                    // Before playing new song, make sure to clear any listeners waiting for previous
+                    // song to finish. This prevents a loop where new song triggers the end of previous
+                    // song which triggers a new song, and repeat.
+                    if let Ok(mut vec) = stream_listeners.lock() {
+                        vec.clear();
+                    }
+
+                    let res = self.play(&queue_tx, song.file_path());
+
+                    match res {
+                        Ok(receiver) => {
+                            // wait for previous listener (if any) to finish sending messages to listeners
+                            // before repopulating listeners list for new song
+                            let prev_listener = done_listener.take();
+                            if let Some(prev_listener) = prev_listener {
+                                let _ = prev_listener.join();
+                            }
+
+                            // spawn new listening thread for new song
+                            let stream_listeners2 = stream_listeners.clone();
+                            let listener = thread::spawn(move || {
+                                let _ = receiver.recv();
+                                if let Ok(stream_listeners) = stream_listeners2.lock() {
+                                    for stream_listener in stream_listeners.iter() {
+                                        let _ = (*stream_listener).send(ServerEvent::PlayerDone);
+                                    }
+                                }
+                            });
+                            done_listener = Some(listener);
+
+                            // add server events to listeners
+                            if let Ok(mut vec) = stream_listeners.lock() {
+                                vec.push(self.event_tx.clone());
+                            }
+                            self.player_res().send(Ok(()))?;
+                        }
+                        Err(e) => self.player_res().send(Err(e))?,
+                    };
+                }
+                PlayerRequest::Pause => {
+                    self.pause()?;
+                    self.player_res().send(Ok(()))?;
+                }
+                PlayerRequest::Stop => {
+                    self.stop()?;
+                    self.player_res().send(Ok(()))?;
+                }
+                PlayerRequest::Resume => {
+                    self.resume()?;
+                    self.player_res().send(Ok(()))?;
+                }
+                PlayerRequest::SetVolume(volume) => {
+                    self.set_volume(volume);
+                    self.player_res().send(Ok(()))?;
+                }
+            }
+        }
+        Ok(())
     }
 
     pub fn player_req(&self) -> &mpsc::Receiver<PlayerRequest> {
@@ -147,84 +221,4 @@ pub fn process_msg(
         }
         _ => {}
     }
-}
-
-pub fn player_stream(
-    config_t: config::AppConfig,
-    player_res_tx: mpsc::Sender<DiziResult>,
-    player_req_rx: mpsc::Receiver<PlayerRequest>,
-    event_tx: ServerEventSender,
-    audio_device: cpal::Device,
-) -> DiziResult {
-    let mut player_stream = PlayerStream::new(event_tx, player_res_tx, player_req_rx);
-
-    let (_stream, stream_handle) = OutputStream::try_from_device(&audio_device)?;
-
-    let (queue_tx, queue_rx) = rodio::queue::queue(true);
-    let _ = stream_handle.play_raw(queue_rx);
-
-    let stream_listeners: Arc<Mutex<Vec<ServerEventSender>>> = Arc::new(Mutex::new(vec![]));
-    let mut done_listener: Option<thread::JoinHandle<()>> = None;
-
-    while let Ok(msg) = player_stream.player_req().recv() {
-        match msg {
-            PlayerRequest::Play(song) => {
-                // Before playing new song, make sure to clear any listeners waiting for previous
-                // song to finish. This prevents a loop where new song triggers the end of previous
-                // song which triggers a new song, and repeat.
-                if let Ok(mut vec) = stream_listeners.lock() {
-                    vec.clear();
-                }
-
-                let res = player_stream.play(&queue_tx, song.file_path());
-
-                match res {
-                    Ok(receiver) => {
-                        // wait for previous listener (if any) to finish sending messages to listeners
-                        // before repopulating listeners list for new song
-                        let prev_listener = done_listener.take();
-                        if let Some(prev_listener) = prev_listener {
-                            let _ = prev_listener.join();
-                        }
-
-                        // spawn new listening thread for new song
-                        let stream_listeners2 = stream_listeners.clone();
-                        let listener = thread::spawn(move || {
-                            let _ = receiver.recv();
-                            if let Ok(stream_listeners) = stream_listeners2.lock() {
-                                for stream_listener in stream_listeners.iter() {
-                                    let _ = (*stream_listener).send(ServerEvent::PlayerDone);
-                                }
-                            }
-                        });
-                        done_listener = Some(listener);
-
-                        // add server events to listeners
-                        if let Ok(mut vec) = stream_listeners.lock() {
-                            vec.push(player_stream.event_tx.clone());
-                        }
-                        player_stream.player_res().send(Ok(()))?;
-                    }
-                    Err(e) => player_stream.player_res().send(Err(e))?,
-                };
-            }
-            PlayerRequest::Pause => {
-                player_stream.pause()?;
-                player_stream.player_res().send(Ok(()))?;
-            }
-            PlayerRequest::Stop => {
-                player_stream.stop()?;
-                player_stream.player_res().send(Ok(()))?;
-            }
-            PlayerRequest::Resume => {
-                player_stream.resume()?;
-                player_stream.player_res().send(Ok(()))?;
-            }
-            PlayerRequest::SetVolume(volume) => {
-                player_stream.set_volume(volume);
-                player_stream.player_res().send(Ok(()))?;
-            }
-        }
-    }
-    Ok(())
 }

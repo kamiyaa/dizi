@@ -1,3 +1,6 @@
+use std::io;
+use std::path;
+
 use signal_hook::consts::signal;
 use termion::event::{Event, Key};
 
@@ -248,15 +251,24 @@ pub fn process_server_event(context: &mut AppContext, s: &str) -> DiziResult {
 
 pub fn process_noninteractive(event: AppEvent, context: &mut AppContext) {
     match event {
-        AppEvent::PreviewDir(Ok(dirlist)) => process_dir_preview(context, dirlist),
+        AppEvent::PreviewDir { path, res } => process_dir_preview(context, path, *res),
         AppEvent::Signal(signal::SIGWINCH) => {}
         _ => {}
     }
 }
 
-pub fn process_dir_preview(context: &mut AppContext, dirlist: JoshutoDirList) {
-    let history = context.tab_context_mut().curr_tab_mut().history_mut();
+pub fn process_dir_preview(
+    context: &mut AppContext,
+    path: path::PathBuf,
+    res: io::Result<JoshutoDirList>,
+) {
+    match res {
+        Ok(dirlist) => {
+            let history = context.tab_context_mut().curr_tab_mut().history_mut();
 
-    let dir_path = dirlist.file_path().to_path_buf();
-    history.insert(dir_path, dirlist);
+            let dir_path = dirlist.file_path().to_path_buf();
+            history.insert(dir_path, dirlist);
+        }
+        Err(_) => {}
+    }
 }

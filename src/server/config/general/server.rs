@@ -27,7 +27,7 @@ fn default_playlist_path() -> PathBuf {
 fn default_audio_system() -> cpal::HostId {
     #[cfg(any(target_os = "linux", target_os = "dragonfly", target_os = "freebsd"))]
     {
-        cpal::HostId::Jack
+        cpal::HostId::Alsa
     }
     #[cfg(any(target_os = "macos", target_os = "ios"))]
     {
@@ -40,14 +40,14 @@ fn default_audio_system() -> cpal::HostId {
 }
 
 fn default_audio_system_string() -> String {
-    "jack".to_string()
+    "alsa".to_string()
 }
 
 #[cfg(any(target_os = "linux", target_os = "dragonfly", target_os = "freebsd"))]
 fn str_to_cpal_hostid(s: &str) -> Option<cpal::HostId> {
     match s {
-        "jack" => Some(cpal::HostId::Jack),
         "alsa" => Some(cpal::HostId::Alsa),
+        "jack" => Some(cpal::HostId::Jack),
         _ => None,
     }
 }
@@ -123,8 +123,8 @@ impl std::default::Default for ServerConfig {
 
 impl From<ServerConfigCrude> for ServerConfig {
     fn from(crude: ServerConfigCrude) -> Self {
-        let audio_system =
-            str_to_cpal_hostid(&crude.audio_system).unwrap_or_else(default_audio_system);
+        let audio_system = str_to_cpal_hostid(&crude.audio_system.to_lowercase())
+            .unwrap_or_else(default_audio_system);
 
         let socket = tilde_with_context(&crude.socket, dirs_next::home_dir);
         let playlist = tilde_with_context(&crude.playlist, dirs_next::home_dir);

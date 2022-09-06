@@ -14,6 +14,8 @@ use dizi_lib::song::Song;
 
 use crate::audio::device::get_default_host;
 use crate::audio::request::PlayerRequest;
+use crate::audio::rodio::stream::PlayerStream;
+use crate::audio::traits::AudioPlayer;
 use crate::config;
 use crate::context::PlaylistContext;
 use crate::events::ServerEventSender;
@@ -22,9 +24,7 @@ use crate::playlist::playlist_file::PlaylistFile;
 use crate::playlist::traits::{OrderedPlaylist, ShufflePlaylist};
 use crate::util::mimetype::{get_mimetype, is_mimetype_audio, is_mimetype_video};
 
-use super::stream::player_stream;
-
-pub struct Player {
+pub struct RodioPlayer {
     state: PlayerState,
     playlist_context: PlaylistContext,
 
@@ -37,7 +37,7 @@ pub struct Player {
     player_res_rx: mpsc::Receiver<DiziResult>,
 }
 
-impl Player {
+impl RodioPlayer {
     pub fn new(config_t: &config::AppConfig, event_tx: ServerEventSender) -> Self {
         let audio_host = get_default_host(config_t.server_ref().audio_system);
         let audio_device = audio_host.default_output_device().unwrap();
@@ -47,23 +47,10 @@ impl Player {
 
         let config_t2 = config_t.clone();
         let event_tx2 = event_tx.clone();
+        let mut stream = PlayerStream::new(event_tx2, player_res_tx, player_req_rx, audio_device);
         let player_handle = thread::spawn(move || {
-            let res = player_stream(
-                config_t2,
-                player_res_tx,
-                player_req_rx,
-                event_tx2,
-                audio_device,
-            );
-            match res.as_ref() {
-                Ok(_) => {}
-                Err(e) => {
-                    if log_enabled!(Level::Debug) {
-                        debug!("PlayerStream: {:?}", e);
-                    }
-                }
-            }
-            res
+            stream.listen_for_events();
+            Ok(())
         });
 
         let server_config = config_t.server_ref();
@@ -82,7 +69,7 @@ impl Player {
             next: player_config.next,
             repeat: player_config.repeat,
             shuffle: player_config.shuffle,
-            audio_host: String::from(audio_host.id().name()),
+            audio_host: audio_host.id().name().to_lowercase(),
             ..PlayerState::default()
         };
 
@@ -104,12 +91,6 @@ impl Player {
         player
     }
 
-    pub fn player_state(&self) -> PlayerState {
-        let mut state = self.state.clone();
-        state.playlist = self.playlist_ref().file_playlist.clone_file_playlist();
-        state
-    }
-
     fn player_stream_req(&self) -> &mpsc::Sender<PlayerRequest> {
         &self.player_req_tx
     }
@@ -126,8 +107,16 @@ impl Player {
         self.state.song = Some(song.clone());
         Ok(())
     }
+}
 
-    pub fn play_directory(&mut self, path: &Path) -> DiziResult {
+impl AudioPlayer for RodioPlayer {
+    fn player_state(&self) -> PlayerState {
+        let mut state = self.state.clone();
+        state.playlist = self.playlist_ref().file_playlist.clone_file_playlist();
+        state
+    }
+
+    fn play_directory(&mut self, path: &Path) -> DiziResult {
         let mimetype = get_mimetype(path)?;
         if !is_mimetype_audio(&mimetype) && !is_mimetype_video(&mimetype) {
             return Err(DiziError::new(
@@ -163,7 +152,7 @@ impl Player {
         Ok(())
     }
 
-    pub fn play_from_playlist(&mut self, index: usize) -> DiziResult {
+    fn play_from_playlist(&mut self, index: usize) -> DiziResult {
         let shuffle_enabled = self.shuffle_enabled();
         let playlist = self.playlist_mut().file_playlist_mut();
 
@@ -182,48 +171,28 @@ impl Player {
         Ok(())
     }
 
-    pub fn play_from_directory(&mut self, index: usize) -> DiziResult {
-        let shuffle_enabled = self.shuffle_enabled();
-        let playlist = self.playlist_mut().directory_playlist_mut();
-
-        // unshuffle the playlist before choosing setting the new index
-        playlist.unshuffle();
-        playlist.set_playlist_index(Some(index));
-        playlist.set_shuffle(shuffle_enabled);
-        if playlist.shuffle_enabled() {
-            playlist.shuffle();
-        }
-        if let Some(entry) = playlist.current_entry_details() {
-            self.play(&entry.entry)?;
-            self.state.playlist_status = PlaylistType::DirectoryListing;
-            self.playlist_context
-                .set_type(PlaylistType::DirectoryListing);
-        }
-        Ok(())
-    }
-
-    pub fn play_again(&mut self) -> DiziResult {
+    fn play_again(&mut self) -> DiziResult {
         if let Some(entry) = self.playlist_ref().current_entry_details() {
             self.play(&entry.entry)?;
         }
         Ok(())
     }
 
-    pub fn play_next(&mut self) -> DiziResult {
+    fn play_next(&mut self) -> DiziResult {
         if let Some(entry) = self.playlist_mut().next_song() {
             self.play(&entry.entry)?;
         }
         Ok(())
     }
 
-    pub fn play_previous(&mut self) -> DiziResult {
+    fn play_previous(&mut self) -> DiziResult {
         if let Some(entry) = self.playlist_mut().previous_song() {
             self.play(&entry.entry)?;
         }
         Ok(())
     }
 
-    pub fn pause(&mut self) -> DiziResult {
+    fn pause(&mut self) -> DiziResult {
         self.player_stream_req().send(PlayerRequest::Pause)?;
 
         self.player_stream_res().recv()??;
@@ -231,7 +200,7 @@ impl Player {
         Ok(())
     }
 
-    pub fn resume(&mut self) -> DiziResult {
+    fn resume(&mut self) -> DiziResult {
         self.player_stream_req().send(PlayerRequest::Resume)?;
 
         self.player_stream_res().recv()??;
@@ -239,7 +208,7 @@ impl Player {
         Ok(())
     }
 
-    pub fn stop(&mut self) -> DiziResult {
+    fn stop(&mut self) -> DiziResult {
         self.player_stream_req().send(PlayerRequest::Stop)?;
 
         self.player_stream_res().recv()??;
@@ -247,7 +216,7 @@ impl Player {
         Ok(())
     }
 
-    pub fn toggle_play(&mut self) -> DiziResult<PlayerStatus> {
+    fn toggle_play(&mut self) -> DiziResult<PlayerStatus> {
         match self.state.status {
             PlayerStatus::Playing => {
                 self.pause()?;
@@ -261,10 +230,10 @@ impl Player {
         }
     }
 
-    pub fn get_volume(&self) -> usize {
+    fn get_volume(&self) -> usize {
         self.state.volume
     }
-    pub fn set_volume(&mut self, volume: usize) -> DiziResult {
+    fn set_volume(&mut self, volume: usize) -> DiziResult {
         self.player_stream_req()
             .send(PlayerRequest::SetVolume(volume as f32 / 100.0))?;
 
@@ -272,23 +241,23 @@ impl Player {
         self.state.volume = volume;
         Ok(())
     }
-    pub fn next_enabled(&self) -> bool {
+    fn next_enabled(&self) -> bool {
         self.state.next
     }
-    pub fn repeat_enabled(&self) -> bool {
+    fn repeat_enabled(&self) -> bool {
         self.state.repeat
     }
-    pub fn shuffle_enabled(&self) -> bool {
+    fn shuffle_enabled(&self) -> bool {
         self.state.shuffle
     }
 
-    pub fn set_next(&mut self, next: bool) {
+    fn set_next(&mut self, next: bool) {
         self.state.next = next;
     }
-    pub fn set_repeat(&mut self, repeat: bool) {
+    fn set_repeat(&mut self, repeat: bool) {
         self.state.repeat = repeat;
     }
-    pub fn set_shuffle(&mut self, shuffle: bool) {
+    fn set_shuffle(&mut self, shuffle: bool) {
         self.state.shuffle = shuffle;
         self.playlist_mut().file_playlist_mut().set_shuffle(shuffle);
         self.playlist_mut()
@@ -303,26 +272,26 @@ impl Player {
         }
     }
 
-    pub fn get_elapsed(&self) -> time::Duration {
+    fn get_elapsed(&self) -> time::Duration {
         self.state.elapsed
     }
-    pub fn set_elapsed(&mut self, elapsed: time::Duration) {
+    fn set_elapsed(&mut self, elapsed: time::Duration) {
         self.state.elapsed = elapsed;
     }
 
-    pub fn current_song_ref(&self) -> Option<&Song> {
+    fn current_song_ref(&self) -> Option<&Song> {
         self.state.song.as_ref()
     }
 
-    pub fn playlist_ref(&self) -> &PlaylistContext {
+    fn playlist_ref(&self) -> &PlaylistContext {
         &self.playlist_context
     }
-    pub fn playlist_mut(&mut self) -> &mut PlaylistContext {
+    fn playlist_mut(&mut self) -> &mut PlaylistContext {
         &mut self.playlist_context
     }
 }
 
-impl std::fmt::Debug for Player {
+impl std::fmt::Debug for RodioPlayer {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(f, "Player")
     }

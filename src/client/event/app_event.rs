@@ -1,4 +1,5 @@
 use std::io;
+use std::path;
 use std::sync::mpsc;
 use std::thread;
 
@@ -14,7 +15,11 @@ use crate::fs::JoshutoDirList;
 #[derive(Debug)]
 pub enum AppEvent {
     Termion(Event),
-    PreviewDir(io::Result<JoshutoDirList>),
+    // preview thread events
+    PreviewDir {
+        path: path::PathBuf,
+        res: Box<io::Result<JoshutoDirList>>,
+    },
     Signal(i32),
     Server(String),
 }

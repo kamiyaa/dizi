@@ -16,6 +16,15 @@ serde_json = "^1"
 strfmt = "^0"
 toml = "^0"
 
+[target.'cfg(any(target_os = "linux", target_os = "dragonfly", target_os = "freebsd"))'.dependencies]
+cpal = { features = [ "jack" ], version = "^0" }
+
+[target.'cfg(target_os = "windows")'.dependencies]
+cpal = "^0"
+
+[target.'cfg(any(target_os = "macos", target_os = "ios"))'.dependencies]
+cpal = "^0"
+
 [features]
 default = [ "symphonia-backend" ]
 symphonia-backend = [ "symphonia" ]

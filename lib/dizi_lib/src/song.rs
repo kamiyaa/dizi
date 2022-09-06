@@ -143,7 +143,7 @@ impl Song {
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct AudioMetadata {
     #[serde(rename = "channels")]
-    pub channels: Option<u16>,
+    pub channels: Option<usize>,
     #[serde(rename = "sample_rate")]
     pub sample_rate: Option<u32>,
     #[serde(rename = "total_duration")]
@@ -178,7 +178,7 @@ impl std::convert::From<Source<Item = i16>> for AudioMetadata {
 #[cfg(feature = "symphonia-backend")]
 impl std::convert::From<&CodecParameters> for AudioMetadata {
     fn from(source: &CodecParameters) -> Self {
-        let channels = Some(2);
+        let channels = source.channels.map(|c| c.count());
         let sample_rate = source.sample_rate;
 
         let total_duration = match (source.time_base, source.n_frames) {

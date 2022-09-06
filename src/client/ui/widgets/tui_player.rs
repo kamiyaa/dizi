@@ -68,7 +68,7 @@ impl<'a> Widget for TuiPlayer<'a> {
             let total_secs = duration_elapsed.as_secs();
             let minutes = total_secs / 60;
             let hours = total_secs / 3600;
-            let seconds = total_secs - hours * 3600 - minutes * 60;
+            let seconds = total_secs % 60;
             format!("{:02}:{:02}:{:02}", hours, minutes, seconds)
         };
         let total_duration = song
@@ -78,7 +78,7 @@ impl<'a> Widget for TuiPlayer<'a> {
             let total_secs = total_duration.as_secs();
             let minutes = total_secs / 60;
             let hours = total_secs / 3600;
-            let seconds = total_secs - hours * 3600 - minutes * 60;
+            let seconds = total_secs % 60;
             format!("{:02}:{:02}:{:02}", hours, minutes, seconds)
         };
 
@@ -117,19 +117,22 @@ impl<'a> Widget for TuiPlayer<'a> {
         };
         Paragraph::new(text).render(rect, buf);
 
-        // draw a progress bar
-        let progress_bar_width = (duration_elapsed.as_secs() as f32
-            / total_duration.as_secs() as f32
-            * area.width as f32) as usize;
+        let total_duration = total_duration.as_secs();
+        if total_duration > 0 {
+            let secs = duration_elapsed.as_secs();
+            // draw a progress bar
+            let progress_bar_width =
+                (secs as f32 / total_duration as f32 * area.width as f32) as usize;
 
-        let progress_bar_space = " ".repeat(progress_bar_width);
-        let style = Style::default().bg(Color::Blue);
-        buf.set_stringn(
-            area.x,
-            area.y + area.height - 1,
-            progress_bar_space,
-            area.width as usize,
-            style,
-        );
+            let progress_bar_space = " ".repeat(progress_bar_width);
+            let style = Style::default().bg(Color::Blue);
+            buf.set_stringn(
+                area.x,
+                area.y + area.height - 1,
+                progress_bar_space,
+                area.width as usize,
+                style,
+            );
+        }
     }
 }

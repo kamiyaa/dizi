@@ -27,101 +27,130 @@ impl std::fmt::Display for DiziError {
 
 impl From<io::Error> for DiziError {
     fn from(err: io::Error) -> Self {
+        let _cause = err.to_string();
         Self {
             _kind: DiziErrorKind::from(err.kind()),
-            _cause: err.to_string(),
+            _cause,
         }
     }
 }
 
 impl From<globset::Error> for DiziError {
     fn from(err: globset::Error) -> Self {
+        let _cause = err.to_string();
         Self {
             _kind: DiziErrorKind::from(err.kind()),
-            _cause: err.to_string(),
+            _cause,
         }
     }
 }
 
 impl From<std::env::VarError> for DiziError {
     fn from(err: std::env::VarError) -> Self {
+        let _cause = err.to_string();
         Self {
             _kind: DiziErrorKind::from(err),
-            _cause: "Environment variable not found".to_string(),
+            _cause,
         }
     }
 }
 
 impl From<std::sync::mpsc::RecvError> for DiziError {
-    fn from(_: std::sync::mpsc::RecvError) -> Self {
+    fn from(err: std::sync::mpsc::RecvError) -> Self {
+        let _cause = err.to_string();
         Self {
             _kind: DiziErrorKind::ReceiveError,
-            _cause: "Failed to receive message".to_string(),
+            _cause,
         }
     }
 }
 
 impl From<rodio::PlayError> for DiziError {
     fn from(err: rodio::PlayError) -> Self {
-        let err_str = err.to_string();
+        let _cause = err.to_string();
         Self {
             _kind: DiziErrorKind::from(err),
-            _cause: err_str,
+            _cause,
         }
     }
 }
 
 impl From<rodio::StreamError> for DiziError {
     fn from(err: rodio::StreamError) -> Self {
+        let _cause = err.to_string();
         Self {
             _kind: DiziErrorKind::from(err),
-            _cause: "Error with audio system".to_string(),
+            _cause,
         }
     }
 }
 
 impl From<rodio::decoder::DecoderError> for DiziError {
     fn from(err: rodio::decoder::DecoderError) -> Self {
-        let cause = format!("{}", err);
+        let _cause = err.to_string();
         Self {
             _kind: DiziErrorKind::from(err),
-            _cause: cause,
+            _cause,
         }
     }
 }
 
 impl<T> From<std::sync::mpsc::SendError<T>> for DiziError {
-    fn from(_: std::sync::mpsc::SendError<T>) -> Self {
+    fn from(err: std::sync::mpsc::SendError<T>) -> Self {
+        let _cause = err.to_string();
         Self {
             _kind: DiziErrorKind::SendError,
-            _cause: "Failed to send message".to_string(),
+            _cause,
         }
     }
 }
 
 impl From<serde_json::Error> for DiziError {
     fn from(err: serde_json::Error) -> Self {
+        let _cause = err.to_string();
         Self {
             _kind: DiziErrorKind::from(err),
-            _cause: "Failed to parse JSON".to_string(),
+            _cause,
         }
     }
 }
 
 impl From<toml::de::Error> for DiziError {
     fn from(err: toml::de::Error) -> Self {
+        let _cause = err.to_string();
         Self {
             _kind: DiziErrorKind::from(err),
-            _cause: "Failed to parse JSON".to_string(),
+            _cause,
         }
     }
 }
 
 impl From<symphonia::core::errors::Error> for DiziError {
     fn from(err: symphonia::core::errors::Error) -> Self {
+        let _cause = err.to_string();
         Self {
             _kind: DiziErrorKind::from(err),
-            _cause: "Symphonia Error".to_string(),
+            _cause,
+        }
+    }
+}
+
+impl From<cpal::BuildStreamError> for DiziError {
+    fn from(err: cpal::BuildStreamError) -> Self {
+        let _cause = err.to_string();
+        Self {
+            _kind: DiziErrorKind::from(err),
+            _cause,
+        }
+    }
+}
+
+impl From<cpal::PlayStreamError> for DiziError {
+    fn from(err: cpal::PlayStreamError) -> Self {
+        let _cause = err.to_string();
+        Self {
+            _kind: DiziErrorKind::from(err),
+            _cause,
         }
     }
 }

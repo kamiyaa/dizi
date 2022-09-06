@@ -20,6 +20,9 @@ pub enum DiziErrorKind {
     SendError,
     ReceiveError,
 
+    CpalBuildStreamError(cpal::BuildStreamError),
+    CpalPlayStreamError(cpal::PlayStreamError),
+
     DecoderError(rodio::decoder::DecoderError),
     SymphoniaError(symphonia::core::errors::Error),
     NoDevice,
@@ -85,5 +88,17 @@ impl From<toml::de::Error> for DiziErrorKind {
 impl From<symphonia::core::errors::Error> for DiziErrorKind {
     fn from(e: symphonia::core::errors::Error) -> Self {
         Self::SymphoniaError(e)
+    }
+}
+
+impl From<cpal::BuildStreamError> for DiziErrorKind {
+    fn from(e: cpal::BuildStreamError) -> Self {
+        Self::CpalBuildStreamError(e)
+    }
+}
+
+impl From<cpal::PlayStreamError> for DiziErrorKind {
+    fn from(e: cpal::PlayStreamError) -> Self {
+        Self::CpalPlayStreamError(e)
     }
 }

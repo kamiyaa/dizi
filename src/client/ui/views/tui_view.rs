@@ -28,6 +28,10 @@ impl<'a> TuiView<'a> {
 
 impl<'a> Widget for TuiView<'a> {
     fn render(self, area: Rect, buf: &mut Buffer) {
+        if area.height < 2 || area.width < 2 {
+            return;
+        }
+
         let default_layout = [Constraint::Ratio(1, 1)];
         let layout_rect = Layout::default()
             .direction(Direction::Horizontal)
@@ -77,6 +81,10 @@ pub fn render_widget(
     area: Rect,
     buf: &mut Buffer,
 ) {
+    if area.height < 2 || area.width < 2 {
+        return;
+    }
+
     let focused_panel_style = Style::default().fg(Color::Blue);
     let unfocused_panel_style = Style::default();
 

@@ -1,4 +1,6 @@
-use crate::audio::player::Player;
+use crate::audio::rodio::player::RodioPlayer;
+use crate::audio::symphonia::player::SymphoniaPlayer;
+use crate::audio::traits::AudioPlayer;
 use crate::config;
 use crate::events::Events;
 
@@ -13,14 +15,14 @@ pub struct AppContext {
     pub events: Events,
     pub quit: QuitType,
     config: config::AppConfig,
-    player: Player,
+    player: SymphoniaPlayer,
 }
 
 impl AppContext {
     pub fn new(config: config::AppConfig) -> Self {
         let events = Events::new();
         let event_tx2 = events.server_event_sender().clone();
-        let player = Player::new(&config, event_tx2);
+        let player = SymphoniaPlayer::new(&config, event_tx2);
         Self {
             events,
             quit: QuitType::DoNot,
@@ -33,11 +35,11 @@ impl AppContext {
         &self.config
     }
 
-    pub fn player_ref(&self) -> &Player {
+    pub fn player_ref(&self) -> &dyn AudioPlayer {
         &self.player
     }
 
-    pub fn player_mut(&mut self) -> &mut Player {
+    pub fn player_mut(&mut self) -> &mut dyn AudioPlayer {
         &mut self.player
     }
 }
