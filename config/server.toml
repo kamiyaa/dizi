@@ -7,12 +7,13 @@ playlist = "~/dizi_playlist.m3u"
 # not implemented
 poll_rate = 200
 
+# supports alsa, jack
+audio_system = "alsa"
+
 # run a script whenever the song changes
 # on_song_change = "some_script"
 
 [server.player]
-# supports alsa, jack
-audio_system = "alsa"
 
 shuffle = false
 repeat = true
