@@ -1,5 +1,6 @@
 use std::sync::Arc;
 use std::sync::{mpsc, RwLock};
+use std::time::Duration;
 
 use symphonia::core::audio::SampleBuffer;
 use symphonia::core::codecs::Decoder;
@@ -10,6 +11,7 @@ use cpal::traits::{DeviceTrait, StreamTrait};
 use cpal::{Stream, StreamConfig};
 
 use dizi_lib::error::DiziResult;
+use symphonia::core::units::TimeBase;
 
 use crate::audio::request::PlayerRequest;
 
@@ -129,6 +131,14 @@ pub fn stream_loop_f32(
 
     let frame_index = Arc::new(RwLock::new(0));
     let volume = Arc::new(RwLock::new(1.0));
+    let playback_duration = Arc::new(RwLock::new(0));
+
+    let time_base = TimeBase {
+        numer: 1,
+        denom: config.sample_rate.0 * config.channels as u32,
+    };
+
+    let _ = stream_tx.send(StreamEvent::Progress(Duration::from_secs(0)));
 
     let stream = device.build_output_stream(
         config,
@@ -144,24 +154,43 @@ pub fn stream_loop_f32(
                     _ => {}
                 }
             }
-            if offset >= channels_len {
+            if offset > channels_len {
                 return;
             }
             let current_volume = { *volume.read().unwrap() };
 
             for d in data {
                 if offset + i >= channels_len {
-                    let mut offset = frame_index.write().unwrap();
-                    *offset = channels_len;
+                    {
+                        let mut offset = frame_index.write().unwrap();
+                        *offset = channels_len + 1;
+                    }
                     let _ = stream_tx.send(StreamEvent::StreamEnded);
                     break;
                 }
                 *d = packets[offset + i] * current_volume;
                 i += 1;
             }
-            {
+            // new offset
+            let new_offset = {
                 let mut offset = frame_index.write().unwrap();
                 *offset += i;
+                offset.clone()
+            };
+            // new duration
+            let new_duration_sym = time_base.calc_time(new_offset as u64);
+            let current_duration = {
+                let old_duration = (*playback_duration.read().unwrap()).clone();
+                old_duration
+            };
+            // update duration if seconds changed
+            if current_duration < new_duration_sym.seconds {
+                let new_duration = Duration::from_secs(new_duration_sym.seconds);
+                let _ = stream_tx.send(StreamEvent::Progress(new_duration));
+                {
+                    let mut duration = playback_duration.write().unwrap();
+                    *duration = new_duration.as_secs();
+                }
             }
         },
         err_fn,

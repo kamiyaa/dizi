@@ -1,8 +1,7 @@
 use std::path::Path;
 use std::sync::mpsc;
-use std::sync::mpsc::RecvTimeoutError;
 use std::thread::{self, JoinHandle};
-use std::time::Duration;
+use std::time::{Duration, SystemTime};
 
 use symphonia::core::codecs::{DecoderOptions, CODEC_TYPE_NULL};
 use symphonia::core::formats::FormatOptions;
@@ -12,7 +11,6 @@ use symphonia::core::probe::Hint;
 
 use cpal::traits::{DeviceTrait, StreamTrait};
 use cpal::Stream;
-use log::{debug, log_enabled, Level};
 
 use dizi_lib::error::{DiziError, DiziErrorKind, DiziResult};
 
@@ -23,6 +21,7 @@ use super::decode::{decode_packets, stream_loop_f32, stream_loop_i16, stream_loo
 #[derive(Clone, Copy, Debug)]
 
 pub enum StreamEvent {
+    Progress(Duration),
     StreamEnded,
 }
 
@@ -88,8 +87,6 @@ impl PlayerStreamEventPoller {
 
 pub struct PlayerStreamState {
     pub stream: Stream,
-    pub stream_progress_thread: JoinHandle<()>,
-    pub stream_progress_tx: mpsc::Sender<PlayerRequest>,
     pub playback_loop_tx: mpsc::Sender<PlayerRequest>,
 }
 
@@ -119,21 +116,17 @@ impl PlayerStream {
     pub fn pause(&mut self) -> Result<(), mpsc::SendError<PlayerRequest>> {
         if let Some(state) = self.state.as_ref() {
             let _ = state.stream.pause();
-            let _ = state.stream_progress_tx.send(PlayerRequest::Pause);
         }
         Ok(())
     }
     pub fn resume(&mut self) -> Result<(), mpsc::SendError<PlayerRequest>> {
         if let Some(state) = self.state.as_ref() {
             let _ = state.stream.play();
-            let _ = state.stream_progress_tx.send(PlayerRequest::Resume);
         }
         Ok(())
     }
     pub fn stop(&mut self) -> Result<(), mpsc::SendError<PlayerRequest>> {
-        if let Some(state) = self.state.take() {
-            let _ = state.stream_progress_thread.join();
-        }
+        self.state.take();
         Ok(())
     }
 
@@ -154,11 +147,8 @@ impl PlayerStream {
                         match stream_res {
                             Ok(stream_res) => {
                                 let (stream, playback_loop_tx) = stream_res;
-                                let (handle, tx) = self.init_stream_progress_thread();
                                 self.state = Some(PlayerStreamState {
                                     stream,
-                                    stream_progress_thread: handle,
-                                    stream_progress_tx: tx,
                                     playback_loop_tx,
                                 });
                                 self.event_poller.player_res().send(Ok(()))?;
@@ -188,44 +178,14 @@ impl PlayerStream {
                         self.stop()?;
                         self.event_tx.send(ServerEvent::PlayerDone)?;
                     }
+                    StreamEvent::Progress(duration) => {
+                        self.event_tx
+                            .send(ServerEvent::PlayerProgressUpdate(duration))?;
+                    }
                 },
             }
         }
         Ok(())
-    }
-
-    fn init_stream_progress_thread(&mut self) -> (JoinHandle<()>, mpsc::Sender<PlayerRequest>) {
-        const POLL_RATE: Duration = Duration::from_secs(1);
-
-        let (stream_progress_tx, stream_progress_rx) = mpsc::channel();
-        let event_tx_clone = self.event_tx.clone();
-        let stream_progress_thread = thread::spawn(move || {
-            for i in 0.. {
-                let duration_played = Duration::from_secs(i);
-                let _ = event_tx_clone.send(ServerEvent::PlayerProgressUpdate(duration_played));
-                if log_enabled!(Level::Debug) {
-                    debug!("{:?}", duration_played);
-                }
-
-                match stream_progress_rx.recv_timeout(POLL_RATE) {
-                    Ok(msg) => match msg {
-                        PlayerRequest::Pause => {
-                            while let Ok(msg) = stream_progress_rx.recv() {
-                                match msg {
-                                    PlayerRequest::Resume => break,
-                                    _ => {}
-                                }
-                            }
-                        }
-                        PlayerRequest::Resume => {}
-                        _ => {}
-                    },
-                    Err(RecvTimeoutError::Timeout) => {}
-                    Err(RecvTimeoutError::Disconnected) => break,
-                }
-            }
-        });
-        (stream_progress_thread, stream_progress_tx)
     }
 
     pub fn play(&mut self, path: &Path) -> DiziResult<(Stream, mpsc::Sender<PlayerRequest>)> {

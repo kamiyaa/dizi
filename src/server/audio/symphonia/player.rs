@@ -9,6 +9,7 @@ use dizi_lib::error::{DiziError, DiziErrorKind, DiziResult};
 use dizi_lib::player::{PlayerState, PlayerStatus};
 use dizi_lib::playlist::PlaylistType;
 use dizi_lib::song::Song;
+use log::{debug, log_enabled, Level};
 
 use crate::audio::device::get_default_host;
 use crate::audio::request::PlayerRequest;
@@ -80,6 +81,10 @@ impl SymphoniaPlayer {
     }
 
     fn play(&mut self, song: &Song) -> DiziResult {
+        if log_enabled!(Level::Debug) {
+            debug!("Song: {:#?}", song);
+        }
+
         self.player_stream_req()
             .send(PlayerRequest::Play(song.clone()))?;
         self.set_volume(self.get_volume())?;
