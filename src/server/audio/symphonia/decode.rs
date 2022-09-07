@@ -8,7 +8,6 @@ use symphonia::core::formats::FormatReader;
 
 use cpal::traits::{DeviceTrait, StreamTrait};
 use cpal::{Stream, StreamConfig};
-use log::{debug, log_enabled, Level};
 
 use dizi_lib::error::DiziResult;
 
@@ -89,7 +88,6 @@ where
                             }
                         }
                         None => {
-                            let channel_count = spec.channels.count();
                             let mut channels: Vec<T> = vec![];
                             for sample in samples.samples() {
                                 channels.push(*sample);
