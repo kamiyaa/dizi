@@ -6,9 +6,9 @@ use std::fs::File;
 #[cfg(not(feature = "symphonia-backend"))]
 use std::io::BufReader;
 
-#[cfg(not(feature = "symphonia-backend"))]
+#[cfg(feature = "rodio-backend")]
 use rodio::decoder::Decoder;
-#[cfg(not(feature = "symphonia-backend"))]
+#[cfg(feature = "rodio-backend")]
 use rodio::source::Source;
 
 #[cfg(feature = "symphonia-backend")]
@@ -40,7 +40,7 @@ pub struct Song {
 }
 
 impl Song {
-    #[cfg(not(feature = "symphonia-backend"))]
+    #[cfg(feature = "rodio-backend")]
     pub fn new(path: &Path) -> DiziResult<Self> {
         let file = File::open(path)?;
         let buffer = BufReader::new(file);
@@ -160,7 +160,7 @@ impl std::default::Default for AudioMetadata {
     }
 }
 
-#[cfg(not(feature = "symphonia-backend"))]
+#[cfg(feature = "rodio-backend")]
 impl std::convert::From<Source<Item = i16>> for AudioMetadata {
     fn from(source: Source<Item = i16>) -> Self {
         let channels = Some(source.channels());

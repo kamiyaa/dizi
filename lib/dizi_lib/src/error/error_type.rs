@@ -65,6 +65,18 @@ impl From<std::sync::mpsc::RecvError> for DiziError {
     }
 }
 
+#[cfg(feature = "rodio-backend")]
+impl From<rodio::decoder::DecoderError> for DiziError {
+    fn from(err: rodio::decoder::DecoderError) -> Self {
+        let _cause = err.to_string();
+        Self {
+            _kind: DiziErrorKind::from(err),
+            _cause,
+        }
+    }
+}
+
+#[cfg(feature = "rodio-backend")]
 impl From<rodio::PlayError> for DiziError {
     fn from(err: rodio::PlayError) -> Self {
         let _cause = err.to_string();
@@ -75,18 +87,9 @@ impl From<rodio::PlayError> for DiziError {
     }
 }
 
+#[cfg(feature = "rodio-backend")]
 impl From<rodio::StreamError> for DiziError {
     fn from(err: rodio::StreamError) -> Self {
-        let _cause = err.to_string();
-        Self {
-            _kind: DiziErrorKind::from(err),
-            _cause,
-        }
-    }
-}
-
-impl From<rodio::decoder::DecoderError> for DiziError {
-    fn from(err: rodio::decoder::DecoderError) -> Self {
         let _cause = err.to_string();
         Self {
             _kind: DiziErrorKind::from(err),
@@ -125,6 +128,7 @@ impl From<toml::de::Error> for DiziError {
     }
 }
 
+#[cfg(feature = "symphonia-backend")]
 impl From<symphonia::core::errors::Error> for DiziError {
     fn from(err: symphonia::core::errors::Error) -> Self {
         let _cause = err.to_string();

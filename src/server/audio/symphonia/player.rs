@@ -94,6 +94,7 @@ impl SymphoniaPlayer {
     fn play(&mut self, song: &Song) -> DiziResult {
         self.player_stream_req()
             .send(PlayerRequest::Play(song.clone()))?;
+        self.set_volume(self.get_volume());
         let _resp = self.player_stream_res().recv()??;
 
         self.state.status = PlayerStatus::Playing;
