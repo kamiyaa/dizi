@@ -2,12 +2,12 @@ use serde_derive::Deserialize;
 
 use crate::config::{parse_toml_to_config, TomlConfigFile};
 
-use super::{ServerConfig, ServerConfigCrude};
+use super::{ServerConfig, ServerConfigRaw};
 
 #[derive(Clone, Debug, Deserialize)]
 pub struct AppConfigCrude {
     #[serde(default)]
-    pub server: ServerConfigCrude,
+    pub server: ServerConfigRaw,
 }
 
 #[derive(Debug, Clone)]

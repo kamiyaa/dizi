@@ -63,7 +63,7 @@ fn str_to_cpal_hostid(s: &str) -> Option<cpal::HostId> {
 }
 
 #[derive(Clone, Debug, Deserialize)]
-pub struct ServerConfigCrude {
+pub struct ServerConfigRaw {
     #[serde(default = "default_socket_string")]
     pub socket: String,
     #[serde(default = "default_playlist_string")]
@@ -76,7 +76,7 @@ pub struct ServerConfigCrude {
     pub player: PlayerOptionCrude,
 }
 
-impl std::default::Default for ServerConfigCrude {
+impl std::default::Default for ServerConfigRaw {
     fn default() -> Self {
         Self {
             socket: default_socket_string(),
@@ -121,14 +121,14 @@ impl std::default::Default for ServerConfig {
     }
 }
 
-impl From<ServerConfigCrude> for ServerConfig {
-    fn from(crude: ServerConfigCrude) -> Self {
-        let audio_system = str_to_cpal_hostid(&crude.audio_system.to_lowercase())
+impl From<ServerConfigRaw> for ServerConfig {
+    fn from(raw: ServerConfigRaw) -> Self {
+        let audio_system = str_to_cpal_hostid(&raw.audio_system.to_lowercase())
             .unwrap_or_else(default_audio_system);
 
-        let socket = tilde_with_context(&crude.socket, dirs_next::home_dir);
-        let playlist = tilde_with_context(&crude.playlist, dirs_next::home_dir);
-        let on_song_change = crude
+        let socket = tilde_with_context(&raw.socket, dirs_next::home_dir);
+        let playlist = tilde_with_context(&raw.playlist, dirs_next::home_dir);
+        let on_song_change = raw
             .on_song_change
             .map(|path| PathBuf::from(tilde_with_context(&path, dirs_next::home_dir).as_ref()));
 
@@ -137,7 +137,7 @@ impl From<ServerConfigCrude> for ServerConfig {
             playlist: PathBuf::from(playlist.as_ref()),
             audio_system,
             on_song_change,
-            player: PlayerOption::from(crude.player),
+            player: PlayerOption::from(raw.player),
         }
     }
 }

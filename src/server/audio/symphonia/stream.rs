@@ -249,6 +249,17 @@ impl PlayerStream {
 
                 let config = self.device.default_output_config().unwrap();
 
+                let audio_config = cpal::StreamConfig {
+                    channels: cpal::ChannelCount::from(2u16),
+                    sample_rate: cpal::SampleRate(
+                        track
+                            .codec_params
+                            .sample_rate
+                            .unwrap_or_else(|| config.sample_rate().0),
+                    ),
+                    buffer_size: cpal::BufferSize::Default,
+                };
+
                 let stream_tx = self.event_poller.stream_tx.clone();
 
                 match config.sample_format() {
@@ -259,7 +270,7 @@ impl PlayerStream {
                                 let res = stream_loop::<f32>(
                                     stream_tx,
                                     &self.device,
-                                    &config.into(),
+                                    &audio_config,
                                     packets,
                                     |packet, volume| packet * volume,
                                 )?;
@@ -278,7 +289,7 @@ impl PlayerStream {
                                 let res = stream_loop::<i16>(
                                     stream_tx,
                                     &self.device,
-                                    &config.into(),
+                                    &audio_config,
                                     packets,
                                     |packet, volume| ((packet as f32) * volume) as i16,
                                 )?;
@@ -297,7 +308,7 @@ impl PlayerStream {
                                 let res = stream_loop::<u16>(
                                     stream_tx,
                                     &self.device,
-                                    &config.into(),
+                                    &audio_config,
                                     packets,
                                     |packet, volume| ((packet as f32) * volume) as u16,
                                 )?;
