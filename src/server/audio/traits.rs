@@ -22,6 +22,9 @@ pub trait AudioPlayer {
     fn stop(&mut self) -> DiziResult;
     fn toggle_play(&mut self) -> DiziResult<PlayerStatus>;
 
+    fn fast_forward(&mut self, duration: time::Duration) -> DiziResult;
+    fn rewind(&mut self, duration: time::Duration) -> DiziResult;
+
     fn get_volume(&self) -> usize;
     fn set_volume(&mut self, volume: usize) -> DiziResult;
 

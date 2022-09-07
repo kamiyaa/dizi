@@ -153,6 +153,18 @@ request.api = "/player/volume/decrease"
 request.amount = 1
 
 [[keymap]]
+keys = [ "[" ]
+command = "server_request"
+request.api = "/player/rewind"
+request.amount = 10
+
+[[keymap]]
+keys = [ "]" ]
+command = "server_request"
+request.api = "/player/fast_forward"
+request.amount = 10
+
+[[keymap]]
 keys = [ "S" ]
 command = "server_request"
 request.api = "/player/toggle/shuffle"

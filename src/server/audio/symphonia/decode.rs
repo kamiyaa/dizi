@@ -129,7 +129,7 @@ pub fn stream_loop_f32(
 
     let (playback_loop_tx, playback_loop_rx) = mpsc::channel();
 
-    let frame_index = Arc::new(RwLock::new(0));
+    let frame_index = Arc::new(RwLock::new(0 as usize));
     let volume = Arc::new(RwLock::new(1.0));
     let playback_duration = Arc::new(RwLock::new(0));
 
@@ -139,6 +139,8 @@ pub fn stream_loop_f32(
     };
 
     let _ = stream_tx.send(StreamEvent::Progress(Duration::from_secs(0)));
+
+    let mut stream_tx = Some(stream_tx);
 
     let stream = device.build_output_stream(
         config,
@@ -151,10 +153,28 @@ pub fn stream_loop_f32(
                         let mut current_volume = volume.write().unwrap();
                         *current_volume = new_volume;
                     }
-                    _ => {}
+                    PlayerRequest::FastForward(duration) => {
+                        let mut offset = frame_index.write().unwrap();
+                        *offset += time_base.denom as usize * duration.as_secs() as usize;
+                    }
+                    PlayerRequest::Rewind(duration) => {
+                        let mut offset = frame_index.write().unwrap();
+                        if *offset < time_base.denom as usize * duration.as_secs() as usize {
+                            *offset = 0;
+                        } else {
+                            *offset -= time_base.denom as usize * duration.as_secs() as usize;
+                        }
+                    }
+                    PlayerRequest::Play(_) => {}
+                    PlayerRequest::Pause => {}
+                    PlayerRequest::Resume => {}
+                    PlayerRequest::Stop => {}
                 }
             }
-            if offset > channels_len {
+            if offset >= channels_len {
+                if let Some(stream_tx) = stream_tx.take() {
+                    let _ = stream_tx.send(StreamEvent::StreamEnded);
+                }
                 return;
             }
             let current_volume = { *volume.read().unwrap() };
@@ -165,7 +185,6 @@ pub fn stream_loop_f32(
                         let mut offset = frame_index.write().unwrap();
                         *offset = channels_len + 1;
                     }
-                    let _ = stream_tx.send(StreamEvent::StreamEnded);
                     break;
                 }
                 *d = packets[offset + i] * current_volume;
@@ -184,9 +203,11 @@ pub fn stream_loop_f32(
                 old_duration
             };
             // update duration if seconds changed
-            if current_duration < new_duration_sym.seconds {
+            if current_duration != new_duration_sym.seconds {
                 let new_duration = Duration::from_secs(new_duration_sym.seconds);
-                let _ = stream_tx.send(StreamEvent::Progress(new_duration));
+                if let Some(stream_tx) = stream_tx.as_ref() {
+                    let _ = stream_tx.send(StreamEvent::Progress(new_duration));
+                }
                 {
                     let mut duration = playback_duration.write().unwrap();
                     *duration = new_duration.as_secs();
@@ -213,6 +234,16 @@ pub fn stream_loop_i16(
 
     let frame_index = Arc::new(RwLock::new(0));
     let volume = Arc::new(RwLock::new(1.0));
+    let playback_duration = Arc::new(RwLock::new(0));
+
+    let time_base = TimeBase {
+        numer: 1,
+        denom: config.sample_rate.0 * config.channels as u32,
+    };
+
+    let _ = stream_tx.send(StreamEvent::Progress(Duration::from_secs(0)));
+
+    let mut stream_tx = Some(stream_tx);
 
     let stream = device.build_output_stream(
         config,
@@ -220,32 +251,72 @@ pub fn stream_loop_i16(
             let offset = { *frame_index.read().unwrap() };
             let mut i = 0;
             if let Ok(msg) = playback_loop_rx.try_recv() {
-                match msg {
-                    PlayerRequest::SetVolume(new_volume) => {
-                        let mut current_volume = volume.write().unwrap();
-                        *current_volume = new_volume;
+                if let Ok(msg) = playback_loop_rx.try_recv() {
+                    match msg {
+                        PlayerRequest::SetVolume(new_volume) => {
+                            let mut current_volume = volume.write().unwrap();
+                            *current_volume = new_volume;
+                        }
+                        PlayerRequest::FastForward(duration) => {
+                            let mut offset = frame_index.write().unwrap();
+                            *offset += time_base.denom as usize * duration.as_secs() as usize;
+                        }
+                        PlayerRequest::Rewind(duration) => {
+                            let mut offset = frame_index.write().unwrap();
+                            if *offset < time_base.denom as usize * duration.as_secs() as usize {
+                                *offset = 0;
+                            } else {
+                                *offset -= time_base.denom as usize * duration.as_secs() as usize;
+                            }
+                        }
+                        PlayerRequest::Play(_) => {}
+                        PlayerRequest::Pause => {}
+                        PlayerRequest::Resume => {}
+                        PlayerRequest::Stop => {}
                     }
-                    _ => {}
                 }
             }
             if offset >= channels_len {
+                if let Some(stream_tx) = stream_tx.take() {
+                    let _ = stream_tx.send(StreamEvent::StreamEnded);
+                }
                 return;
             }
             let current_volume = { *volume.read().unwrap() };
 
             for d in data {
                 if offset + i >= channels_len {
-                    let mut offset = frame_index.write().unwrap();
-                    *offset = channels_len;
-                    let _ = stream_tx.send(StreamEvent::StreamEnded);
+                    {
+                        let mut offset = frame_index.write().unwrap();
+                        *offset = channels_len + 1;
+                    }
                     break;
                 }
                 *d = (packets[offset + i] as f32 * current_volume) as i16;
                 i += 1;
             }
-            {
+            // new offset
+            let new_offset = {
                 let mut offset = frame_index.write().unwrap();
                 *offset += i;
+                offset.clone()
+            };
+            // new duration
+            let new_duration_sym = time_base.calc_time(new_offset as u64);
+            let current_duration = {
+                let old_duration = (*playback_duration.read().unwrap()).clone();
+                old_duration
+            };
+            // update duration if seconds changed
+            if current_duration < new_duration_sym.seconds {
+                let new_duration = Duration::from_secs(new_duration_sym.seconds);
+                if let Some(stream_tx) = stream_tx.as_ref() {
+                    let _ = stream_tx.send(StreamEvent::Progress(new_duration));
+                }
+                {
+                    let mut duration = playback_duration.write().unwrap();
+                    *duration = new_duration.as_secs();
+                }
             }
         },
         err_fn,
@@ -268,6 +339,16 @@ pub fn stream_loop_u16(
 
     let frame_index = Arc::new(RwLock::new(0));
     let volume = Arc::new(RwLock::new(1.0));
+    let playback_duration = Arc::new(RwLock::new(0));
+
+    let time_base = TimeBase {
+        numer: 1,
+        denom: config.sample_rate.0 * config.channels as u32,
+    };
+
+    let _ = stream_tx.send(StreamEvent::Progress(Duration::from_secs(0)));
+
+    let mut stream_tx = Some(stream_tx);
 
     let stream = device.build_output_stream(
         config,
@@ -275,32 +356,72 @@ pub fn stream_loop_u16(
             let offset = { *frame_index.read().unwrap() };
             let mut i = 0;
             if let Ok(msg) = playback_loop_rx.try_recv() {
-                match msg {
-                    PlayerRequest::SetVolume(new_volume) => {
-                        let mut current_volume = volume.write().unwrap();
-                        *current_volume = new_volume;
+                if let Ok(msg) = playback_loop_rx.try_recv() {
+                    match msg {
+                        PlayerRequest::SetVolume(new_volume) => {
+                            let mut current_volume = volume.write().unwrap();
+                            *current_volume = new_volume;
+                        }
+                        PlayerRequest::FastForward(duration) => {
+                            let mut offset = frame_index.write().unwrap();
+                            *offset += time_base.denom as usize * duration.as_secs() as usize;
+                        }
+                        PlayerRequest::Rewind(duration) => {
+                            let mut offset = frame_index.write().unwrap();
+                            if *offset < time_base.denom as usize * duration.as_secs() as usize {
+                                *offset = 0;
+                            } else {
+                                *offset -= time_base.denom as usize * duration.as_secs() as usize;
+                            }
+                        }
+                        PlayerRequest::Play(_) => {}
+                        PlayerRequest::Pause => {}
+                        PlayerRequest::Resume => {}
+                        PlayerRequest::Stop => {}
                     }
-                    _ => {}
                 }
             }
             if offset >= channels_len {
+                if let Some(stream_tx) = stream_tx.take() {
+                    let _ = stream_tx.send(StreamEvent::StreamEnded);
+                }
                 return;
             }
             let current_volume = { *volume.read().unwrap() };
 
             for d in data {
                 if offset + i >= channels_len {
-                    let mut offset = frame_index.write().unwrap();
-                    *offset = channels_len;
-                    let _ = stream_tx.send(StreamEvent::StreamEnded);
+                    {
+                        let mut offset = frame_index.write().unwrap();
+                        *offset = channels_len + 1;
+                    }
                     break;
                 }
                 *d = (packets[offset + i] as f32 * current_volume) as u16;
                 i += 1;
             }
-            {
+            // new offset
+            let new_offset = {
                 let mut offset = frame_index.write().unwrap();
                 *offset += i;
+                offset.clone()
+            };
+            // new duration
+            let new_duration_sym = time_base.calc_time(new_offset as u64);
+            let current_duration = {
+                let old_duration = (*playback_duration.read().unwrap()).clone();
+                old_duration
+            };
+            // update duration if seconds changed
+            if current_duration < new_duration_sym.seconds {
+                let new_duration = Duration::from_secs(new_duration_sym.seconds);
+                if let Some(stream_tx) = stream_tx.as_ref() {
+                    let _ = stream_tx.send(StreamEvent::Progress(new_duration));
+                }
+                {
+                    let mut duration = playback_duration.write().unwrap();
+                    *duration = new_duration.as_secs();
+                }
             }
         },
         err_fn,

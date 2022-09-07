@@ -216,6 +216,16 @@ impl AudioPlayer for SymphoniaPlayer {
             s => Ok(s),
         }
     }
+    fn fast_forward(&mut self, duration: time::Duration) -> DiziResult {
+        self.player_stream_req()
+            .send(PlayerRequest::FastForward(duration))?;
+        Ok(())
+    }
+    fn rewind(&mut self, duration: time::Duration) -> DiziResult {
+        self.player_stream_req()
+            .send(PlayerRequest::Rewind(duration))?;
+        Ok(())
+    }
 
     fn get_volume(&self) -> usize {
         self.state.volume

@@ -1,6 +1,7 @@
 use std::process::Command;
 use std::sync::mpsc;
 use std::thread;
+use std::time::Duration;
 
 use log::{debug, log_enabled, Level};
 
@@ -206,6 +207,14 @@ pub fn process_client_request(
             context
                 .events
                 .broadcast_event(ServerBroadcastEvent::PlayerShuffle { on: !enabled });
+        }
+        ClientRequest::PlayerFastForward { amount } => {
+            let duration = Duration::from_secs(amount as u64);
+            context.player_mut().fast_forward(duration)?;
+        }
+        ClientRequest::PlayerRewind { amount } => {
+            let duration = Duration::from_secs(amount as u64);
+            context.player_mut().rewind(duration)?;
         }
         s => {
             if log_enabled!(Level::Debug) {

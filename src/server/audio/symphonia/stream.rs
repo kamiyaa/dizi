@@ -129,6 +129,25 @@ impl PlayerStream {
         self.state.take();
         Ok(())
     }
+    pub fn fast_forward(
+        &mut self,
+        duration: Duration,
+    ) -> Result<(), mpsc::SendError<PlayerRequest>> {
+        if let Some(state) = self.state.as_ref() {
+            state
+                .playback_loop_tx
+                .send(PlayerRequest::FastForward(duration))?;
+        }
+        Ok(())
+    }
+    pub fn rewind(&mut self, duration: Duration) -> Result<(), mpsc::SendError<PlayerRequest>> {
+        if let Some(state) = self.state.as_ref() {
+            state
+                .playback_loop_tx
+                .send(PlayerRequest::Rewind(duration))?;
+        }
+        Ok(())
+    }
 
     pub fn set_volume(&mut self, volume: f32) {
         if let Some(state) = self.state.as_ref() {
@@ -171,6 +190,12 @@ impl PlayerStream {
                     PlayerRequest::SetVolume(volume) => {
                         self.set_volume(volume);
                         self.event_poller.player_res().send(Ok(()))?;
+                    }
+                    PlayerRequest::FastForward(duration) => {
+                        self.fast_forward(duration)?;
+                    }
+                    PlayerRequest::Rewind(duration) => {
+                        self.rewind(duration);
                     }
                 },
                 PlayerStreamEvent::Stream(event) => match event {

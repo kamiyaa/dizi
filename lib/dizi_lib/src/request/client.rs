@@ -37,9 +37,9 @@ pub enum ClientRequest {
     PlayerGetVolume,
 
     #[serde(rename = "/player/rewind")]
-    PlayerRewind { amount: time::Duration },
+    PlayerRewind { amount: usize },
     #[serde(rename = "/player/fast_forward")]
-    PlayerFastForward { amount: time::Duration },
+    PlayerFastForward { amount: usize },
 
     #[serde(rename = "/player/toggle/play")]
     PlayerTogglePlay,
