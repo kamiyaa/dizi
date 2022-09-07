@@ -17,7 +17,7 @@ use dizi_lib::error::{DiziError, DiziErrorKind, DiziResult};
 use crate::audio::request::PlayerRequest;
 use crate::events::{ServerEvent, ServerEventSender};
 
-use super::decode::{decode_packets, stream_loop_f32, stream_loop_i16, stream_loop_u16};
+use super::decode::{decode_packets, stream_loop};
 #[derive(Clone, Copy, Debug)]
 
 pub enum StreamEvent {
@@ -195,7 +195,7 @@ impl PlayerStream {
                         self.fast_forward(duration)?;
                     }
                     PlayerRequest::Rewind(duration) => {
-                        self.rewind(duration);
+                        self.rewind(duration)?;
                     }
                 },
                 PlayerStreamEvent::Stream(event) => match event {
@@ -256,11 +256,12 @@ impl PlayerStream {
                         let packets = decode_packets::<f32>(probed.format, decoder, track_id);
                         match packets {
                             Some(packets) => {
-                                let res = stream_loop_f32(
+                                let res = stream_loop::<f32>(
                                     stream_tx,
                                     &self.device,
                                     &config.into(),
                                     packets,
+                                    |packet, volume| packet * volume,
                                 )?;
                                 Ok(res)
                             }
@@ -274,11 +275,12 @@ impl PlayerStream {
                         let packets = decode_packets::<i16>(probed.format, decoder, track_id);
                         match packets {
                             Some(packets) => {
-                                let res = stream_loop_i16(
+                                let res = stream_loop::<i16>(
                                     stream_tx,
                                     &self.device,
                                     &config.into(),
                                     packets,
+                                    |packet, volume| ((packet as f32) * volume) as i16,
                                 )?;
                                 Ok(res)
                             }
@@ -292,11 +294,12 @@ impl PlayerStream {
                         let packets = decode_packets::<u16>(probed.format, decoder, track_id);
                         match packets {
                             Some(packets) => {
-                                let res = stream_loop_u16(
+                                let res = stream_loop::<u16>(
                                     stream_tx,
                                     &self.device,
                                     &config.into(),
                                     packets,
+                                    |packet, volume| ((packet as f32) * volume) as u16,
                                 )?;
                                 Ok(res)
                             }
