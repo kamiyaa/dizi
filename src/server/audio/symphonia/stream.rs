@@ -1,11 +1,10 @@
 use std::path::Path;
 use std::sync::mpsc;
 use std::sync::mpsc::RecvTimeoutError;
-use std::sync::{Arc, Mutex};
 use std::thread::{self, JoinHandle};
 use std::time::Duration;
 
-use symphonia::core::codecs::{Decoder, DecoderOptions, CODEC_TYPE_NULL};
+use symphonia::core::codecs::{DecoderOptions, CODEC_TYPE_NULL};
 use symphonia::core::formats::FormatOptions;
 use symphonia::core::io::MediaSourceStream;
 use symphonia::core::meta::MetadataOptions;
@@ -133,23 +132,20 @@ impl PlayerStream {
     }
     pub fn stop(&mut self) -> Result<(), mpsc::SendError<PlayerRequest>> {
         if let Some(state) = self.state.take() {
-            state.stream_progress_thread.join();
+            let _ = state.stream_progress_thread.join();
         }
         Ok(())
     }
 
     pub fn set_volume(&mut self, volume: f32) {
         if let Some(state) = self.state.as_ref() {
-            state
+            let _ = state
                 .playback_loop_tx
                 .send(PlayerRequest::SetVolume(volume));
         }
     }
 
     pub fn listen_for_events(&mut self) -> DiziResult {
-        let stream_listeners: Arc<Mutex<Vec<ServerEventSender>>> = Arc::new(Mutex::new(vec![]));
-        let mut done_listener: Option<thread::JoinHandle<()>> = None;
-
         while let Ok(msg) = self.event_poller.next() {
             match msg {
                 PlayerStreamEvent::Player(req) => match req {
@@ -189,7 +185,7 @@ impl PlayerStream {
                 },
                 PlayerStreamEvent::Stream(event) => match event {
                     StreamEvent::StreamEnded => {
-                        self.stop();
+                        self.stop()?;
                         self.event_tx.send(ServerEvent::PlayerDone)?;
                     }
                 },

@@ -1,10 +1,9 @@
 use std::path::{Path, PathBuf};
 use std::sync::mpsc;
-use std::thread;
+use std::thread::{self, JoinHandle};
 use std::time;
 
 use cpal::traits::HostTrait;
-use log::{debug, log_enabled, Level};
 
 use dizi_lib::error::{DiziError, DiziErrorKind, DiziResult};
 use dizi_lib::player::{PlayerState, PlayerStatus};
@@ -29,9 +28,6 @@ pub struct SymphoniaPlayer {
 
     playlist_context: PlaylistContext,
 
-    event_tx: ServerEventSender,
-
-    player_handle: thread::JoinHandle<DiziResult>,
     player_req_tx: mpsc::Sender<PlayerRequest>,
     player_res_rx: mpsc::Receiver<DiziResult>,
 }
@@ -44,12 +40,10 @@ impl SymphoniaPlayer {
         let (player_req_tx, player_req_rx) = mpsc::channel();
         let (player_res_tx, player_res_rx) = mpsc::channel();
 
-        let event_tx2 = event_tx.clone();
-
-        let player_handle = thread::spawn(move || {
+        let _: JoinHandle<DiziResult> = thread::spawn(move || {
             let mut stream =
-                PlayerStream::new(event_tx2, player_res_tx, player_req_rx, audio_device);
-            stream.listen_for_events();
+                PlayerStream::new(event_tx, player_res_tx, player_req_rx, audio_device);
+            stream.listen_for_events()?;
             Ok(())
         });
 
@@ -73,8 +67,6 @@ impl SymphoniaPlayer {
         Self {
             state,
             playlist_context,
-            event_tx,
-            player_handle,
             player_req_tx,
             player_res_rx,
         }
@@ -87,14 +79,10 @@ impl SymphoniaPlayer {
         &self.player_res_rx
     }
 
-    pub fn player_state(&self) -> &PlayerState {
-        &self.state
-    }
-
     fn play(&mut self, song: &Song) -> DiziResult {
         self.player_stream_req()
             .send(PlayerRequest::Play(song.clone()))?;
-        self.set_volume(self.get_volume());
+        self.set_volume(self.get_volume())?;
         let _resp = self.player_stream_res().recv()??;
 
         self.state.status = PlayerStatus::Playing;
