@@ -1,5 +1,6 @@
 use std::time;
 
+use dizi_lib::playlist::PlaylistType;
 use tui::buffer::Buffer;
 use tui::layout::Rect;
 use tui::style::{Color, Modifier, Style};
@@ -24,28 +25,16 @@ impl<'a> Widget for TuiPlayer<'a> {
             return;
         }
 
-        let player_status_style = Style::default()
-            .fg(Color::Green)
-            .add_modifier(Modifier::BOLD);
-
-        let player_status = match self.player.get_player_status() {
-            PlayerStatus::Playing => ">>",
-            PlayerStatus::Stopped => "\u{2588}\u{2588}",
-            PlayerStatus::Paused => "||",
-        };
-
-        let duration_elapsed = self.player.get_elapsed();
-
         let song = self.player.get_song();
-        let song_name = match song {
-            Some(song) => match song.music_metadata().standard_tags.get("TrackTitle") {
-                Some(title) => title.clone(),
-                None => song.file_name().to_string(),
-            },
-            None => " ".to_string(),
-        };
-
         {
+            let song_name = match song {
+                Some(song) => match song.music_metadata().standard_tags.get("TrackTitle") {
+                    Some(title) => title.clone(),
+                    None => song.file_name().to_string(),
+                },
+                None => " ".to_string(),
+            };
+
             let p_rect = Rect {
                 x: area.x,
                 y: area.y,
@@ -57,13 +46,42 @@ impl<'a> Widget for TuiPlayer<'a> {
                 .wrap(Wrap { trim: true })
                 .render(p_rect, buf);
         }
-        buf.set_string(
-            area.x,
-            area.y + area.height - 3,
-            format!("Volume: {}%", self.player.get_volume()),
-            player_status_style,
-        );
 
+        {
+            let on_style = Style::default().fg(Color::Green);
+            let off_style = Style::default().fg(Color::Black);
+
+            let playlist_file_style = match self.player.get_playlist_status() {
+                PlaylistType::PlaylistFile => on_style,
+                PlaylistType::DirectoryListing => off_style,
+            };
+
+            let playlist_directory_style = match self.player.get_playlist_status() {
+                PlaylistType::PlaylistFile => off_style,
+                PlaylistType::DirectoryListing => on_style,
+            };
+
+            let player_status_style = Style::default()
+                .fg(Color::Green)
+                .add_modifier(Modifier::BOLD);
+            let text = Spans::from(vec![
+                Span::styled(
+                    format!("Volume: {}%  ", self.player.get_volume(),),
+                    player_status_style,
+                ),
+                Span::styled("[PLAYLIST] ", playlist_file_style),
+                Span::styled("[DIRECTORY] ", playlist_directory_style),
+            ]);
+
+            let rect = Rect {
+                y: area.y + area.height - 3,
+                height: 1,
+                ..area
+            };
+            Paragraph::new(text).render(rect, buf);
+        }
+
+        let duration_elapsed = self.player.get_elapsed();
         let duration_played_str = {
             let total_secs = duration_elapsed.as_secs();
             let minutes = total_secs / 60;
@@ -81,58 +99,65 @@ impl<'a> Widget for TuiPlayer<'a> {
             let seconds = total_secs % 60;
             format!("{:02}:{:02}:{:02}", hours, minutes, seconds)
         };
+        {
+            let on_style = Style::default().fg(Color::Yellow);
+            let off_style = Style::default().fg(Color::Black);
 
-        let on_style = Style::default().fg(Color::Yellow);
-        let off_style = Style::default().fg(Color::Black);
-        let next_style = if self.player.next_enabled() {
-            on_style
-        } else {
-            off_style
-        };
-        let repeat_style = if self.player.repeat_enabled() {
-            on_style
-        } else {
-            off_style
-        };
-        let shuffle_style = if self.player.shuffle_enabled() {
-            on_style
-        } else {
-            off_style
-        };
+            let next_style = match self.player.next_enabled() {
+                true => on_style,
+                false => off_style,
+            };
+            let repeat_style = match self.player.repeat_enabled() {
+                true => on_style,
+                false => off_style,
+            };
+            let shuffle_style = match self.player.shuffle_enabled() {
+                true => on_style,
+                false => off_style,
+            };
 
-        let text = Spans::from(vec![
-            Span::raw(format!(
-                "{} {} / {}   ",
-                player_status, duration_played_str, total_duration_str
-            )),
-            Span::styled("[NEXT] ", next_style),
-            Span::styled("[REPEAT] ", repeat_style),
-            Span::styled("[SHUFFLE] ", shuffle_style),
-        ]);
+            let player_status = match self.player.get_player_status() {
+                PlayerStatus::Playing => ">>",
+                PlayerStatus::Stopped => "\u{2588}\u{2588}",
+                PlayerStatus::Paused => "||",
+            };
 
-        let rect = Rect {
-            y: area.y + area.height - 2,
-            height: 1,
-            ..area
-        };
-        Paragraph::new(text).render(rect, buf);
+            let text = Spans::from(vec![
+                Span::raw(format!(
+                    "{} {} / {}   ",
+                    player_status, duration_played_str, total_duration_str
+                )),
+                Span::styled("[NEXT] ", next_style),
+                Span::styled("[REPEAT] ", repeat_style),
+                Span::styled("[SHUFFLE] ", shuffle_style),
+            ]);
 
-        let total_duration = total_duration.as_secs();
-        if total_duration > 0 {
-            let secs = duration_elapsed.as_secs();
-            // draw a progress bar
-            let progress_bar_width =
-                (secs as f32 / total_duration as f32 * area.width as f32) as usize;
+            let rect = Rect {
+                y: area.y + area.height - 2,
+                height: 1,
+                ..area
+            };
+            Paragraph::new(text).render(rect, buf);
+        }
 
-            let progress_bar_space = " ".repeat(progress_bar_width);
-            let style = Style::default().bg(Color::Blue);
-            buf.set_stringn(
-                area.x,
-                area.y + area.height - 1,
-                progress_bar_space,
-                area.width as usize,
-                style,
-            );
+        {
+            let total_duration = total_duration.as_secs();
+            if total_duration > 0 {
+                let secs = duration_elapsed.as_secs();
+                // draw a progress bar
+                let progress_bar_width =
+                    (secs as f32 / total_duration as f32 * area.width as f32) as usize;
+
+                let progress_bar_space = " ".repeat(progress_bar_width);
+                let style = Style::default().bg(Color::Blue);
+                buf.set_stringn(
+                    area.x,
+                    area.y + area.height - 1,
+                    progress_bar_space,
+                    area.width as usize,
+                    style,
+                );
+            }
         }
     }
 }

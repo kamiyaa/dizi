@@ -85,9 +85,10 @@ impl SymphoniaPlayer {
             debug!("Song: {:#?}", song);
         }
 
-        self.player_stream_req()
-            .send(PlayerRequest::Play(song.clone()))?;
-        self.set_volume(self.get_volume())?;
+        self.player_stream_req().send(PlayerRequest::Play {
+            song: song.clone(),
+            volume: self.get_volume() as f32 / 100.0,
+        })?;
         let _resp = self.player_stream_res().recv()??;
 
         self.state.status = PlayerStatus::Playing;
@@ -216,14 +217,14 @@ impl AudioPlayer for SymphoniaPlayer {
             s => Ok(s),
         }
     }
-    fn fast_forward(&mut self, duration: time::Duration) -> DiziResult {
+    fn fast_forward(&mut self, offset: time::Duration) -> DiziResult {
         self.player_stream_req()
-            .send(PlayerRequest::FastForward(duration))?;
+            .send(PlayerRequest::FastForward { offset })?;
         Ok(())
     }
-    fn rewind(&mut self, duration: time::Duration) -> DiziResult {
+    fn rewind(&mut self, offset: time::Duration) -> DiziResult {
         self.player_stream_req()
-            .send(PlayerRequest::Rewind(duration))?;
+            .send(PlayerRequest::Rewind { offset })?;
         Ok(())
     }
 
@@ -231,8 +232,9 @@ impl AudioPlayer for SymphoniaPlayer {
         self.state.volume
     }
     fn set_volume(&mut self, volume: usize) -> DiziResult {
-        self.player_stream_req()
-            .send(PlayerRequest::SetVolume(volume as f32 / 100.0))?;
+        self.player_stream_req().send(PlayerRequest::SetVolume {
+            volume: volume as f32 / 100.0,
+        })?;
 
         self.player_stream_res().recv()??;
         self.state.volume = volume;

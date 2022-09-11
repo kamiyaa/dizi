@@ -130,22 +130,19 @@ impl PlayerStream {
         self.state.take();
         Ok(())
     }
-    pub fn fast_forward(
-        &mut self,
-        duration: Duration,
-    ) -> Result<(), mpsc::SendError<PlayerRequest>> {
+    pub fn fast_forward(&mut self, offset: Duration) -> Result<(), mpsc::SendError<PlayerRequest>> {
         if let Some(state) = self.state.as_ref() {
             state
                 .playback_loop_tx
-                .send(PlayerRequest::FastForward(duration))?;
+                .send(PlayerRequest::FastForward { offset })?;
         }
         Ok(())
     }
-    pub fn rewind(&mut self, duration: Duration) -> Result<(), mpsc::SendError<PlayerRequest>> {
+    pub fn rewind(&mut self, offset: Duration) -> Result<(), mpsc::SendError<PlayerRequest>> {
         if let Some(state) = self.state.as_ref() {
             state
                 .playback_loop_tx
-                .send(PlayerRequest::Rewind(duration))?;
+                .send(PlayerRequest::Rewind { offset })?;
         }
         Ok(())
     }
@@ -154,7 +151,7 @@ impl PlayerStream {
         if let Some(state) = self.state.as_ref() {
             let _ = state
                 .playback_loop_tx
-                .send(PlayerRequest::SetVolume(volume));
+                .send(PlayerRequest::SetVolume { volume });
         }
     }
 
@@ -162,8 +159,8 @@ impl PlayerStream {
         while let Ok(msg) = self.event_poller.next() {
             match msg {
                 PlayerStreamEvent::Player(req) => match req {
-                    PlayerRequest::Play(song) => {
-                        let stream_res = self.play(song.file_path());
+                    PlayerRequest::Play { song, volume } => {
+                        let stream_res = self.play(song.file_path(), volume);
                         match stream_res {
                             Ok(stream_res) => {
                                 let (stream, playback_loop_tx) = stream_res;
@@ -188,15 +185,15 @@ impl PlayerStream {
                         self.resume()?;
                         self.event_poller.player_res().send(Ok(()))?;
                     }
-                    PlayerRequest::SetVolume(volume) => {
+                    PlayerRequest::SetVolume { volume } => {
                         self.set_volume(volume);
                         self.event_poller.player_res().send(Ok(()))?;
                     }
-                    PlayerRequest::FastForward(duration) => {
-                        self.fast_forward(duration)?;
+                    PlayerRequest::FastForward { offset } => {
+                        self.fast_forward(offset)?;
                     }
-                    PlayerRequest::Rewind(duration) => {
-                        self.rewind(duration)?;
+                    PlayerRequest::Rewind { offset } => {
+                        self.rewind(offset)?;
                     }
                 },
                 PlayerStreamEvent::Stream(event) => match event {
@@ -214,7 +211,11 @@ impl PlayerStream {
         Ok(())
     }
 
-    pub fn play(&mut self, path: &Path) -> DiziResult<(Stream, mpsc::Sender<PlayerRequest>)> {
+    pub fn play(
+        &mut self,
+        path: &Path,
+        volume: f32,
+    ) -> DiziResult<(Stream, mpsc::Sender<PlayerRequest>)> {
         let mut hint = Hint::new();
         if let Some(ext) = path.extension().and_then(|e| e.to_str()) {
             hint.with_extension(ext);
@@ -285,6 +286,7 @@ impl PlayerStream {
                                     &self.device,
                                     &audio_config,
                                     packets,
+                                    volume,
                                     |packet, volume| packet * volume,
                                 )?;
                                 Ok(res)
@@ -304,6 +306,7 @@ impl PlayerStream {
                                     &self.device,
                                     &audio_config,
                                     packets,
+                                    volume,
                                     |packet, volume| ((packet as f32) * volume) as i16,
                                 )?;
                                 Ok(res)
@@ -323,6 +326,7 @@ impl PlayerStream {
                                     &self.device,
                                     &audio_config,
                                     packets,
+                                    volume,
                                     |packet, volume| ((packet as f32) * volume) as u16,
                                 )?;
                                 Ok(res)

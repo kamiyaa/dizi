@@ -4,13 +4,13 @@ use dizi_lib::song::Song;
 
 #[derive(Clone, Debug)]
 pub enum PlayerRequest {
-    Play(Song),
+    Play { song: Song, volume: f32 },
     Pause,
     Resume,
     Stop,
-    SetVolume(f32),
-    FastForward(Duration),
-    Rewind(Duration),
+    SetVolume { volume: f32 },
+    FastForward { offset: Duration },
+    Rewind { offset: Duration },
     //    AddListener(ServerEventSender),
     //    ClearListeners,
 }
