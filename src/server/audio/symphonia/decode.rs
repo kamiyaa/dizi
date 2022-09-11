@@ -10,7 +10,7 @@ use symphonia::core::formats::FormatReader;
 use cpal::traits::{DeviceTrait, StreamTrait};
 use cpal::{Stream, StreamConfig};
 
-use dizi_lib::error::DiziResult;
+use dizi_lib::error::{DiziError, DiziErrorKind, DiziResult};
 use symphonia::core::units::TimeBase;
 
 use crate::audio::request::PlayerRequest;
@@ -21,7 +21,7 @@ pub fn decode_packets<T>(
     mut format: Box<dyn FormatReader>,
     mut decoder: Box<dyn Decoder>,
     track_id: u32,
-) -> Option<Vec<T>>
+) -> DiziResult<Vec<T>>
 where
     T: symphonia::core::sample::Sample
         + cpal::Sample
@@ -58,7 +58,7 @@ where
             Err(err) => {
                 // A unrecoverable error occured, halt decoding.
                 eprintln!("{:?}", err);
-                break;
+                return Err(DiziError::from(err));
             }
         };
 
@@ -109,12 +109,18 @@ where
                 continue;
             }
             Err(err) => {
-                // An unrecoverable error occured, halt decoding.
-                panic!("{}", err);
+                return Err(DiziError::from(err));
             }
         }
     }
-    channel_data
+
+    match channel_data {
+        Some(s) => Ok(s),
+        None => Err(DiziError::new(
+            DiziErrorKind::NoDevice,
+            "Failed to decode audio".to_string(),
+        )),
+    }
 }
 
 pub fn stream_loop<T>(

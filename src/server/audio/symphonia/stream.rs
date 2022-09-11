@@ -278,64 +278,40 @@ impl PlayerStream {
 
                 match config.sample_format() {
                     cpal::SampleFormat::F32 => {
-                        let packets = decode_packets::<f32>(probed.format, decoder, track_id);
-                        match packets {
-                            Some(packets) => {
-                                let res = stream_loop::<f32>(
-                                    stream_tx,
-                                    &self.device,
-                                    &audio_config,
-                                    packets,
-                                    volume,
-                                    |packet, volume| packet * volume,
-                                )?;
-                                Ok(res)
-                            }
-                            None => Err(DiziError::new(
-                                DiziErrorKind::NoDevice,
-                                "Error eading packets".to_string(),
-                            )),
-                        }
+                        let packets = decode_packets::<f32>(probed.format, decoder, track_id)?;
+                        let res = stream_loop::<f32>(
+                            stream_tx,
+                            &self.device,
+                            &audio_config,
+                            packets,
+                            volume,
+                            |packet, volume| packet * volume,
+                        )?;
+                        Ok(res)
                     }
                     cpal::SampleFormat::I16 => {
-                        let packets = decode_packets::<i16>(probed.format, decoder, track_id);
-                        match packets {
-                            Some(packets) => {
-                                let res = stream_loop::<i16>(
-                                    stream_tx,
-                                    &self.device,
-                                    &audio_config,
-                                    packets,
-                                    volume,
-                                    |packet, volume| ((packet as f32) * volume) as i16,
-                                )?;
-                                Ok(res)
-                            }
-                            None => Err(DiziError::new(
-                                DiziErrorKind::NoDevice,
-                                "Error eading packets".to_string(),
-                            )),
-                        }
+                        let packets = decode_packets::<i16>(probed.format, decoder, track_id)?;
+                        let res = stream_loop::<i16>(
+                            stream_tx,
+                            &self.device,
+                            &audio_config,
+                            packets,
+                            volume,
+                            |packet, volume| ((packet as f32) * volume) as i16,
+                        )?;
+                        Ok(res)
                     }
                     cpal::SampleFormat::U16 => {
-                        let packets = decode_packets::<u16>(probed.format, decoder, track_id);
-                        match packets {
-                            Some(packets) => {
-                                let res = stream_loop::<u16>(
-                                    stream_tx,
-                                    &self.device,
-                                    &audio_config,
-                                    packets,
-                                    volume,
-                                    |packet, volume| ((packet as f32) * volume) as u16,
-                                )?;
-                                Ok(res)
-                            }
-                            None => Err(DiziError::new(
-                                DiziErrorKind::NoDevice,
-                                "Error eading packets".to_string(),
-                            )),
-                        }
+                        let packets = decode_packets::<u16>(probed.format, decoder, track_id)?;
+                        let res = stream_loop::<u16>(
+                            stream_tx,
+                            &self.device,
+                            &audio_config,
+                            packets,
+                            volume,
+                            |packet, volume| ((packet as f32) * volume) as u16,
+                        )?;
+                        Ok(res)
                     }
                 }
             }
