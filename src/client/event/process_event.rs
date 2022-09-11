@@ -259,7 +259,7 @@ pub fn process_noninteractive(event: AppEvent, context: &mut AppContext) {
 
 pub fn process_dir_preview(
     context: &mut AppContext,
-    path: path::PathBuf,
+    _path: path::PathBuf,
     res: io::Result<JoshutoDirList>,
 ) {
     match res {

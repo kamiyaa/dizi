@@ -1,36 +1,64 @@
-pub const CMD_HELP: &str = "help";
+use rustyline::completion::Pair;
 
-pub const CMD_CLOSE: &str = "close";
-
-pub const CMD_CHANGE_DIRECTORY: &str = "cd";
 pub const CMD_COMMAND_LINE: &str = ":";
 
-pub const CMD_CURSOR_MOVE_UP: &str = "cursor_move_up";
-pub const CMD_CURSOR_MOVE_DOWN: &str = "cursor_move_down";
-pub const CMD_CURSOR_MOVE_HOME: &str = "cursor_move_home";
-pub const CMD_CURSOR_MOVE_END: &str = "cursor_move_end";
-pub const CMD_CURSOR_MOVE_PAGEUP: &str = "cursor_move_page_up";
-pub const CMD_CURSOR_MOVE_PAGEDOWN: &str = "cursor_move_page_down";
+macro_rules! cmd_constants {
+    ($( ($cmd_name:ident, $cmd_value:literal), )*) => {
+        $(
+            pub const $cmd_name: &str = $cmd_value;
+        )*
 
-pub const CMD_GO_TO_PLAYING: &str = "go_to_playing";
+        pub fn commands() -> Vec<&'static str> {
+            vec![$($cmd_value,)*]
+        }
+    };
+}
 
-pub const CMD_OPEN_FILE: &str = "open";
+cmd_constants![
+    (CMD_CLOSE, "close"),
 
-pub const CMD_PARENT_DIRECTORY: &str = "cd ..";
-pub const CMD_RELOAD_DIRECTORY_LIST: &str = "reload_dirlist";
+    (CMD_CHANGE_DIRECTORY, "cd"),
 
-pub const CMD_SEARCH_STRING: &str = "search";
-pub const CMD_SEARCH_GLOB: &str = "search_glob";
-pub const CMD_SEARCH_SKIM: &str = "search_skim";
-pub const CMD_SEARCH_NEXT: &str = "search_next";
-pub const CMD_SEARCH_PREV: &str = "search_prev";
+    (CMD_CURSOR_MOVE_UP, "cursor_move_up"),
+    (CMD_CURSOR_MOVE_DOWN, "cursor_move_down"),
+    (CMD_CURSOR_MOVE_HOME, "cursor_move_home"),
+    (CMD_CURSOR_MOVE_END, "cursor_move_end"),
+    (CMD_CURSOR_MOVE_PAGEUP, "cursor_move_page_up"),
+    (CMD_CURSOR_MOVE_PAGEDOWN, "cursor_move_page_down"),
 
-pub const CMD_SELECT_FILES: &str = "select";
+    (CMD_GO_TO_PLAYING, "go_to_playing"),
 
-pub const CMD_SERVER_REQUEST: &str = "server_request";
+    (CMD_OPEN_FILE, "open"),
 
-pub const CMD_SORT: &str = "sort";
-pub const CMD_SORT_REVERSE: &str = "sort reverse";
+    (CMD_PARENT_DIRECTORY, "cd .."),
+    (CMD_RELOAD_DIRECTORY_LIST, "reload_dirlist"),
 
-pub const CMD_TOGGLE_HIDDEN: &str = "toggle_hidden";
-pub const CMD_TOGGLE_VIEW: &str = "toggle_view";
+    (CMD_SEARCH_STRING, "search"),
+    (CMD_SEARCH_GLOB, "search_glob"),
+    (CMD_SEARCH_SKIM, "search_skim"),
+    (CMD_SEARCH_NEXT, "search_next"),
+    (CMD_SEARCH_PREV, "search_prev"),
+
+    (CMD_SELECT_FILES, "select"),
+
+    (CMD_SERVER_REQUEST, "server_request"),
+
+    (CMD_SORT, "sort"),
+    (CMD_SORT_REVERSE, "sort reverse"),
+
+    (CMD_TOGGLE_HIDDEN, "toggle_hidden"),
+    (CMD_TOGGLE_VIEW, "toggle_view"),
+];
+
+
+
+pub fn complete_command(partial_command: &str) -> Vec<Pair> {
+    commands()
+        .into_iter()
+        .filter(|command| command.starts_with(partial_command))
+        .map(|command| Pair {
+            display: command.to_string(),
+            replacement: command.to_string(),
+        })
+        .collect()
+}

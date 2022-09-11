@@ -14,7 +14,7 @@ use unicode_width::UnicodeWidthStr;
 use crate::context::AppContext;
 use crate::event::process_event;
 use crate::event::AppEvent;
-use crate::key_command::Command;
+use crate::key_command::{complete_command};
 use crate::ui::views::TuiView;
 use crate::ui::widgets::{TuiMenu, TuiMultilineText};
 use crate::ui::AppBackend;
@@ -260,7 +260,9 @@ impl<'a> TuiTextField<'a> {
                             Key::Char('\n') => {
                                 break;
                             }
-                            Key::Char(c) => line_buffer.insert(c, 1).is_some(),
+                            Key::Char(c) => {
+                                line_buffer.insert(c, 1).is_some()
+                            }
                             _ => false,
                         };
                         if dirty {
@@ -370,6 +372,17 @@ fn get_candidates(
     line_buffer: &mut LineBuffer,
 ) -> Option<(usize, Vec<Pair>)> {
     let line = line_buffer.as_str().split_once(' ');
-    let res = completer.complete_path(line_buffer.as_str(), line_buffer.pos());
+    let res = match line {
+        None => Ok((0, complete_command(line_buffer.as_str()))),
+
+        Some((command, _files)) => {
+            // We want to autocomplete a command if we are inside it.
+            if line_buffer.pos() <= command.len() {
+                Ok((0, complete_command(command)))
+            } else {
+                completer.complete_path(line_buffer.as_str(), line_buffer.pos())
+            }
+        }
+    };
     res.ok()
 }

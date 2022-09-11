@@ -1,7 +1,7 @@
 use std::path::Path;
 use std::sync::mpsc;
-use std::thread::{self, JoinHandle};
-use std::time::{Duration, SystemTime};
+use std::thread;
+use std::time::Duration;
 
 use log::{debug, log_enabled, Level};
 use symphonia::core::codecs::{DecoderOptions, CODEC_TYPE_NULL};
