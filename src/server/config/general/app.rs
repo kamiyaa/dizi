@@ -5,7 +5,7 @@ use crate::config::{parse_toml_to_config, TomlConfigFile};
 use super::{ServerConfig, ServerConfigRaw};
 
 #[derive(Clone, Debug, Deserialize)]
-pub struct AppConfigCrude {
+pub struct AppConfigRaw {
     #[serde(default)]
     pub server: ServerConfigRaw,
 }
@@ -15,8 +15,8 @@ pub struct AppConfig {
     server: ServerConfig,
 }
 
-impl From<AppConfigCrude> for AppConfig {
-    fn from(crude: AppConfigCrude) -> Self {
+impl From<AppConfigRaw> for AppConfig {
+    fn from(crude: AppConfigRaw) -> Self {
         Self {
             server: ServerConfig::from(crude.server),
         }
@@ -43,6 +43,12 @@ impl std::default::Default for AppConfig {
 
 impl TomlConfigFile for AppConfig {
     fn get_config(file_name: &str) -> Self {
-        parse_toml_to_config::<AppConfigCrude, AppConfig>(file_name).unwrap_or_else(Self::default)
+        match parse_toml_to_config::<AppConfigRaw, AppConfig>(file_name) {
+            Ok(s) => s,
+            Err(e) => {
+                eprintln!("Failed to parse server config: {}", e);
+                Self::default()
+            }
+        }
     }
 }

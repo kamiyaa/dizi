@@ -144,7 +144,7 @@ where
 
     let (playback_loop_tx, playback_loop_rx) = mpsc::channel();
 
-    let frame_index = Arc::new(RwLock::new(0 as usize));
+    let frame_index = Arc::new(RwLock::new(0_usize));
     let volume = Arc::new(RwLock::new(1.0));
     let playback_duration = Arc::new(RwLock::new(0));
 
@@ -173,7 +173,7 @@ where
                         let mut offset = frame_index.write().unwrap();
                         *offset += time_base.denom as usize * duration.as_secs() as usize;
                         if *offset >= packet_count {
-                            *offset = packet_count - time_base.denom as usize * 1;
+                            *offset = packet_count - time_base.denom as usize;
                         }
                     }
                     PlayerRequest::Rewind(duration) => {
@@ -213,12 +213,12 @@ where
             let new_offset = {
                 let mut offset = frame_index.write().unwrap();
                 *offset += i;
-                offset.clone()
+                *offset
             };
             // new duration
             let new_duration_sym = time_base.calc_time(new_offset as u64);
             let current_duration = {
-                let old_duration = (*playback_duration.read().unwrap()).clone();
+                let old_duration = *playback_duration.read().unwrap();
                 old_duration
             };
             // update duration if seconds changed

@@ -255,13 +255,11 @@ impl PlayerStream {
                 let config = self.device.default_output_config().unwrap();
 
                 let audio_config = cpal::StreamConfig {
-                    channels: cpal::ChannelCount::from(
-                        track
-                            .codec_params
-                            .channels
-                            .map(|c| c.count() as u16)
-                            .unwrap_or(2u16),
-                    ),
+                    channels: track
+                        .codec_params
+                        .channels
+                        .map(|c| c.count() as u16)
+                        .unwrap_or(2u16),
                     sample_rate: cpal::SampleRate(
                         track
                             .codec_params

@@ -4,7 +4,7 @@ use std::path::{Path, PathBuf};
 use serde_derive::Deserialize;
 use shellexpand::tilde_with_context;
 
-use super::{PlayerOption, PlayerOptionCrude};
+use super::{PlayerOption, PlayerOptionRaw};
 
 fn default_socket_string() -> String {
     "~/dizi-server-socket".to_string()
@@ -73,7 +73,7 @@ pub struct ServerConfigRaw {
     #[serde(default)]
     pub on_song_change: Option<String>,
     #[serde(default)]
-    pub player: PlayerOptionCrude,
+    pub player: PlayerOptionRaw,
 }
 
 impl std::default::Default for ServerConfigRaw {
@@ -83,7 +83,7 @@ impl std::default::Default for ServerConfigRaw {
             playlist: default_playlist_string(),
             audio_system: default_audio_system_string(),
             on_song_change: None,
-            player: PlayerOptionCrude::default(),
+            player: PlayerOptionRaw::default(),
         }
     }
 }

@@ -7,7 +7,7 @@ use super::DEFAULT_CONFIG_FILE_PATH;
 use super::{AppStyle, AppStyleRaw};
 use crate::config::{parse_toml_to_config, TomlConfigFile};
 
-#[derive(Clone, Debug, Deserialize)]
+#[derive(Clone, Debug, Default, Deserialize)]
 pub struct AppThemeRaw {
     #[serde(default)]
     pub playing: AppStyleRaw,
@@ -28,23 +28,6 @@ pub struct AppThemeRaw {
     pub socket: AppStyleRaw,
     #[serde(default)]
     pub ext: HashMap<String, AppStyleRaw>,
-}
-
-impl std::default::Default for AppThemeRaw {
-    fn default() -> Self {
-        Self {
-            playing: AppStyleRaw::default(),
-            playlist: AppStyleRaw::default(),
-
-            regular: AppStyleRaw::default(),
-            directory: AppStyleRaw::default(),
-            executable: AppStyleRaw::default(),
-            link: AppStyleRaw::default(),
-            link_invalid: AppStyleRaw::default(),
-            socket: AppStyleRaw::default(),
-            ext: HashMap::default(),
-        }
-    }
 }
 
 #[derive(Clone, Debug)]
@@ -105,7 +88,13 @@ impl AppTheme {
 
 impl TomlConfigFile for AppTheme {
     fn get_config(file_name: &str) -> Self {
-        parse_toml_to_config::<AppThemeRaw, AppTheme>(file_name).unwrap_or_default()
+        match parse_toml_to_config::<AppThemeRaw, AppTheme>(file_name) {
+            Ok(s) => s,
+            Err(e) => {
+                eprintln!("Failed to parse theme config: {}", e);
+                Self::default()
+            }
+        }
     }
 }
 

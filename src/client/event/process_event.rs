@@ -262,13 +262,10 @@ pub fn process_dir_preview(
     _path: path::PathBuf,
     res: io::Result<JoshutoDirList>,
 ) {
-    match res {
-        Ok(dirlist) => {
-            let history = context.tab_context_mut().curr_tab_mut().history_mut();
+    if let Ok(dirlist) = res {
+        let history = context.tab_context_mut().curr_tab_mut().history_mut();
 
-            let dir_path = dirlist.file_path().to_path_buf();
-            history.insert(dir_path, dirlist);
-        }
-        Err(_) => {}
+        let dir_path = dirlist.file_path().to_path_buf();
+        history.insert(dir_path, dirlist);
     }
 }

@@ -24,7 +24,7 @@ pub struct CommandKeymap {
 }
 
 #[derive(Debug, Deserialize)]
-struct AppKeyMappingCrude {
+struct AppKeyMappingRaw {
     #[serde(default)]
     pub keymap: Vec<CommandKeymap>,
 }
@@ -42,7 +42,7 @@ impl AppKeyMapping {
     }
 
     pub fn default_res() -> DiziResult<Self> {
-        let raw: AppKeyMappingCrude = toml::from_str(DEFAULT_KEYMAP)?;
+        let raw: AppKeyMappingRaw = toml::from_str(DEFAULT_KEYMAP)?;
         let keymapping: Self = Self::from(raw);
         Ok(keymapping)
     }
@@ -60,8 +60,8 @@ impl AsMut<HashMap<Event, CommandKeybind>> for AppKeyMapping {
     }
 }
 
-impl From<AppKeyMappingCrude> for AppKeyMapping {
-    fn from(raw: AppKeyMappingCrude) -> Self {
+impl From<AppKeyMappingRaw> for AppKeyMapping {
+    fn from(raw: AppKeyMappingRaw) -> Self {
         let mut keymaps = Self::new();
         for m in raw.keymap {
             match Command::from_keymap(&m) {
@@ -92,7 +92,13 @@ impl From<AppKeyMappingCrude> for AppKeyMapping {
 
 impl TomlConfigFile for AppKeyMapping {
     fn get_config(file_name: &str) -> Self {
-        parse_toml_to_config::<AppKeyMappingCrude, AppKeyMapping>(file_name).unwrap()
+        match parse_toml_to_config::<AppKeyMappingRaw, AppKeyMapping>(file_name) {
+            Ok(s) => s,
+            Err(e) => {
+                eprintln!("Failed to parse keymap config: {}", e);
+                Self::default()
+            }
+        }
     }
 }
 

@@ -112,14 +112,6 @@ impl JoshutoMetadata {
         self._modified
     }
 
-    pub fn permissions_ref(&self) -> &fs::Permissions {
-        &self._permissions
-    }
-
-    pub fn permissions_mut(&mut self) -> &mut fs::Permissions {
-        &mut self._permissions
-    }
-
     pub fn file_type(&self) -> &FileType {
         &self._file_type
     }

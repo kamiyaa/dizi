@@ -9,7 +9,7 @@ const fn default_volume() -> usize {
 }
 
 #[derive(Clone, Debug, Deserialize)]
-pub struct PlayerOptionCrude {
+pub struct PlayerOptionRaw {
     #[serde(default)]
     pub shuffle: bool,
     #[serde(default = "default_true")]
@@ -20,7 +20,7 @@ pub struct PlayerOptionCrude {
     pub volume: usize,
 }
 
-impl std::default::Default for PlayerOptionCrude {
+impl std::default::Default for PlayerOptionRaw {
     fn default() -> Self {
         Self {
             shuffle: false,
@@ -31,8 +31,8 @@ impl std::default::Default for PlayerOptionCrude {
     }
 }
 
-impl From<PlayerOptionCrude> for PlayerOption {
-    fn from(crude: PlayerOptionCrude) -> Self {
+impl From<PlayerOptionRaw> for PlayerOption {
+    fn from(crude: PlayerOptionRaw) -> Self {
         Self {
             shuffle: crude.shuffle,
             repeat: crude.repeat,

@@ -12,8 +12,6 @@ pub struct JoshutoDirEntry {
     label: String,
     path: path::PathBuf,
     pub metadata: JoshutoMetadata,
-    selected: bool,
-    marked: bool,
 }
 
 impl JoshutoDirEntry {
@@ -42,8 +40,6 @@ impl JoshutoDirEntry {
             label,
             path,
             metadata,
-            selected: false,
-            marked: false,
         })
     }
 
@@ -65,14 +61,6 @@ impl JoshutoDirEntry {
 
     pub fn file_path_buf(&self) -> path::PathBuf {
         self.path.clone()
-    }
-
-    pub fn is_selected(&self) -> bool {
-        self.selected
-    }
-
-    pub fn set_selected(&mut self, selected: bool) {
-        self.selected = selected;
     }
 
     pub fn get_ext(&self) -> &str {
@@ -133,8 +121,4 @@ fn create_icon_label(name: &str, metadata: &JoshutoMetadata) -> String {
         format!("{} {}", icon, name)
     };
     label
-}
-
-fn get_directory_size(path: &path::Path) -> io::Result<usize> {
-    fs::read_dir(path).map(|s| s.count())
 }

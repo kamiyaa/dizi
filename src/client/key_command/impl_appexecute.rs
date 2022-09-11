@@ -32,7 +32,7 @@ impl AppExecute for Command {
             Self::CursorMovePageUp => cursor_move::page_up(context, backend)?,
             Self::CursorMovePageDown => cursor_move::page_down(context, backend)?,
 
-            Self::GoToPlaying => goto::goto_playing(context, backend)?,
+            Self::GoToPlaying => goto::goto_playing(context)?,
 
             Self::ParentDirectory => change_directory::parent_directory(context)?,
 
@@ -50,7 +50,7 @@ impl AppExecute for Command {
                 selection::select_files(context, pattern.as_str(), options)?
             }
 
-            Self::ServerRequest(request) => execute_request(context, &request)?,
+            Self::ServerRequest(request) => execute_request(context, request)?,
 
             Self::ToggleHiddenFiles => show_hidden::toggle_hidden(context)?,
             Self::ToggleView => {

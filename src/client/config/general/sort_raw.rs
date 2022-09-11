@@ -1,5 +1,4 @@
 use serde_derive::Deserialize;
-use std::convert::Into;
 
 use crate::config::option::{SortOption, SortType, SortTypes};
 
@@ -19,9 +18,9 @@ pub struct SortOptionRaw {
     pub sort_method: Option<String>,
 }
 
-impl Into<SortOption> for SortOptionRaw {
-    fn into(self) -> SortOption {
-        let sort_method = match self.sort_method.as_ref() {
+impl From<SortOptionRaw> for SortOption {
+    fn from(raw: SortOptionRaw) -> Self {
+        let sort_method = match raw.sort_method.as_ref() {
             Some(s) => SortType::parse(s).unwrap_or(SortType::Natural),
             None => SortType::Natural,
         };
@@ -29,10 +28,10 @@ impl Into<SortOption> for SortOptionRaw {
         let mut sort_methods = SortTypes::default();
         sort_methods.reorganize(sort_method);
 
-        SortOption {
-            directories_first: self.directories_first,
-            case_sensitive: self.case_sensitive,
-            reverse: self.reverse,
+        Self {
+            directories_first: raw.directories_first,
+            case_sensitive: raw.case_sensitive,
+            reverse: raw.reverse,
             sort_methods,
         }
     }

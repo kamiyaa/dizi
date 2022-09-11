@@ -138,7 +138,7 @@ fn search_directory_skim(
                 .collect();
             v
         })
-        .unwrap_or_else(|| vec![]);
+        .unwrap_or_default();
 
     if items.is_empty() {
         return Err(DiziError::new(

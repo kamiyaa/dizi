@@ -6,8 +6,6 @@ use tui::widgets::Widget;
 use crate::context::AppContext;
 use crate::ui::widgets::TuiDirListDetailed;
 
-const TAB_VIEW_WIDTH: u16 = 15;
-
 pub struct TuiFolderView<'a> {
     pub context: &'a AppContext,
     pub show_bottom_status: bool,

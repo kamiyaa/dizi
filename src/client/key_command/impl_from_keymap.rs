@@ -41,7 +41,7 @@ impl Command {
                 None => {
                     return Err(DiziError::new(
                         DiziErrorKind::InvalidParameters,
-                        format!("No json provided to server_request"),
+                        "No json provided to server_request".to_string(),
                     ))
                 }
             }

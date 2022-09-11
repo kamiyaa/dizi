@@ -2,10 +2,6 @@ use std::fs;
 
 use crate::config::option::SortOption;
 
-pub const fn default_column_ratio() -> (usize, usize, usize) {
-    (1, 3, 4)
-}
-
 #[derive(Clone, Debug)]
 pub struct DisplayOption {
     pub _show_hidden: bool,

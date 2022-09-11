@@ -13,7 +13,7 @@ use crate::events::{ClientRequestSender, ServerBroadcastEventReceiver};
 #[derive(Clone, Debug)]
 pub enum ClientMessage {
     Client(String),
-    Server(ServerBroadcastEvent),
+    Server(Box<ServerBroadcastEvent>),
 }
 
 pub fn handle_client(
@@ -29,7 +29,7 @@ pub fn handle_client(
     let _ = thread::spawn(move || {
         while let Ok(server_event) = server_event_rx.recv() {
             if event_tx_clone
-                .send(ClientMessage::Server(server_event))
+                .send(ClientMessage::Server(Box::new(server_event)))
                 .is_err()
             {
                 return;
@@ -61,7 +61,7 @@ pub fn handle_client(
     while let Ok(event) = event_rx.recv() {
         match event {
             ClientMessage::Server(event) => {
-                process_server_event(&mut stream, event)?;
+                process_server_event(&mut stream, &event)?;
             }
             ClientMessage::Client(line) => {
                 if line.is_empty() {
@@ -84,9 +84,8 @@ pub fn forward_client_request(
     Ok(())
 }
 
-pub fn process_server_event(stream: &mut UnixStream, event: ServerBroadcastEvent) -> DiziResult {
-    let response = event;
-    let json = serde_json::to_string(&response)?;
+pub fn process_server_event(stream: &mut UnixStream, event: &ServerBroadcastEvent) -> DiziResult {
+    let json = serde_json::to_string(&event)?;
 
     stream.write_all(json.as_bytes())?;
     utils::flush(stream)?;

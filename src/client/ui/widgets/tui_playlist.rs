@@ -183,22 +183,20 @@ fn factor_labels_for_entry<'a>(
         ("".to_string(), "")
     } else if width_remainder >= 0 {
         (left_label_original.to_string(), right_label_original)
+    } else if left_width_remainder < MIN_LEFT_LABEL_WIDTH {
+        (
+            if left_label_original.width() as i32 <= left_width_remainder {
+                trim_file_label(left_label_original, drawing_width)
+            } else {
+                left_label_original.to_string()
+            },
+            "",
+        )
     } else {
-        if left_width_remainder < MIN_LEFT_LABEL_WIDTH {
-            (
-                if left_label_original.width() as i32 <= left_width_remainder {
-                    trim_file_label(left_label_original, drawing_width)
-                } else {
-                    left_label_original.to_string()
-                },
-                "",
-            )
-        } else {
-            (
-                trim_file_label(left_label_original, left_width_remainder as usize),
-                right_label_original,
-            )
-        }
+        (
+            trim_file_label(left_label_original, left_width_remainder as usize),
+            right_label_original,
+        )
     }
 }
 

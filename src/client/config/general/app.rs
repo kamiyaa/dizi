@@ -5,10 +5,6 @@ use crate::config::{parse_toml_to_config, TomlConfigFile};
 
 use super::client::{ClientConfig, ClientConfigRaw};
 
-const fn default_max_preview_size() -> u64 {
-    2 * 1024 * 1024 // 2 MB
-}
-
 #[derive(Clone, Debug, Deserialize)]
 pub struct AppConfigRaw {
     #[serde(default)]
@@ -23,12 +19,13 @@ impl From<AppConfigRaw> for AppConfig {
     }
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Default, Clone)]
 pub struct AppConfig {
     _client: ClientConfig,
 }
 
 impl AppConfig {
+    #[allow(dead_code)]
     pub fn new(client: ClientConfig) -> Self {
         Self { _client: client }
     }
@@ -56,16 +53,14 @@ impl AppConfig {
     }
 }
 
-impl std::default::Default for AppConfig {
-    fn default() -> Self {
-        Self {
-            _client: ClientConfig::default(),
-        }
-    }
-}
-
 impl TomlConfigFile for AppConfig {
     fn get_config(file_name: &str) -> Self {
-        parse_toml_to_config::<AppConfigRaw, AppConfig>(file_name).unwrap_or_else(Self::default)
+        match parse_toml_to_config::<AppConfigRaw, AppConfig>(file_name) {
+            Ok(s) => s,
+            Err(e) => {
+                eprintln!("Failed to parse client config: {}", e);
+                Self::default()
+            }
+        }
     }
 }

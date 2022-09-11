@@ -1,6 +1,6 @@
 use std::cmp;
 use std::path;
-use std::slice::{Iter, IterMut};
+use std::slice::Iter;
 
 use crate::config::option::DisplayOption;
 use crate::context::UiContext;
@@ -108,10 +108,6 @@ impl JoshutoDirList {
         self.contents.iter()
     }
 
-    pub fn iter_mut(&mut self) -> IterMut<JoshutoDirEntry> {
-        self.contents.iter_mut()
-    }
-
     pub fn len(&self) -> usize {
         self.contents.len()
     }
@@ -143,52 +139,13 @@ impl JoshutoDirList {
         &self.path
     }
 
-    pub fn any_selected(&self) -> bool {
-        self.contents.iter().any(|e| e.is_selected())
-    }
-
-    pub fn iter_selected(&self) -> impl Iterator<Item = &JoshutoDirEntry> {
-        self.contents.iter().filter(|entry| entry.is_selected())
-    }
-
-    pub fn iter_selected_mut(&mut self) -> impl Iterator<Item = &mut JoshutoDirEntry> {
-        self.contents.iter_mut().filter(|entry| entry.is_selected())
-    }
-
-    pub fn get_selected_paths(&self) -> Vec<path::PathBuf> {
-        let vec: Vec<path::PathBuf> = self
-            .iter_selected()
-            .map(|e| e.file_path().to_path_buf())
-            .collect();
-        if !vec.is_empty() {
-            vec
-        } else {
-            match self.curr_entry_ref() {
-                Some(s) => vec![s.file_path().to_path_buf()],
-                _ => vec![],
-            }
-        }
-    }
-
     pub fn curr_entry_ref(&self) -> Option<&JoshutoDirEntry> {
         self.get_curr_ref_(self.index?)
-    }
-
-    pub fn curr_entry_mut(&mut self) -> Option<&mut JoshutoDirEntry> {
-        self.get_curr_mut_(self.index?)
     }
 
     /// Returns the index of the first entry to be printed in a UI dir list
     pub fn first_index_for_viewport(&self) -> usize {
         self.viewport_index
-    }
-
-    fn get_curr_mut_(&mut self, index: usize) -> Option<&mut JoshutoDirEntry> {
-        if index < self.contents.len() {
-            Some(&mut self.contents[index])
-        } else {
-            None
-        }
     }
 
     fn get_curr_ref_(&self, index: usize) -> Option<&JoshutoDirEntry> {

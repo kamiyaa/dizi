@@ -1,5 +1,3 @@
-use std::str::FromStr;
-
 use rustyline::completion::{Candidate, Completer, FilenameCompleter, Pair};
 use rustyline::{
     line_buffer::{self, LineBuffer},
@@ -14,7 +12,7 @@ use unicode_width::UnicodeWidthStr;
 use crate::context::AppContext;
 use crate::event::process_event;
 use crate::event::AppEvent;
-use crate::key_command::{complete_command};
+use crate::key_command::complete_command;
 use crate::ui::views::TuiView;
 use crate::ui::widgets::{TuiMenu, TuiMultilineText};
 use crate::ui::AppBackend;
@@ -260,9 +258,7 @@ impl<'a> TuiTextField<'a> {
                             Key::Char('\n') => {
                                 break;
                             }
-                            Key::Char(c) => {
-                                line_buffer.insert(c, 1).is_some()
-                            }
+                            Key::Char(c) => line_buffer.insert(c, 1).is_some(),
                             _ => false,
                         };
                         if dirty {

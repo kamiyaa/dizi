@@ -18,7 +18,7 @@ pub fn search_next(context: &mut AppContext) -> DiziResult {
             }
         };
         if let Some(index) = index {
-            let _ = cursor_move::cursor_move(context, index);
+            cursor_move::cursor_move(context, index);
         }
     }
     Ok(())
@@ -35,7 +35,7 @@ pub fn search_prev(context: &mut AppContext) -> DiziResult {
             }
         };
         if let Some(index) = index {
-            let _ = cursor_move::cursor_move(context, index);
+            cursor_move::cursor_move(context, index);
         }
     }
     Ok(())

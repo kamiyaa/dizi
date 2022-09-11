@@ -22,7 +22,7 @@ fn _search_exact(curr_tab: &JoshutoTab, pattern: &str) -> Option<usize> {
 pub fn search_exact(context: &mut AppContext, pattern: &str) -> DiziResult {
     let index = _search_exact(context.tab_context_ref().curr_tab_ref(), pattern);
     if let Some(index) = index {
-        let _ = cursor_move::cursor_move(context, index);
+        cursor_move::cursor_move(context, index);
     }
     Ok(())
 }
@@ -62,7 +62,7 @@ pub fn search_string(context: &mut AppContext, pattern: &str) -> DiziResult {
     let pattern = pattern.to_lowercase();
     let index = search_string_fwd(context.tab_context_ref().curr_tab_ref(), pattern.as_str());
     if let Some(index) = index {
-        let _ = cursor_move::cursor_move(context, index);
+        cursor_move::cursor_move(context, index);
     }
     context.set_search_context(SearchPattern::String(pattern));
     Ok(())

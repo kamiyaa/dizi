@@ -12,14 +12,14 @@ use crate::context::{CommandLineContext, MessageQueue, ServerState, TabContext};
 use crate::event::{AppEvent, Events};
 use crate::util::search::SearchPattern;
 
-#[derive(Clone, Copy, Debug, PartialEq)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum QuitType {
     DoNot,
     Normal,
     Server,
 }
 
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Debug, PartialEq, Eq)]
 pub struct UiContext {
     pub layout: Vec<Rect>,
 }

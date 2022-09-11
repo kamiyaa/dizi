@@ -52,6 +52,12 @@ impl From<AppLayoutRaw> for AppLayout {
 
 impl JsonConfigFile for AppLayout {
     fn get_config(file_name: &str) -> Self {
-        parse_json_to_config::<AppLayoutRaw, AppLayout>(file_name).unwrap_or_else(Self::default)
+        match parse_json_to_config::<AppLayoutRaw, AppLayout>(file_name) {
+            Ok(s) => s,
+            Err(e) => {
+                eprintln!("Failed to parse layout config: {}", e);
+                Self::default()
+            }
+        }
     }
 }

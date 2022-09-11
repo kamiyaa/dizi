@@ -40,7 +40,7 @@ impl OrderedPlaylist for PlaylistFile {
     fn is_end(&self) -> bool {
         match self.get_playlist_index() {
             None => true,
-            Some(i) => return i + 1 >= self.len(),
+            Some(i) => i + 1 >= self.len(),
         }
     }
 

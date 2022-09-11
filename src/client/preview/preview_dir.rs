@@ -21,7 +21,7 @@ pub struct Background {}
 
 impl Background {
     pub fn load_preview(context: &mut AppContext, p: path::PathBuf) -> thread::JoinHandle<()> {
-        let event_tx = context.events.event_tx.clone();
+        let event_tx = context.clone_event_tx();
         let options = context.config_ref().display_options_ref().clone();
 
         thread::spawn(move || {

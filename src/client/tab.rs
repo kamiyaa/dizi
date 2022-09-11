@@ -5,13 +5,6 @@ use crate::context::UiContext;
 use crate::fs::JoshutoDirList;
 use crate::history::{DirectoryHistory, JoshutoHistory};
 
-#[derive(Clone, Copy, Debug)]
-pub enum TabHomePage {
-    Inherit,
-    Home,
-    Root,
-}
-
 #[derive(Debug)]
 pub struct JoshutoTab {
     history: JoshutoHistory,

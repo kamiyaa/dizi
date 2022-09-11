@@ -7,8 +7,10 @@ pub use self::general::*;
 pub use self::keymap::AppKeyMapping;
 pub use self::theme::{AppStyle, AppTheme};
 
+use dizi_lib::error::{DiziError, DiziErrorKind, DiziResult};
 use serde::de::DeserializeOwned;
 use std::fs;
+use std::io;
 use std::path::{Path, PathBuf};
 
 use crate::CONFIG_HIERARCHY;
@@ -36,49 +38,47 @@ where
 }
 
 // parses a config file into its appropriate format
-fn parse_toml_to_config<T, S>(filename: &str) -> Option<S>
+fn parse_toml_to_config<T, S>(filename: &str) -> DiziResult<S>
 where
     T: DeserializeOwned,
     S: From<T>,
 {
-    let file_path = search_directories(filename, &CONFIG_HIERARCHY)?;
-    let file_contents = match fs::read_to_string(&file_path) {
-        Ok(content) => content,
-        Err(e) => {
-            eprintln!("Error reading {} file: {}", filename, e);
-            return None;
+    match search_directories(filename, &CONFIG_HIERARCHY) {
+        Some(file_path) => {
+            let file_contents = fs::read_to_string(&file_path)?;
+            let config = toml::from_str::<T>(&file_contents)?;
+            Ok(S::from(config))
         }
-    };
-    let config = match toml::from_str::<T>(&file_contents) {
-        Ok(config) => config,
-        Err(e) => {
-            eprintln!("Error parsing {} file: {}", filename, e);
-            return None;
+        None => {
+            let error_kind = io::ErrorKind::NotFound;
+            let error = DiziError::new(
+                DiziErrorKind::IoError(error_kind),
+                "No config directory found".to_string(),
+            );
+            Err(error)
         }
-    };
-    Some(S::from(config))
+    }
 }
 
 // parses a config file into its appropriate format
-fn parse_json_to_config<T, S>(filename: &str) -> Option<S>
+fn parse_json_to_config<T, S>(filename: &str) -> DiziResult<S>
 where
     T: DeserializeOwned,
     S: From<T>,
 {
-    let file_path = search_directories(filename, &CONFIG_HIERARCHY)?;
-    let file_contents = match fs::read_to_string(&file_path) {
-        Ok(content) => content,
-        Err(e) => {
-            eprintln!("Error reading {} file: {}", filename, e);
-            return None;
+    match search_directories(filename, &CONFIG_HIERARCHY) {
+        Some(file_path) => {
+            let file_contents = fs::read_to_string(&file_path)?;
+            let config = serde_json::from_str::<T>(&file_contents)?;
+            Ok(S::from(config))
         }
-    };
-    let config = match serde_json::from_str::<T>(&file_contents) {
-        Ok(config) => config,
-        Err(e) => {
-            eprintln!("Error parsing {} file: {}", filename, e);
-            return None;
+        None => {
+            let error_kind = io::ErrorKind::NotFound;
+            let error = DiziError::new(
+                DiziErrorKind::IoError(error_kind),
+                "No config directory found".to_string(),
+            );
+            Err(error)
         }
-    };
-    Some(S::from(config))
+    }
 }

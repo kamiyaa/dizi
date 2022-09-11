@@ -77,7 +77,7 @@ impl PlaylistFile {
     }
 
     pub fn get_playlist_index(&self) -> Option<usize> {
-        self._playlist_index.clone()
+        self._playlist_index
     }
     pub fn set_playlist_index(&mut self, index: Option<usize>) {
         self._playlist_index = index;

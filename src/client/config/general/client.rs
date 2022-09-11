@@ -8,10 +8,6 @@ use crate::config::option::DisplayOption;
 
 use super::display_raw::DisplayOptionRaw;
 
-const fn default_true() -> bool {
-    true
-}
-
 #[derive(Clone, Debug, Deserialize)]
 pub struct ClientConfigRaw {
     #[serde(default)]

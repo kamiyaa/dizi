@@ -6,7 +6,7 @@ use dizi_lib::error::{DiziError, DiziErrorKind, DiziResult};
 
 use crate::config::general::LayoutCompositionRaw;
 
-#[derive(Clone, Copy, Debug, PartialEq)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum WidgetType {
     FileBrowser,
     MusicPlayer,
@@ -58,7 +58,7 @@ impl LayoutComposition {
                 border,
                 title,
             } => {
-                let widget = WidgetType::from_str(&widget)?;
+                let widget = WidgetType::from_str(widget)?;
                 Ok(Self::Simple {
                     widget,
                     ratio: *ratio,
@@ -71,10 +71,10 @@ impl LayoutComposition {
                 widgets,
                 ratio,
             } => {
-                let direction = str_to_direction(&direction)?;
+                let direction = str_to_direction(direction)?;
                 let mut new_widgets: Vec<LayoutComposition> = Vec::new();
                 for w in widgets {
-                    let widget = LayoutComposition::from(&w)?;
+                    let widget = LayoutComposition::from(w)?;
                     new_widgets.push(widget);
                 }
 

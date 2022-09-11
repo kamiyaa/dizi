@@ -29,7 +29,7 @@ pub fn run_ui(
     // server listener
     {
         let stream = context.clone_stream()?;
-        let event_tx = context.events.event_tx.clone();
+        let event_tx = context.clone_event_tx();
 
         let _ = thread::spawn(move || {
             let cursor = BufReader::new(stream);
