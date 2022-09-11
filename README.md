@@ -71,9 +71,9 @@ Please create an issue :)
 
 ### Server-side
  - [x] play/pause support
- - [ ] get audio duration (requires [rodio](https://github.com/RustAudio/rodio) and [symphonia](https://github.com/pdeljanov/Symphonia) to work together on this)
+ - [x] get audio duration (requires [rodio](https://github.com/RustAudio/rodio) and [symphonia](https://github.com/pdeljanov/Symphonia) to work together on this)
  - [x] volume support
- - [ ] fast forward/rewind
+ - [x] fast forward/rewind
  - [x] directory playing
    - [x] shuffle
    - [x] repeat
@@ -90,15 +90,15 @@ Please create an issue :)
    - [x] save on exit
  - [x] show music progress
  - [x] configurable audio system
-   - [x] ALSA support
-   - [x] JACK support (current default)
+   - [x] ALSA support (current default)
+   - [x] JACK support
    - [ ] Pulseaudio support (issue https://github.com/RustAudio/cpal/issues/259)
    - [ ] Pipewire support (issue https://github.com/RustAudio/cpal/issues/554)
  - [x] querying
    - [x] file name
    - [x] file path
-   - [ ] song name (blocked on metadata)
-   - [ ] playlist index and length
+   - [x] show audio metadata (title, artists, genre, album, etc)
+   - [x] playlist index and length
  - [x] on song change hook
 
 ### Client-side
