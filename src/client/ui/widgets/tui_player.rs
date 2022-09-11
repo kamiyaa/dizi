@@ -30,7 +30,7 @@ impl<'a> Widget for TuiPlayer<'a> {
 
         let player_status = match self.player.get_player_status() {
             PlayerStatus::Playing => ">>",
-            PlayerStatus::Stopped => "XX",
+            PlayerStatus::Stopped => "\u{2588}\u{2588}",
             PlayerStatus::Paused => "||",
         };
 
