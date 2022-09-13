@@ -1,11 +1,11 @@
-use std::sync::Arc;
-use std::sync::{mpsc, RwLock};
+use std::iter::Iterator;
+use std::sync::{mpsc, Arc, RwLock};
 use std::time::Duration;
 
 use symphonia::core::audio::SampleBuffer;
 use symphonia::core::codecs::Decoder;
 use symphonia::core::errors::Error as SymphoniaError;
-use symphonia::core::formats::FormatReader;
+use symphonia::core::formats::{FormatReader, Packet};
 
 use cpal::traits::{DeviceTrait, StreamTrait};
 use cpal::{Stream, StreamConfig};
@@ -17,109 +17,89 @@ use crate::audio::request::PlayerRequest;
 
 use super::stream::StreamEvent;
 
-pub fn decode_packets<T>(
-    mut format: Box<dyn FormatReader>,
-    mut decoder: Box<dyn Decoder>,
+pub struct PacketReader {
+    format: Box<dyn FormatReader>,
     track_id: u32,
-) -> DiziResult<Vec<T>>
-where
-    T: symphonia::core::sample::Sample
-        + cpal::Sample
-        + std::marker::Send
-        + 'static
-        + symphonia::core::conv::FromSample<i8>
-        + symphonia::core::conv::FromSample<i16>
-        + symphonia::core::conv::FromSample<i32>
-        + symphonia::core::conv::FromSample<u8>
-        + symphonia::core::conv::FromSample<u16>
-        + symphonia::core::conv::FromSample<u32>
-        + symphonia::core::conv::FromSample<f32>
-        + symphonia::core::conv::FromSample<f64>
-        + symphonia::core::conv::FromSample<symphonia::core::sample::i24>
-        + symphonia::core::conv::FromSample<symphonia::core::sample::u24>,
-{
-    let mut channel_data: Option<Vec<T>> = None;
+}
 
-    // The decode loop.
-    loop {
-        // Get the next packet from the media format.
-        let packet = match format.next_packet() {
-            Ok(packet) => packet,
-            Err(SymphoniaError::ResetRequired) => {
-                // The track list has been changed. Re-examine it and create a new set of decoders,
-                // then restart the decode loop. This is an advanced feature and it is not
-                // unreasonable to consider this "the end." As of v0.5.0, the only usage of this is
-                // for chained OGG physical streams.
-                unimplemented!();
-            }
-            Err(SymphoniaError::IoError(_)) => {
-                break;
-            }
-            Err(err) => {
-                // A unrecoverable error occured, halt decoding.
-                eprintln!("{:?}", err);
-                return Err(DiziError::from(err));
-            }
-        };
+impl PacketReader {
+    pub fn new(format: Box<dyn FormatReader>, track_id: u32) -> Self {
+        Self { format, track_id }
+    }
+}
 
-        // Consume any new metadata that has been read since the last packet.
-        while !format.metadata().is_latest() {
-            // Pop the old head of the metadata queue.
-            format.metadata().pop();
+impl Iterator for PacketReader {
+    type Item = Packet;
 
-            // Consume the new metadata at the head of the metadata queue.
+    fn next(&mut self) -> Option<Self::Item> {
+        loop {
+            let packet = match self.format.next_packet() {
+                Ok(p) => p,
+                Err(_) => return None,
+            };
+
+            // Consume any new metadata that has been read since the last packet.
+            while !self.format.metadata().is_latest() {
+                // Pop the old head of the metadata queue.
+                self.format.metadata().pop();
+
+                // Consume the new metadata at the head of the metadata queue.
+            }
+
+            // If the packet does not belong to the selected track, skip over it.
+            if packet.track_id() != self.track_id {
+                continue;
+            }
+            return Some(packet);
         }
+    }
+}
 
-        // If the packet does not belong to the selected track, skip over it.
-        if packet.track_id() != track_id {
-            continue;
-        }
+pub struct PacketDecoder {
+    decoder: Box<dyn Decoder>,
+}
 
+impl PacketDecoder {
+    pub fn new(decoder: Box<dyn Decoder>) -> Self {
+        Self { decoder }
+    }
+
+    pub fn decode<T>(&mut self, packet: Packet) -> DiziResult<Vec<T>>
+    where
+        T: symphonia::core::sample::Sample
+            + cpal::Sample
+            + std::marker::Send
+            + 'static
+            + symphonia::core::conv::FromSample<i8>
+            + symphonia::core::conv::FromSample<i16>
+            + symphonia::core::conv::FromSample<i32>
+            + symphonia::core::conv::FromSample<u8>
+            + symphonia::core::conv::FromSample<u16>
+            + symphonia::core::conv::FromSample<u32>
+            + symphonia::core::conv::FromSample<f32>
+            + symphonia::core::conv::FromSample<f64>
+            + symphonia::core::conv::FromSample<symphonia::core::sample::i24>
+            + symphonia::core::conv::FromSample<symphonia::core::sample::u24>,
+    {
         // Decode the packet into audio samples.
-        match decoder.decode(&packet) {
+        match self.decoder.decode(&packet) {
             Ok(decoded) => {
                 if decoded.frames() > 0 {
                     let spec = *decoded.spec();
                     let mut samples: SampleBuffer<T> =
                         SampleBuffer::new(decoded.frames() as u64, spec);
                     samples.copy_interleaved_ref(decoded);
-                    match channel_data.as_mut() {
-                        Some(channels) => {
-                            for sample in samples.samples() {
-                                channels.push(*sample);
-                            }
-                        }
-                        None => {
-                            let mut channels: Vec<T> = vec![];
-                            for sample in samples.samples() {
-                                channels.push(*sample);
-                            }
-                            channel_data = Some(channels);
-                        }
-                    }
-                }
-                // Consume the decoded audio samples (see below).
-            }
-            Err(SymphoniaError::IoError(_)) => {
-                // The packet failed to decode due to an IO error, skip the packet.
-                continue;
-            }
-            Err(SymphoniaError::DecodeError(_)) => {
-                // The packet failed to decode due to invalid data, skip the packet.
-                continue;
-            }
-            Err(err) => {
-                return Err(DiziError::from(err));
-            }
-        }
-    }
 
-    match channel_data {
-        Some(s) => Ok(s),
-        None => Err(DiziError::new(
-            DiziErrorKind::NoDevice,
-            "Failed to decode audio".to_string(),
-        )),
+                    let sample_data: Vec<T> = samples.samples().iter().map(|s| *s).collect();
+                    Ok(sample_data)
+                } else {
+                    Ok(vec![])
+                }
+            }
+            Err(SymphoniaError::IoError(_)) => Ok(vec![]),
+            Err(SymphoniaError::DecodeError(_)) => Ok(vec![]),
+            Err(err) => Err(DiziError::from(err)),
+        }
     }
 }
 
@@ -127,7 +107,7 @@ pub fn stream_loop<T>(
     stream_tx: mpsc::Sender<StreamEvent>,
     device: &cpal::Device,
     config: &StreamConfig,
-    packets: Vec<T>,
+    samples: Vec<T>,
     volume: f32,
     volume_change: fn(T, f32) -> T,
 ) -> DiziResult<(Stream, mpsc::Sender<PlayerRequest>)>
@@ -151,10 +131,6 @@ where
 
     let (playback_loop_tx, playback_loop_rx) = mpsc::channel();
 
-    let frame_index = Arc::new(RwLock::new(0_usize));
-    let volume = Arc::new(RwLock::new(volume));
-    let playback_duration = Arc::new(RwLock::new(0));
-
     let time_base = TimeBase {
         numer: 1,
         denom: config.sample_rate.0 * config.channels as u32,
@@ -162,8 +138,16 @@ where
 
     let _ = stream_tx.send(StreamEvent::Progress(Duration::from_secs(0)));
 
+    // if stream_tx is None, then we've already sent a StreamEnded message
+    // and we don't need to send another one
     let mut stream_tx = Some(stream_tx);
-    let packet_count = packets.len();
+
+    let samples_count = samples.len();
+
+    // all vars that the stream will update while its streaming
+    let frame_index = Arc::new(RwLock::new(0_usize));
+    let volume = Arc::new(RwLock::new(volume));
+    let playback_duration = Arc::new(RwLock::new(0));
 
     let stream = device.build_output_stream(
         config,
@@ -174,32 +158,30 @@ where
                     *current_volume = new_volume;
                 }
                 PlayerRequest::FastForward { offset } => {
-                    let mut packet_offset = frame_index.write().unwrap();
-                    *packet_offset += time_base.denom as usize * offset.as_secs() as usize;
-                    if *packet_offset >= packet_count {
-                        *packet_offset = packet_count - time_base.denom as usize;
+                    let mut sample_offset = frame_index.write().unwrap();
+                    *sample_offset += time_base.denom as usize * offset.as_secs() as usize;
+                    if *sample_offset >= samples_count {
+                        *sample_offset = samples_count - time_base.denom as usize;
                     }
                 }
                 PlayerRequest::Rewind { offset } => {
-                    let mut packet_offset = frame_index.write().unwrap();
-                    if *packet_offset < time_base.denom as usize * offset.as_secs() as usize {
-                        *packet_offset = 0;
+                    let mut sample_offset = frame_index.write().unwrap();
+                    if *sample_offset < time_base.denom as usize * offset.as_secs() as usize {
+                        *sample_offset = 0;
                     } else {
-                        *packet_offset -= time_base.denom as usize * offset.as_secs() as usize;
+                        *sample_offset -= time_base.denom as usize * offset.as_secs() as usize;
                     }
                 }
-                PlayerRequest::Play { .. } => {}
-                PlayerRequest::Pause => {}
-                PlayerRequest::Resume => {}
-                PlayerRequest::Stop => {}
+                _ => {}
             };
 
             if let Ok(msg) = playback_loop_rx.try_recv() {
                 process_message(msg);
             }
 
-            let packet_offset = { *frame_index.read().unwrap() };
-            if packet_offset >= packet_count {
+            // if sample_offset is greater than samples_count, then we've reached the end
+            let sample_offset = { *frame_index.read().unwrap() };
+            if sample_offset >= samples_count {
                 if let Some(stream_tx) = stream_tx.take() {
                     let _ = stream_tx.send(StreamEvent::StreamEnded);
                 }
@@ -209,31 +191,27 @@ where
             let current_volume = { *volume.read().unwrap() };
             let mut i = 0;
             for d in data {
-                if packet_offset + i >= packet_count {
-                    {
-                        let mut offset = frame_index.write().unwrap();
-                        *offset = packet_count + 1;
-                    }
+                if sample_offset + i >= samples_count {
+                    let mut offset = frame_index.write().unwrap();
+                    *offset = samples_count + 1;
                     break;
                 }
-                *d = volume_change(packets[packet_offset + i], current_volume);
+                *d = volume_change(samples[sample_offset + i], current_volume);
                 i += 1;
             }
             // new offset
-            let new_packet_offset = {
-                let mut packet_offset = frame_index.write().unwrap();
-                *packet_offset += i;
-                *packet_offset
+            let new_sample_offset = {
+                let mut sample_offset = frame_index.write().unwrap();
+                *sample_offset += i;
+                *sample_offset
             };
             // new duration
-            let new_duration_sym = time_base.calc_time(new_packet_offset as u64);
-            let current_duration = {
-                let old_duration = *playback_duration.read().unwrap();
-                old_duration
-            };
+            let next_duration = time_base.calc_time(new_sample_offset as u64).seconds;
+            let prev_duration = { *playback_duration.read().unwrap() };
+
             // update duration if seconds changed
-            if current_duration != new_duration_sym.seconds {
-                let new_duration = Duration::from_secs(new_duration_sym.seconds);
+            if prev_duration != next_duration {
+                let new_duration = Duration::from_secs(next_duration);
                 if let Some(stream_tx) = stream_tx.as_ref() {
                     let _ = stream_tx.send(StreamEvent::Progress(new_duration));
                 }

@@ -18,7 +18,7 @@ use dizi_lib::error::{DiziError, DiziErrorKind, DiziResult};
 use crate::audio::request::PlayerRequest;
 use crate::events::{ServerEvent, ServerEventSender};
 
-use super::decode::{decode_packets, stream_loop};
+use super::decode::{stream_loop, PacketDecoder, PacketReader};
 #[derive(Clone, Copy, Debug)]
 
 pub enum StreamEvent {
@@ -212,7 +212,7 @@ impl PlayerStream {
     }
 
     pub fn play(
-        &mut self,
+        &self,
         path: &Path,
         volume: f32,
     ) -> DiziResult<(Stream, mpsc::Sender<PlayerRequest>)> {
@@ -238,6 +238,7 @@ impl PlayerStream {
             .iter()
             .find(|t| t.codec_params.codec != CODEC_TYPE_NULL);
         match track {
+            None => Err(DiziError::new(DiziErrorKind::NoDevice, "".to_string())),
             Some(track) => {
                 // Store the track identifier, it will be used to filter packets.
                 let track_id = track.id;
@@ -278,36 +279,54 @@ impl PlayerStream {
 
                 match config.sample_format() {
                     cpal::SampleFormat::F32 => {
-                        let packets = decode_packets::<f32>(probed.format, decoder, track_id)?;
+                        let packet_reader = PacketReader::new(probed.format, track_id);
+                        let mut packet_decoder = PacketDecoder::new(decoder);
+                        let mut samples = Vec::new();
+                        for packet in packet_reader {
+                            let packet_sample = packet_decoder.decode::<f32>(packet)?;
+                            samples.extend(packet_sample);
+                        }
                         let res = stream_loop::<f32>(
                             stream_tx,
                             &self.device,
                             &audio_config,
-                            packets,
+                            samples,
                             volume,
                             |packet, volume| packet * volume,
                         )?;
                         Ok(res)
                     }
                     cpal::SampleFormat::I16 => {
-                        let packets = decode_packets::<i16>(probed.format, decoder, track_id)?;
+                        let packet_reader = PacketReader::new(probed.format, track_id);
+                        let mut packet_decoder = PacketDecoder::new(decoder);
+                        let mut samples = Vec::new();
+                        for packet in packet_reader {
+                            let packet_sample = packet_decoder.decode::<i16>(packet)?;
+                            samples.extend(packet_sample);
+                        }
                         let res = stream_loop::<i16>(
                             stream_tx,
                             &self.device,
                             &audio_config,
-                            packets,
+                            samples,
                             volume,
                             |packet, volume| ((packet as f32) * volume) as i16,
                         )?;
                         Ok(res)
                     }
                     cpal::SampleFormat::U16 => {
-                        let packets = decode_packets::<u16>(probed.format, decoder, track_id)?;
+                        let packet_reader = PacketReader::new(probed.format, track_id);
+                        let mut packet_decoder = PacketDecoder::new(decoder);
+                        let mut samples = Vec::new();
+                        for packet in packet_reader {
+                            let packet_sample = packet_decoder.decode::<u16>(packet)?;
+                            samples.extend(packet_sample);
+                        }
                         let res = stream_loop::<u16>(
                             stream_tx,
                             &self.device,
                             &audio_config,
-                            packets,
+                            samples,
                             volume,
                             |packet, volume| ((packet as f32) * volume) as u16,
                         )?;
@@ -315,7 +334,6 @@ impl PlayerStream {
                     }
                 }
             }
-            None => Err(DiziError::new(DiziErrorKind::NoDevice, "".to_string())),
         }
     }
 }

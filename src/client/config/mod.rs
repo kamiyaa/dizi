@@ -4,8 +4,8 @@ pub mod option;
 pub mod theme;
 
 pub use self::general::*;
-pub use self::keymap::AppKeyMapping;
-pub use self::theme::{AppStyle, AppTheme};
+pub use self::keymap::*;
+pub use self::theme::*;
 
 use dizi_lib::error::{DiziError, DiziErrorKind, DiziResult};
 use serde::de::DeserializeOwned;

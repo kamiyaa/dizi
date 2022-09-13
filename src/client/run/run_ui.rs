@@ -13,11 +13,11 @@ use crate::event::process_event;
 use crate::event::AppEvent;
 use crate::key_command::{AppExecute, Command, CommandKeybind};
 use crate::preview::preview_default;
+use crate::traits::ToString;
 use crate::ui::views;
 use crate::ui::views::TuiView;
 use crate::ui::AppBackend;
 use crate::util::request::send_client_request;
-use crate::util::to_string::ToString;
 
 pub fn run_ui(
     backend: &mut AppBackend,

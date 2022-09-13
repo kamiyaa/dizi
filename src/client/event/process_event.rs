@@ -10,7 +10,7 @@ use dizi_lib::playlist::PlaylistType;
 use dizi_lib::response::server::ServerBroadcastEvent;
 
 use crate::config::option::WidgetType;
-use crate::config::AppKeyMapping;
+use crate::config::KeyMapping;
 use crate::context::{AppContext, QuitType};
 use crate::event::AppEvent;
 use crate::fs::JoshutoDirList;
@@ -21,7 +21,7 @@ use crate::ui::views::TuiCommandMenu;
 pub fn get_input_while_composite<'a>(
     backend: &mut ui::AppBackend,
     context: &mut AppContext,
-    keymap: &'a AppKeyMapping,
+    keymap: &'a KeyMapping,
 ) -> Option<&'a Command> {
     let mut keymap = keymap;
 
@@ -35,7 +35,7 @@ pub fn get_input_while_composite<'a>(
                 AppEvent::Termion(event) => {
                     match event {
                         Event::Key(Key::Esc) => return None,
-                        event => match keymap.as_ref().get(&event) {
+                        event => match keymap.get(&event) {
                             Some(CommandKeybind::SimpleKeybind(s)) => {
                                 return Some(s);
                             }

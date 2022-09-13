@@ -2,6 +2,7 @@ use serde_derive::Deserialize;
 
 use std::collections::{hash_map::Entry, HashMap};
 use std::convert::{AsMut, AsRef, From};
+use std::str::FromStr;
 
 use termion::event::Event;
 #[cfg(feature = "mouse")]
@@ -11,10 +12,18 @@ use dizi_lib::error::DiziResult;
 use dizi_lib::request::client::ClientRequest;
 
 use crate::config::{parse_toml_to_config, TomlConfigFile};
-use crate::key_command::{Command, CommandKeybind};
+use crate::key_command::{AppCommand, Command, CommandKeybind};
+use crate::traits::ToString;
 use crate::util::keyparse::str_to_event;
 
 use super::default_keymap::DEFAULT_KEYMAP;
+
+#[derive(Clone, Copy, Debug)]
+enum KeymapError {
+    Conflict,
+}
+
+pub type KeyMapping = HashMap<Event, CommandKeybind>;
 
 #[derive(Debug, Deserialize)]
 pub struct CommandKeymap {
@@ -63,29 +72,7 @@ impl AsMut<HashMap<Event, CommandKeybind>> for AppKeyMapping {
 impl From<AppKeyMappingRaw> for AppKeyMapping {
     fn from(raw: AppKeyMappingRaw) -> Self {
         let mut keymaps = Self::new();
-        for m in raw.keymap {
-            match Command::from_keymap(&m) {
-                Ok(command) => {
-                    let events: Vec<Event> = m
-                        .keys
-                        .iter()
-                        .filter_map(|s| str_to_event(s.as_str()))
-                        .collect();
-
-                    if events.len() != m.keys.len() {
-                        eprintln!("Failed to parse events: {:?}", m.keys);
-                        continue;
-                    }
-
-                    let result = insert_keycommand(&mut keymaps, command, &events);
-                    match result {
-                        Ok(_) => {}
-                        Err(e) => eprintln!("{}", e),
-                    }
-                }
-                Err(e) => eprintln!("{}", e),
-            }
-        }
+        keymaps.map = vec_to_map(&raw.keymap);
         keymaps
     }
 }
@@ -108,11 +95,47 @@ impl std::default::Default for AppKeyMapping {
     }
 }
 
+fn vec_to_map(vec: &[CommandKeymap]) -> HashMap<Event, CommandKeybind> {
+    let mut hashmap = HashMap::new();
+
+    for m in vec {
+        match Command::from_keymap(m) {
+            Ok(command) => {
+                let events: Vec<Event> = m
+                    .keys
+                    .iter()
+                    .filter_map(|s| str_to_event(s.as_str()))
+                    .collect();
+
+                if events.len() != m.keys.len() {
+                    eprintln!("Failed to parse events: {:?}", m.keys);
+                    continue;
+                }
+
+                let command_str = command.command();
+                let result = insert_keycommand(&mut hashmap, command, &events);
+                match result {
+                    Ok(_) => {}
+                    Err(e) => match e {
+                        KeymapError::Conflict => {
+                            let events_str: Vec<String> =
+                                events.iter().map(|e| e.to_string()).collect();
+                            eprintln!("Error: Ambiguous Keymapping: Multiple commands mapped to key sequence {:?} {}", events_str, command_str);
+                        }
+                    },
+                }
+            }
+            Err(e) => eprintln!("Keymap error: {}", e),
+        }
+    }
+    hashmap
+}
+
 fn insert_keycommand(
-    keymap: &mut AppKeyMapping,
+    keymap: &mut KeyMapping,
     keycommand: Command,
     events: &[Event],
-) -> Result<(), String> {
+) -> Result<(), KeymapError> {
     let num_events = events.len();
     if num_events == 0 {
         return Ok(());
@@ -120,24 +143,22 @@ fn insert_keycommand(
 
     let event = events[0].clone();
     if num_events == 1 {
-        match keymap.as_mut().entry(event) {
-            Entry::Occupied(_) => {
-                return Err(format!("Error: Keybindings ambiguous for {}", keycommand))
-            }
+        match keymap.entry(event) {
+            Entry::Occupied(_) => return Err(KeymapError::Conflict),
             Entry::Vacant(entry) => entry.insert(CommandKeybind::SimpleKeybind(keycommand)),
         };
         return Ok(());
     }
 
-    match keymap.as_mut().entry(event) {
+    match keymap.entry(event) {
         Entry::Occupied(mut entry) => match entry.get_mut() {
             CommandKeybind::CompositeKeybind(ref mut m) => {
                 insert_keycommand(m, keycommand, &events[1..])
             }
-            _ => Err(format!("Error: Keybindings ambiguous for {}", keycommand)),
+            _ => Err(KeymapError::Conflict),
         },
         Entry::Vacant(entry) => {
-            let mut new_map = AppKeyMapping::new();
+            let mut new_map = KeyMapping::new();
             let result = insert_keycommand(&mut new_map, keycommand, &events[1..]);
             if result.is_ok() {
                 let composite_command = CommandKeybind::CompositeKeybind(new_map);
