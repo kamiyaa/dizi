@@ -21,7 +21,6 @@ impl ToString for PlaylistType {
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
 pub struct FilePlaylist {
-    #[serde(rename = "list")]
     pub list: Vec<Song>,
     pub cursor_index: Option<usize>,
     pub playing_index: Option<usize>,

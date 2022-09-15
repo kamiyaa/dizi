@@ -25,7 +25,20 @@ fn _playlist_goto_playing(context: &mut AppContext) -> DiziResult {
     let player_state = context.server_state_ref().player_ref();
 
     match player_state.playlist_status {
-        PlaylistType::DirectoryListing => {}
+        PlaylistType::DirectoryListing => {
+            if let Some(song) = player_state.song.clone() {
+                let file_path = song.file_path();
+                if let Some((index, _)) = player_state
+                    .playlist
+                    .playlist()
+                    .iter()
+                    .enumerate()
+                    .find(|(i, song)| song.file_path() == file_path)
+                {
+                    set_playlist_index(context, index);
+                }
+            }
+        }
         PlaylistType::PlaylistFile => {
             if let Some(index) = player_state.playlist.playing_index {
                 set_playlist_index(context, index);
