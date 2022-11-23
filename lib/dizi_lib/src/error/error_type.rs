@@ -158,3 +158,13 @@ impl From<cpal::PlayStreamError> for DiziError {
         }
     }
 }
+
+impl From<cpal::PauseStreamError> for DiziError {
+    fn from(err: cpal::PauseStreamError) -> Self {
+        let _cause = err.to_string();
+        Self {
+            _kind: DiziErrorKind::from(err),
+            _cause,
+        }
+    }
+}

@@ -2,7 +2,7 @@ use dizi_lib::playlist::PlaylistType;
 
 use crate::playlist::playlist_directory::PlaylistDirectory;
 use crate::playlist::playlist_file::PlaylistFile;
-use crate::playlist::traits::{OrderedPlaylist, OrderedPlaylistEntry};
+use crate::traits::{OrderedPlaylist, OrderedPlaylistEntry};
 
 #[derive(Clone, Debug)]
 pub struct PlaylistContext {

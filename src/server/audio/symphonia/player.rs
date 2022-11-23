@@ -14,13 +14,12 @@ use log::{debug, log_enabled, Level};
 use crate::audio::device::get_default_host;
 use crate::audio::request::PlayerRequest;
 use crate::audio::symphonia::stream::PlayerStream;
-use crate::audio::traits::AudioPlayer;
 use crate::config;
 use crate::context::PlaylistContext;
 use crate::events::ServerEventSender;
 use crate::playlist::playlist_directory::PlaylistDirectory;
 use crate::playlist::playlist_file::PlaylistFile;
-use crate::playlist::traits::{OrderedPlaylist, ShufflePlaylist};
+use crate::traits::{AudioPlayer, OrderedPlaylist, ShufflePlaylist};
 use crate::util::mimetype::{get_mimetype, is_mimetype_audio, is_mimetype_video};
 
 #[derive(Debug)]
@@ -51,10 +50,14 @@ impl SymphoniaPlayer {
         let server_config = config_t.server_ref();
         let player_config = server_config.player_ref();
 
-        let mut playlist_context = PlaylistContext::default();
-        playlist_context.file_playlist =
-            PlaylistFile::from_file(&PathBuf::from("/"), server_config.playlist_ref())
-                .unwrap_or_else(|_| PlaylistFile::new(Vec::new()));
+        let playlist_context = PlaylistContext {
+            file_playlist: PlaylistFile::from_file(
+                &PathBuf::from("/"),
+                server_config.playlist_ref(),
+            )
+            .unwrap_or_else(|_| PlaylistFile::new(Vec::new())),
+            ..Default::default()
+        };
 
         let state = PlayerState {
             next: player_config.next,
@@ -89,7 +92,7 @@ impl SymphoniaPlayer {
             song: song.clone(),
             volume: self.get_volume() as f32 / 100.0,
         })?;
-        let _resp = self.player_stream_res().recv()??;
+        self.player_stream_res().recv()??;
 
         self.state.status = PlayerStatus::Playing;
         self.state.song = Some(song.clone());
@@ -125,8 +128,7 @@ impl AudioPlayer for SymphoniaPlayer {
                 .map(|(i, _)| i);
 
             playlist.set_playlist_index(index);
-            playlist.set_shuffle(shuffle_enabled);
-            if playlist.shuffle_enabled() {
+            if shuffle_enabled {
                 playlist.shuffle();
             }
             if let Some(entry) = playlist.current_entry_details() {
@@ -147,8 +149,7 @@ impl AudioPlayer for SymphoniaPlayer {
         // unshuffle the playlist before choosing setting the new index
         playlist.unshuffle();
         playlist.set_playlist_index(Some(index));
-        playlist.set_shuffle(shuffle_enabled);
-        if playlist.shuffle_enabled() {
+        if shuffle_enabled {
             playlist.shuffle();
         }
         if let Some(entry) = playlist.current_entry_details() {
@@ -258,10 +259,6 @@ impl AudioPlayer for SymphoniaPlayer {
     }
     fn set_shuffle(&mut self, shuffle: bool) {
         self.state.shuffle = shuffle;
-        self.playlist_mut().file_playlist_mut().set_shuffle(shuffle);
-        self.playlist_mut()
-            .directory_playlist_mut()
-            .set_shuffle(shuffle);
         if self.shuffle_enabled() {
             self.playlist_mut().file_playlist_mut().shuffle();
             self.playlist_mut().directory_playlist_mut().shuffle();

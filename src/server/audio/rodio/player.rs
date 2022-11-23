@@ -15,13 +15,13 @@ use dizi_lib::song::Song;
 use crate::audio::device::get_default_host;
 use crate::audio::request::PlayerRequest;
 use crate::audio::rodio::stream::PlayerStream;
-use crate::audio::traits::AudioPlayer;
 use crate::config;
 use crate::context::PlaylistContext;
 use crate::events::ServerEventSender;
 use crate::playlist::playlist_directory::PlaylistDirectory;
 use crate::playlist::playlist_file::PlaylistFile;
 use crate::playlist::traits::{OrderedPlaylist, ShufflePlaylist};
+use crate::traits::AudioPlayer;
 use crate::util::mimetype::{get_mimetype, is_mimetype_audio, is_mimetype_video};
 
 pub struct RodioPlayer {

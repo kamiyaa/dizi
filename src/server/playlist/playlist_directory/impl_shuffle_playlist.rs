@@ -2,16 +2,9 @@ use rand::prelude::SliceRandom;
 use rand::thread_rng;
 
 use super::PlaylistDirectory;
-use crate::playlist::traits::{OrderedPlaylist, ShufflePlaylist};
+use crate::traits::{OrderedPlaylist, ShufflePlaylist};
 
 impl ShufflePlaylist for PlaylistDirectory {
-    fn shuffle_enabled(&self) -> bool {
-        self._shuffle
-    }
-    fn set_shuffle(&mut self, shuffle: bool) {
-        self._shuffle = shuffle;
-    }
-
     fn shuffle(&mut self) {
         let mut random_order: Vec<usize> = (0..self.len()).collect();
 

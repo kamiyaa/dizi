@@ -33,7 +33,7 @@ fn _playlist_goto_playing(context: &mut AppContext) -> DiziResult {
                     .playlist()
                     .iter()
                     .enumerate()
-                    .find(|(i, song)| song.file_path() == file_path)
+                    .find(|(_, song)| song.file_path() == file_path)
                 {
                     set_playlist_index(context, index);
                 }

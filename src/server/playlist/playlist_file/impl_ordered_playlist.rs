@@ -1,7 +1,7 @@
 use dizi_lib::song::Song;
 
 use super::PlaylistFile;
-use crate::playlist::traits::{OrderedPlaylist, OrderedPlaylistEntry};
+use crate::traits::{OrderedPlaylist, OrderedPlaylistEntry};
 
 impl OrderedPlaylist for PlaylistFile {
     fn is_empty(&self) -> bool {

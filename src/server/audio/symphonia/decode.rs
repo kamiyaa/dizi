@@ -10,7 +10,7 @@ use symphonia::core::formats::{FormatReader, Packet};
 use cpal::traits::{DeviceTrait, StreamTrait};
 use cpal::{Stream, StreamConfig};
 
-use dizi_lib::error::{DiziError, DiziErrorKind, DiziResult};
+use dizi_lib::error::{DiziError, DiziResult};
 use symphonia::core::units::TimeBase;
 
 use crate::audio::request::PlayerRequest;
@@ -90,7 +90,7 @@ impl PacketDecoder {
                         SampleBuffer::new(decoded.frames() as u64, spec);
                     samples.copy_interleaved_ref(decoded);
 
-                    let sample_data: Vec<T> = samples.samples().iter().map(|s| *s).collect();
+                    let sample_data: Vec<T> = samples.samples().to_vec();
                     Ok(sample_data)
                 } else {
                     Ok(vec![])
@@ -215,10 +215,8 @@ where
                 if let Some(stream_tx) = stream_tx.as_ref() {
                     let _ = stream_tx.send(StreamEvent::Progress(new_duration));
                 }
-                {
-                    let mut duration = playback_duration.write().unwrap();
-                    *duration = new_duration.as_secs();
-                }
+                let mut duration = playback_duration.write().unwrap();
+                *duration = new_duration.as_secs();
             }
         },
         err_fn,

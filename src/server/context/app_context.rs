@@ -2,11 +2,11 @@
 use crate::audio::rodio::player::RodioPlayer;
 #[cfg(feature = "symphonia-backend")]
 use crate::audio::symphonia::player::SymphoniaPlayer;
-use crate::audio::traits::AudioPlayer;
 use crate::config;
 use crate::events::Events;
+use crate::traits::AudioPlayer;
 
-#[derive(Clone, Copy, Debug, PartialEq)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum QuitType {
     DoNot,
     Server,

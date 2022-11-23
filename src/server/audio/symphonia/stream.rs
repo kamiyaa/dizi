@@ -114,23 +114,23 @@ impl PlayerStream {
         }
     }
 
-    pub fn pause(&mut self) -> Result<(), mpsc::SendError<PlayerRequest>> {
+    pub fn pause(&mut self) -> DiziResult {
         if let Some(state) = self.state.as_ref() {
-            let _ = state.stream.pause();
+            state.stream.pause()?;
         }
         Ok(())
     }
-    pub fn resume(&mut self) -> Result<(), mpsc::SendError<PlayerRequest>> {
+    pub fn resume(&mut self) -> DiziResult {
         if let Some(state) = self.state.as_ref() {
-            let _ = state.stream.play();
+            state.stream.play()?;
         }
         Ok(())
     }
-    pub fn stop(&mut self) -> Result<(), mpsc::SendError<PlayerRequest>> {
+    pub fn stop(&mut self) -> DiziResult {
         self.state.take();
         Ok(())
     }
-    pub fn fast_forward(&mut self, offset: Duration) -> Result<(), mpsc::SendError<PlayerRequest>> {
+    pub fn fast_forward(&mut self, offset: Duration) -> DiziResult {
         if let Some(state) = self.state.as_ref() {
             state
                 .playback_loop_tx
@@ -138,7 +138,7 @@ impl PlayerStream {
         }
         Ok(())
     }
-    pub fn rewind(&mut self, offset: Duration) -> Result<(), mpsc::SendError<PlayerRequest>> {
+    pub fn rewind(&mut self, offset: Duration) -> DiziResult {
         if let Some(state) = self.state.as_ref() {
             state
                 .playback_loop_tx
@@ -158,54 +158,64 @@ impl PlayerStream {
     pub fn listen_for_events(&mut self) -> DiziResult {
         while let Ok(msg) = self.event_poller.next() {
             match msg {
-                PlayerStreamEvent::Player(req) => match req {
-                    PlayerRequest::Play { song, volume } => {
-                        let stream_res = self.play(song.file_path(), volume);
-                        match stream_res {
-                            Ok(stream_res) => {
-                                let (stream, playback_loop_tx) = stream_res;
-                                self.state = Some(PlayerStreamState {
-                                    stream,
-                                    playback_loop_tx,
-                                });
-                                self.event_poller.player_res().send(Ok(()))?;
-                            }
-                            Err(e) => self.event_poller.player_res().send(Err(e))?,
-                        };
-                    }
-                    PlayerRequest::Pause => {
-                        self.pause()?;
+                PlayerStreamEvent::Player(req) => self.process_player_req(req)?,
+                PlayerStreamEvent::Stream(event) => self.process_stream_event(event)?,
+            }
+        }
+        Ok(())
+    }
+
+    fn process_player_req(&mut self, req: PlayerRequest) -> DiziResult {
+        match req {
+            PlayerRequest::Play { song, volume } => {
+                let stream_res = self.play(song.file_path(), volume);
+                match stream_res {
+                    Ok(stream_res) => {
+                        let (stream, playback_loop_tx) = stream_res;
+                        self.state = Some(PlayerStreamState {
+                            stream,
+                            playback_loop_tx,
+                        });
                         self.event_poller.player_res().send(Ok(()))?;
                     }
-                    PlayerRequest::Stop => {
-                        self.stop()?;
-                        self.event_poller.player_res().send(Ok(()))?;
-                    }
-                    PlayerRequest::Resume => {
-                        self.resume()?;
-                        self.event_poller.player_res().send(Ok(()))?;
-                    }
-                    PlayerRequest::SetVolume { volume } => {
-                        self.set_volume(volume);
-                        self.event_poller.player_res().send(Ok(()))?;
-                    }
-                    PlayerRequest::FastForward { offset } => {
-                        self.fast_forward(offset)?;
-                    }
-                    PlayerRequest::Rewind { offset } => {
-                        self.rewind(offset)?;
-                    }
-                },
-                PlayerStreamEvent::Stream(event) => match event {
-                    StreamEvent::StreamEnded => {
-                        self.stop()?;
-                        self.event_tx.send(ServerEvent::PlayerDone)?;
-                    }
-                    StreamEvent::Progress(duration) => {
-                        self.event_tx
-                            .send(ServerEvent::PlayerProgressUpdate(duration))?;
-                    }
-                },
+                    Err(e) => self.event_poller.player_res().send(Err(e))?,
+                };
+            }
+            PlayerRequest::Pause => {
+                self.pause()?;
+                self.event_poller.player_res().send(Ok(()))?;
+            }
+            PlayerRequest::Stop => {
+                self.stop()?;
+                self.event_poller.player_res().send(Ok(()))?;
+            }
+            PlayerRequest::Resume => {
+                self.resume()?;
+                self.event_poller.player_res().send(Ok(()))?;
+            }
+            PlayerRequest::SetVolume { volume } => {
+                self.set_volume(volume);
+                self.event_poller.player_res().send(Ok(()))?;
+            }
+            PlayerRequest::FastForward { offset } => {
+                self.fast_forward(offset)?;
+            }
+            PlayerRequest::Rewind { offset } => {
+                self.rewind(offset)?;
+            }
+        }
+        Ok(())
+    }
+
+    fn process_stream_event(&mut self, event: StreamEvent) -> DiziResult {
+        match event {
+            StreamEvent::StreamEnded => {
+                self.stop()?;
+                self.event_tx.send(ServerEvent::PlayerDone)?;
+            }
+            StreamEvent::Progress(duration) => {
+                self.event_tx
+                    .send(ServerEvent::PlayerProgressUpdate(duration))?;
             }
         }
         Ok(())

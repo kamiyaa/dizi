@@ -4,4 +4,3 @@ pub mod request;
 pub mod rodio;
 #[cfg(feature = "symphonia-backend")]
 pub mod symphonia;
-pub mod traits;

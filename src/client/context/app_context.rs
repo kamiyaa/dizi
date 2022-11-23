@@ -75,8 +75,7 @@ impl AppContext {
     }
 
     pub fn flush_stream(&mut self) -> io::Result<()> {
-        utils::flush(&mut self.stream)?;
-        Ok(())
+        utils::flush(&mut self.stream)
     }
 
     // event related

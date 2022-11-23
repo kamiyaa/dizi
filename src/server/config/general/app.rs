@@ -10,7 +10,7 @@ pub struct AppConfigRaw {
     pub server: ServerConfigRaw,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Clone, Debug, Default)]
 pub struct AppConfig {
     server: ServerConfig,
 }
@@ -30,14 +30,6 @@ impl AppConfig {
 
     pub fn server_ref(&self) -> &ServerConfig {
         &self.server
-    }
-}
-
-impl std::default::Default for AppConfig {
-    fn default() -> Self {
-        Self {
-            server: ServerConfig::default(),
-        }
     }
 }
 

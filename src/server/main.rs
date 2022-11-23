@@ -7,6 +7,7 @@ mod playlist;
 mod server;
 mod server_commands;
 mod server_util;
+mod traits;
 mod util;
 
 use std::path::PathBuf;

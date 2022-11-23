@@ -41,7 +41,7 @@ whenever mocp is playing music, other audio/video apps stop working and vice ver
 ```
 ~ $ dizi-server     # starts server
 ~ $ RUST_LOG=debug dizi-server      # starts server with debug messages enabled
-~ $ dizi            # starts server if not already started
+~ $ dizi            # starts server if not already started, then starts frontend
 ```
 
 ## Configuration

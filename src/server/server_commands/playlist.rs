@@ -9,8 +9,8 @@ use dizi_lib::song::Song;
 
 use crate::context::AppContext;
 use crate::playlist::playlist_file::PlaylistFile;
-use crate::playlist::traits::{OrderedPlaylist, ShufflePlaylist};
 use crate::server_util::run_on_song_change;
+use crate::traits::{OrderedPlaylist, ShufflePlaylist};
 use crate::util::mimetype::is_playable;
 
 pub fn playlist_play(context: &mut AppContext, index: usize) -> DiziResult {
@@ -30,7 +30,9 @@ pub fn playlist_load(context: &mut AppContext, cwd: &Path, path: &Path) -> DiziR
     }
 
     let mut new_playlist = PlaylistFile::from_file(cwd, path)?;
-    new_playlist.set_shuffle(shuffle_enabled);
+    if shuffle_enabled {
+        new_playlist.shuffle();
+    }
     playlist.file_playlist = new_playlist;
     Ok(())
 }

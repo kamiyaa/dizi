@@ -15,7 +15,6 @@ pub struct PlaylistDirectory {
     _playlist_content: Vec<Song>,
     _playlist_order: Vec<usize>,
     _playlist_index: Option<usize>,
-    _shuffle: bool,
 }
 
 impl PlaylistDirectory {
@@ -25,7 +24,6 @@ impl PlaylistDirectory {
             _playlist_content: songs,
             _playlist_order: (0..songs_count).collect(),
             _playlist_index: None,
-            _shuffle: false,
         }
     }
 
@@ -44,8 +42,14 @@ impl PlaylistDirectory {
             _playlist_content: songs,
             _playlist_order: (0..len).collect(),
             _playlist_index: None,
-            _shuffle: false,
         })
+    }
+
+    pub fn get_playlist_index(&self) -> Option<usize> {
+        self._playlist_index
+    }
+    pub fn set_playlist_index(&mut self, index: Option<usize>) {
+        self._playlist_index = index;
     }
 
     fn playlist_content_ref(&self) -> &Vec<Song> {
@@ -60,12 +64,5 @@ impl PlaylistDirectory {
     }
     fn playlist_order_mut(&mut self) -> &mut Vec<usize> {
         &mut self._playlist_order
-    }
-
-    pub fn get_playlist_index(&self) -> Option<usize> {
-        self._playlist_index
-    }
-    pub fn set_playlist_index(&mut self, index: Option<usize>) {
-        self._playlist_index = index;
     }
 }

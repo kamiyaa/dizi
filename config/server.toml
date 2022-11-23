@@ -4,9 +4,6 @@ socket = "~/dizi-server-socket"
 # Where to save playlist on exit
 playlist = "~/dizi_playlist.m3u"
 
-# not implemented
-poll_rate = 200
-
 # supports alsa, jack
 audio_system = "alsa"
 

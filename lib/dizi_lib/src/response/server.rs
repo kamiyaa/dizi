@@ -10,31 +10,62 @@ use crate::song::Song;
 pub enum ServerBroadcastEvent {
     // server is shutting down
     ServerQuit,
-    ServerError { msg: String },
-    ServerQuery { query: String },
-    ServerQueryAll { query_items: HashMap<String, String> },
+    ServerError {
+        msg: String,
+    },
+    ServerQuery {
+        query: String,
+    },
+    ServerQueryAll {
+        query_items: HashMap<String, String>,
+    },
 
     // player status updates
-    PlayerState { state: PlayerState },
+    PlayerState {
+        state: PlayerState,
+    },
 
-    PlayerFilePlay { song: Song },
+    PlayerFilePlay {
+        song: Song,
+    },
 
     PlayerPause,
     PlayerResume,
     PlayerStop,
 
-    PlayerRepeat { on: bool },
-    PlayerShuffle { on: bool },
-    PlayerNext { on: bool },
+    PlayerRepeat {
+        on: bool,
+    },
+    PlayerShuffle {
+        on: bool,
+    },
+    PlayerNext {
+        on: bool,
+    },
 
-    PlayerVolumeUpdate { volume: usize },
-    PlayerProgressUpdate { elapsed: time::Duration },
+    PlayerVolumeUpdate {
+        volume: usize,
+    },
+    PlayerProgressUpdate {
+        elapsed: time::Duration,
+    },
 
     // playlist
-    PlaylistOpen { state: PlayerState },
-    PlaylistPlay { index: usize },
-    PlaylistAppend { songs: Vec<Song> },
-    PlaylistRemove { index: usize },
-    PlaylistSwapMove { index1: usize, index2: usize },
+    PlaylistOpen {
+        state: PlayerState,
+    },
+    PlaylistPlay {
+        index: usize,
+    },
+    PlaylistAppend {
+        songs: Vec<Song>,
+    },
+    PlaylistRemove {
+        index: usize,
+    },
+    PlaylistSwapMove {
+        index1: usize,
+        index2: usize,
+    },
     PlaylistClear,
 }

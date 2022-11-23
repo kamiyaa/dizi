@@ -1,10 +1,10 @@
 use std::collections::HashMap;
-use std::path::{Path, PathBuf};
-use std::time;
 #[cfg(not(feature = "symphonia-backend"))]
 use std::fs::File;
 #[cfg(not(feature = "symphonia-backend"))]
 use std::io::BufReader;
+use std::path::{Path, PathBuf};
+use std::time;
 
 #[cfg(feature = "rodio-backend")]
 use rodio::decoder::Decoder;
@@ -96,8 +96,7 @@ impl Song {
         // Create the media source stream.
         let mss = MediaSourceStream::new(Box::new(src), Default::default());
 
-        let probed = symphonia::default::get_probe()
-            .format(&hint, mss, &fmt_opts, &meta_opts)?;
+        let probed = symphonia::default::get_probe().format(&hint, mss, &fmt_opts, &meta_opts)?;
 
         // Get the instantiated format reader.
         let mut format = probed.format;
@@ -109,7 +108,9 @@ impl Song {
             .map(|track| AudioMetadata::from(&track.codec_params))
             .unwrap_or_else(|| AudioMetadata::default());
 
-        let music_metadata = format.metadata().skip_to_latest()
+        let music_metadata = format
+            .metadata()
+            .skip_to_latest()
             .map(|metadata| MusicMetadata::from(metadata))
             .unwrap_or_else(|| MusicMetadata::default());
 
@@ -207,11 +208,16 @@ pub struct MusicMetadata {
 #[cfg(feature = "symphonia-backend")]
 impl std::convert::From<&MetadataRevision> for MusicMetadata {
     fn from(metadata: &MetadataRevision) -> Self {
-        let standard_tags: HashMap<String, String> = metadata.tags()
+        let standard_tags: HashMap<String, String> = metadata
+            .tags()
             .iter()
-            .filter_map(|tag| tag.std_key.map(|std_key| (format!("{:?}", std_key), tag.value.to_string())))
+            .filter_map(|tag| {
+                tag.std_key
+                    .map(|std_key| (format!("{:?}", std_key), tag.value.to_string()))
+            })
             .collect();
-        let tags: HashMap<String, String> = metadata.tags()
+        let tags: HashMap<String, String> = metadata
+            .tags()
             .iter()
             .filter(|tag| tag.std_key.is_none())
             .map(|tag| (tag.key.to_owned(), tag.value.to_string()))

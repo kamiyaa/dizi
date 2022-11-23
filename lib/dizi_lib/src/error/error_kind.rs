@@ -20,12 +20,12 @@ pub enum DiziErrorKind {
     SendError,
     ReceiveError,
 
-
     #[cfg(feature = "symphonia-backend")]
     SymphoniaError(symphonia::core::errors::Error),
 
     CpalBuildStreamError(cpal::BuildStreamError),
     CpalPlayStreamError(cpal::PlayStreamError),
+    CpalPauseStreamError(cpal::PauseStreamError),
 
     NoDevice,
     UnrecognizedFormat,
@@ -109,5 +109,11 @@ impl From<cpal::BuildStreamError> for DiziErrorKind {
 impl From<cpal::PlayStreamError> for DiziErrorKind {
     fn from(e: cpal::PlayStreamError) -> Self {
         Self::CpalPlayStreamError(e)
+    }
+}
+
+impl From<cpal::PauseStreamError> for DiziErrorKind {
+    fn from(e: cpal::PauseStreamError) -> Self {
+        Self::CpalPauseStreamError(e)
     }
 }

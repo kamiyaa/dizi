@@ -15,7 +15,6 @@ pub struct PlaylistFile {
     _playlist_content: Vec<Song>,
     _playlist_order: Vec<usize>,
     _playlist_index: Option<usize>,
-    _shuffle: bool,
 }
 
 impl PlaylistFile {
@@ -25,7 +24,6 @@ impl PlaylistFile {
             _playlist_content: songs,
             _playlist_order: (0..content_count).collect(),
             _playlist_index: None,
-            _shuffle: false,
         }
     }
 
@@ -34,17 +32,14 @@ impl PlaylistFile {
         let read_playlist: Vec<_> = reader.entries().map(|entry| entry.unwrap()).collect();
         let mut songs = Vec::new();
         for entry in &read_playlist {
-            match entry {
-                m3u::Entry::Path(p) => {
-                    if p.is_absolute() {
-                        songs.push(Song::new(p));
-                    } else {
-                        let mut new_path = cwd.to_path_buf();
-                        new_path.push(p);
-                        songs.push(Song::new(&new_path));
-                    }
+            if let m3u::Entry::Path(p) = entry {
+                if p.is_absolute() {
+                    songs.push(Song::new(p));
+                } else {
+                    let mut new_path = cwd.to_path_buf();
+                    new_path.push(p);
+                    songs.push(Song::new(&new_path));
                 }
-                _ => {}
             }
         }
         let playlist = PlaylistFile::new(songs);
@@ -62,6 +57,13 @@ impl PlaylistFile {
         }
     }
 
+    pub fn get_playlist_index(&self) -> Option<usize> {
+        self._playlist_index
+    }
+    pub fn set_playlist_index(&mut self, index: Option<usize>) {
+        self._playlist_index = index;
+    }
+
     fn playlist_content_ref(&self) -> &Vec<Song> {
         &self._playlist_content
     }
@@ -74,12 +76,5 @@ impl PlaylistFile {
     }
     fn playlist_order_mut(&mut self) -> &mut Vec<usize> {
         &mut self._playlist_order
-    }
-
-    pub fn get_playlist_index(&self) -> Option<usize> {
-        self._playlist_index
-    }
-    pub fn set_playlist_index(&mut self, index: Option<usize>) {
-        self._playlist_index = index;
     }
 }

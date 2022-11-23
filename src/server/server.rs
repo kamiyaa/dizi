@@ -11,15 +11,15 @@ use dizi_lib::response::server::ServerBroadcastEvent;
 use crate::config::AppConfig;
 use crate::context::{AppContext, QuitType};
 use crate::events::{AppEvent, ServerEvent, ServerEventSender};
-use crate::playlist::traits::OrderedPlaylist;
 use crate::server_util;
+use crate::traits::OrderedPlaylist;
 
 pub fn setup_socket(config: &AppConfig) -> DiziResult<UnixListener> {
     let socket = Path::new(config.server_ref().socket_ref());
     if socket.exists() {
-        fs::remove_file(&socket)?;
+        fs::remove_file(socket)?;
     }
-    let stream = UnixListener::bind(&socket)?;
+    let stream = UnixListener::bind(socket)?;
     Ok(stream)
 }
 

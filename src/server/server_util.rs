@@ -16,8 +16,8 @@ use dizi_lib::response::server::ServerBroadcastEvent;
 use crate::client;
 use crate::context::AppContext;
 use crate::events::ServerEvent;
-use crate::playlist::traits::OrderedPlaylist;
 use crate::server_commands::*;
+use crate::traits::OrderedPlaylist;
 
 pub fn process_server_event(context: &mut AppContext, event: ServerEvent) -> DiziResult {
     match event {
