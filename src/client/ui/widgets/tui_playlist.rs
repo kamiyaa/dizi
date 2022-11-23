@@ -151,7 +151,7 @@ fn print_entry(
     (x, y): (u16, u16),
     drawing_width: usize,
 ) {
-    let left_label_original = format!("|{:03}| {}", index + 1, entry.file_name());
+    let left_label_original = format!("{:03} \u{02503} {}", index + 1, entry.file_name());
     let right_label_original = "";
 
     let (left_label, right_label) =

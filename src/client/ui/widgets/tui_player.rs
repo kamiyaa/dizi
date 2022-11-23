@@ -117,9 +117,9 @@ impl<'a> Widget for TuiPlayer<'a> {
             };
 
             let player_status = match self.player.get_player_status() {
-                PlayerStatus::Playing => ">>",
+                PlayerStatus::Playing => "\u{25B6}  ",
                 PlayerStatus::Stopped => "\u{2588}\u{2588}",
-                PlayerStatus::Paused => "||",
+                PlayerStatus::Paused => "\u{2590} \u{258C}",
             };
 
             let text = Spans::from(vec![
