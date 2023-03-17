@@ -114,6 +114,7 @@ pub fn stream_loop<T>(
 where
     T: symphonia::core::sample::Sample
         + cpal::Sample
+        + cpal::SizedSample
         + std::marker::Send
         + 'static
         + symphonia::core::conv::FromSample<i8>
@@ -220,6 +221,7 @@ where
             }
         },
         err_fn,
+        None,
     )?;
     stream.play()?;
     Ok((stream, playback_loop_tx))
