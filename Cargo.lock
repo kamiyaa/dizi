@@ -636,7 +636,6 @@ dependencies = [
  "m3u",
  "phf",
  "rand",
- "rodio",
  "rustyline",
  "serde",
  "serde_derive",
