@@ -59,8 +59,7 @@ impl Song {
         let mss = MediaSourceStream::new(Box::new(src), Default::default());
 
         // get probe
-        let probed = symphonia::default::get_probe()
-            .format(&hint, mss, &fmt_opts, &meta_opts)?;
+        let probed = symphonia::default::get_probe().format(&hint, mss, &fmt_opts, &meta_opts)?;
 
         // Get the instantiated format reader.
         let mut format = probed.format;
