@@ -239,6 +239,7 @@ impl PlayerStream {
 
         // Create the media source stream.
         let mss = MediaSourceStream::new(Box::new(file), Default::default());
+
         let probed = symphonia::default::get_probe().format(&hint, mss, &fmt_opts, &meta_opts)?;
 
         // Get the instantiated format reader.
@@ -247,6 +248,7 @@ impl PlayerStream {
             .tracks()
             .iter()
             .find(|t| t.codec_params.codec != CODEC_TYPE_NULL);
+
         match track {
             None => Err(DiziError::new(DiziErrorKind::NoDevice, "".to_string())),
             Some(track) => {

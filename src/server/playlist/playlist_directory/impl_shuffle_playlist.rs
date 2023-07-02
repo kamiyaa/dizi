@@ -10,7 +10,7 @@ impl ShufflePlaylist for PlaylistDirectory {
 
         // the current song being played should be the
         // first value of the random order
-        match self.current_entry_details() {
+        match self.current_song() {
             Some(entry) => {
                 random_order.remove(entry.song_index);
                 random_order.shuffle(&mut thread_rng());

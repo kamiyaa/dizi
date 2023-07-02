@@ -48,7 +48,7 @@ optional = true
 
 [dependencies.symphonia]
 version = "^0"
-optional = true
+features = ["all"]
 
 [dependencies.tui]
 features = ["termion"]
@@ -76,6 +76,5 @@ cpal = "^0"
 
 
 [features]
-default = [ "devicons", "symphonia-backend" ]
-symphonia-backend = [ "symphonia" ]
+default = [ "devicons" ]
 devicons = [ "phf" ]

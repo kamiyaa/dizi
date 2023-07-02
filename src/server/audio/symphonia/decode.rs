@@ -98,7 +98,10 @@ impl PacketDecoder {
             }
             Err(SymphoniaError::IoError(_)) => Ok(vec![]),
             Err(SymphoniaError::DecodeError(_)) => Ok(vec![]),
-            Err(err) => Err(DiziError::from(err)),
+            Err(err) => {
+                log::error!("Unhandled symphonia error: {}", err);
+                Err(DiziError::from(err))
+            }
         }
     }
 }

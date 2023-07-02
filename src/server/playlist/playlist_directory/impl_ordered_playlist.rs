@@ -51,7 +51,7 @@ impl OrderedPlaylist for PlaylistDirectory {
         &mut self.playlist_content_mut()[index]
     }
 
-    fn current_entry_details(&self) -> Option<OrderedPlaylistEntry> {
+    fn current_song(&self) -> Option<OrderedPlaylistEntry> {
         let playlist_index = self.get_playlist_index()?;
         let song_index = self.playlist_order_ref()[playlist_index];
 

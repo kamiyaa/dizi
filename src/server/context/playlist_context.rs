@@ -26,14 +26,31 @@ impl PlaylistContext {
         &mut self.file_playlist
     }
 
+    pub fn directory_playlist_ref(&self) -> &PlaylistDirectory {
+        &self.directory_playlist
+    }
     pub fn directory_playlist_mut(&mut self) -> &mut PlaylistDirectory {
         &mut self.directory_playlist
     }
 
-    pub fn current_entry_details(&self) -> Option<OrderedPlaylistEntry> {
+    pub fn current_song(&self) -> Option<OrderedPlaylistEntry> {
         match self.get_type() {
-            PlaylistType::PlaylistFile => self.file_playlist.current_entry_details(),
-            PlaylistType::DirectoryListing => self.directory_playlist.current_entry_details(),
+            PlaylistType::PlaylistFile => self.file_playlist.current_song(),
+            PlaylistType::DirectoryListing => self.directory_playlist.current_song(),
+        }
+    }
+
+    pub fn next_song_peak(&mut self) -> Option<OrderedPlaylistEntry> {
+        match self.get_type() {
+            PlaylistType::PlaylistFile => self.file_playlist.next_song_peak(),
+            PlaylistType::DirectoryListing => self.directory_playlist.next_song_peak(),
+        }
+    }
+
+    pub fn previous_song_peak(&mut self) -> Option<OrderedPlaylistEntry> {
+        match self.get_type() {
+            PlaylistType::PlaylistFile => self.file_playlist.previous_song_peak(),
+            PlaylistType::DirectoryListing => self.directory_playlist.previous_song_peak(),
         }
     }
 

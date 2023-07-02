@@ -8,8 +8,8 @@ edition = "2018"
 [dependencies]
 crossbeam = "^0"
 globset = "^0"
-rodio = { features = [ "symphonia-all" ], git = "https://github.com/RustAudio/rodio.git", version = "^0" }
-symphonia = { version = "^0", optional = true }
+log = "^0"
+symphonia = "^0"
 serde = "^1"
 serde_derive = "^1"
 serde_json = "^1"
@@ -24,7 +24,3 @@ cpal = "^0"
 
 [target.'cfg(any(target_os = "macos", target_os = "ios"))'.dependencies]
 cpal = "^0"
-
-[features]
-default = [ "symphonia-backend" ]
-symphonia-backend = [ "symphonia" ]

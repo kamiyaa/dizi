@@ -20,7 +20,6 @@ pub enum DiziErrorKind {
     SendError,
     ReceiveError,
 
-    #[cfg(feature = "symphonia-backend")]
     SymphoniaError(symphonia::core::errors::Error),
 
     CpalBuildStreamError(cpal::BuildStreamError),
@@ -30,10 +29,6 @@ pub enum DiziErrorKind {
     NoDevice,
     UnrecognizedFormat,
     NotAudioFile,
-    #[cfg(feature = "rodio-backend")]
-    RodioDecoderError(rodio::decoder::DecoderError),
-    #[cfg(feature = "rodio-backend")]
-    RodioStreamError(rodio::StreamError),
 
     UnrecognizedArgument,
     UnrecognizedCommand,
@@ -57,30 +52,6 @@ impl From<std::env::VarError> for DiziErrorKind {
     }
 }
 
-#[cfg(feature = "rodio-backend")]
-impl From<rodio::PlayError> for DiziErrorKind {
-    fn from(err: rodio::PlayError) -> Self {
-        match err {
-            rodio::PlayError::DecoderError(e) => Self::DecoderError(e),
-            rodio::PlayError::NoDevice => Self::NoDevice,
-        }
-    }
-}
-
-#[cfg(feature = "rodio-backend")]
-impl From<rodio::decoder::DecoderError> for DiziErrorKind {
-    fn from(err: rodio::decoder::DecoderError) -> Self {
-        Self::RodioDecoderError(err)
-    }
-}
-
-#[cfg(feature = "rodio-backend")]
-impl From<rodio::StreamError> for DiziErrorKind {
-    fn from(err: rodio::StreamError) -> Self {
-        Self::RodioStreamError(err)
-    }
-}
-
 impl From<serde_json::Error> for DiziErrorKind {
     fn from(_: serde_json::Error) -> Self {
         Self::SerdeJson
@@ -93,7 +64,6 @@ impl From<toml::de::Error> for DiziErrorKind {
     }
 }
 
-#[cfg(feature = "symphonia-backend")]
 impl From<symphonia::core::errors::Error> for DiziErrorKind {
     fn from(e: symphonia::core::errors::Error) -> Self {
         Self::SymphoniaError(e)

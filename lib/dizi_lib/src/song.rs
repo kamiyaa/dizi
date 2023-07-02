@@ -1,25 +1,11 @@
 use std::collections::HashMap;
-#[cfg(not(feature = "symphonia-backend"))]
-use std::fs::File;
-#[cfg(not(feature = "symphonia-backend"))]
-use std::io::BufReader;
 use std::path::{Path, PathBuf};
 use std::time;
 
-#[cfg(feature = "rodio-backend")]
-use rodio::decoder::Decoder;
-#[cfg(feature = "rodio-backend")]
-use rodio::source::Source;
-
-#[cfg(feature = "symphonia-backend")]
 use symphonia::core::codecs::{CodecParameters, CODEC_TYPE_NULL};
-#[cfg(feature = "symphonia-backend")]
 use symphonia::core::formats::FormatOptions;
-#[cfg(feature = "symphonia-backend")]
 use symphonia::core::io::MediaSourceStream;
-#[cfg(feature = "symphonia-backend")]
 use symphonia::core::meta::{MetadataOptions, MetadataRevision};
-#[cfg(feature = "symphonia-backend")]
 use symphonia::core::probe::Hint;
 
 use serde_derive::{Deserialize, Serialize};
@@ -40,48 +26,24 @@ pub struct Song {
 }
 
 impl Song {
-    #[cfg(feature = "rodio-backend")]
-    pub fn new(path: &Path) -> DiziResult<Self> {
-        let file = File::open(path)?;
-        let buffer = BufReader::new(file);
-        let source = Decoder::new(buffer)?;
-
-        let audio_metadata = AudioMetadata::from_source(&source);
-        let music_metadata = MusicMetadata::default();
-
-        let file_name = path
-            .file_name()
-            .map(|s| s.to_string_lossy())
-            .unwrap()
-            .into_owned();
-
-        Ok(Self {
-            _file_name: file_name,
-            _path: path.to_path_buf(),
-            _metadata_loaded: false,
-            _audio_metadata: audio_metadata,
-            _music_metadata: music_metadata,
-        })
-    }
-    #[cfg(feature = "symphonia-backend")]
     pub fn new(path: &Path) -> Self {
         let file_name = path
             .file_name()
             .map(|s| s.to_string_lossy())
             .unwrap()
             .into_owned();
-        let mut song = Self {
+        let song = Self {
             _file_name: file_name,
             _path: path.to_path_buf(),
             _metadata_loaded: false,
             _audio_metadata: AudioMetadata::default(),
             _music_metadata: MusicMetadata::default(),
         };
-        let _ = song.load_metadata();
         song
     }
 
     pub fn load_metadata(&mut self) -> DiziResult {
+        log::debug!("Loading metadata for {:?}", self.file_path());
         let mut hint = Hint::new();
         if let Some(ext) = self.file_path().extension().and_then(|e| e.to_str()) {
             hint.with_extension(ext);
@@ -96,7 +58,9 @@ impl Song {
         // Create the media source stream.
         let mss = MediaSourceStream::new(Box::new(src), Default::default());
 
-        let probed = symphonia::default::get_probe().format(&hint, mss, &fmt_opts, &meta_opts)?;
+        // get probe
+        let probed = symphonia::default::get_probe()
+            .format(&hint, mss, &fmt_opts, &meta_opts)?;
 
         // Get the instantiated format reader.
         let mut format = probed.format;
@@ -122,6 +86,10 @@ impl Song {
 
     pub fn metadata_loaded(&self) -> bool {
         self._metadata_loaded
+    }
+
+    pub fn set_metadata_loaded(&mut self, loaded: bool) {
+        self._metadata_loaded = loaded;
     }
 
     pub fn file_path(&self) -> &Path {
@@ -161,22 +129,6 @@ impl std::default::Default for AudioMetadata {
     }
 }
 
-#[cfg(feature = "rodio-backend")]
-impl std::convert::From<Source<Item = i16>> for AudioMetadata {
-    fn from(source: Source<Item = i16>) -> Self {
-        let channels = Some(source.channels());
-        let sample_rate = Some(source.sample_rate());
-        let total_duration = source.total_duration();
-
-        Self {
-            channels,
-            sample_rate,
-            total_duration,
-        }
-    }
-}
-
-#[cfg(feature = "symphonia-backend")]
 impl std::convert::From<&CodecParameters> for AudioMetadata {
     fn from(source: &CodecParameters) -> Self {
         let channels = source.channels.map(|c| c.count());
@@ -205,7 +157,6 @@ pub struct MusicMetadata {
     pub tags: HashMap<String, String>,
 }
 
-#[cfg(feature = "symphonia-backend")]
 impl std::convert::From<&MetadataRevision> for MusicMetadata {
     fn from(metadata: &MetadataRevision) -> Self {
         let standard_tags: HashMap<String, String> = metadata

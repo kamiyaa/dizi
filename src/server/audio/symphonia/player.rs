@@ -92,6 +92,7 @@ impl SymphoniaPlayer {
             song: song.clone(),
             volume: self.get_volume() as f32 / 100.0,
         })?;
+
         self.player_stream_res().recv()??;
 
         self.state.status = PlayerStatus::Playing;
@@ -131,7 +132,19 @@ impl AudioPlayer for SymphoniaPlayer {
             if shuffle_enabled {
                 playlist.shuffle();
             }
-            if let Some(entry) = playlist.current_entry_details() {
+
+            // lazily load metadata before playing
+            if let Some(entry) = playlist.current_song() {
+                let song = playlist.entry_mut(entry.song_index);
+                if !song.metadata_loaded() {
+                    if let Err(err) = song.load_metadata() {
+                        log::error!("Failed to load metadata: {}", err);
+                        song.set_metadata_loaded(true);
+                    }
+                }
+            }
+
+            if let Some(entry) = playlist.current_song() {
                 self.play(&entry.entry)?;
             }
             self.playlist_context.directory_playlist = playlist;
@@ -152,22 +165,66 @@ impl AudioPlayer for SymphoniaPlayer {
         if shuffle_enabled {
             playlist.shuffle();
         }
-        if let Some(entry) = playlist.current_entry_details() {
+
+        // lazily load metadata before playing
+        if let Some(entry) = playlist.current_song() {
+            let song = playlist.entry_mut(entry.song_index);
+            if !song.metadata_loaded() {
+                if let Err(err) = song.load_metadata() {
+                    log::error!("Failed to load metadata: {}", err);
+                    song.set_metadata_loaded(true);
+                }
+            }
+        }
+
+        if let Some(entry) = playlist.current_song() {
             self.play(&entry.entry)?;
             self.state.playlist_status = PlaylistType::PlaylistFile;
             self.playlist_context.set_type(PlaylistType::PlaylistFile);
         }
+
         Ok(())
     }
 
     fn play_again(&mut self) -> DiziResult {
-        if let Some(entry) = self.playlist_ref().current_entry_details() {
+        match self.playlist_context.get_type() {
+            PlaylistType::DirectoryListing => {
+                let playlist = self.playlist_mut().directory_playlist_mut();
+
+                // lazily load metadata before playing
+                if let Some(entry) = playlist.current_song() {
+                    let song = playlist.entry_mut(entry.song_index);
+                    if !song.metadata_loaded() {
+                        if let Err(err) = song.load_metadata() {
+                            log::error!("Failed to load metadata: {}", err);
+                            song.set_metadata_loaded(true);
+                        }
+                    }
+                }
+            }
+            PlaylistType::PlaylistFile => {
+                let playlist = self.playlist_mut().file_playlist_mut();
+
+                // lazily load metadata before playing
+                if let Some(entry) = playlist.current_song() {
+                    let song = playlist.entry_mut(entry.song_index);
+                    if !song.metadata_loaded() {
+                        if let Err(err) = song.load_metadata() {
+                            log::error!("Failed to load metadata: {}", err);
+                            song.set_metadata_loaded(true);
+                        }
+                    }
+                }
+            }
+        }
+        if let Some(entry) = self.playlist_ref().current_song() {
             self.play(&entry.entry)?;
         }
         Ok(())
     }
 
     fn play_next(&mut self) -> DiziResult {
+        if let Some(entry) = self.playlist_mut().next_song_peak() {}
         if let Some(entry) = self.playlist_mut().next_song() {
             self.play(&entry.entry)?;
         }
