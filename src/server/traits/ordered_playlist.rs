@@ -25,6 +25,6 @@ pub trait OrderedPlaylist {
     fn next_song_peak(&self) -> Option<OrderedPlaylistEntry>;
     fn previous_song_peak(&self) -> Option<OrderedPlaylistEntry>;
 
-    fn next_song(&mut self) -> Option<OrderedPlaylistEntry>;
-    fn previous_song(&mut self) -> Option<OrderedPlaylistEntry>;
+    fn goto_next_song(&mut self) -> Option<OrderedPlaylistEntry>;
+    fn goto_previous_song(&mut self) -> Option<OrderedPlaylistEntry>;
 }

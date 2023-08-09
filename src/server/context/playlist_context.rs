@@ -54,20 +54,6 @@ impl PlaylistContext {
         }
     }
 
-    pub fn next_song(&mut self) -> Option<OrderedPlaylistEntry> {
-        match self.get_type() {
-            PlaylistType::PlaylistFile => self.file_playlist.next_song(),
-            PlaylistType::DirectoryListing => self.directory_playlist.next_song(),
-        }
-    }
-
-    pub fn previous_song(&mut self) -> Option<OrderedPlaylistEntry> {
-        match self.get_type() {
-            PlaylistType::PlaylistFile => self.file_playlist.previous_song(),
-            PlaylistType::DirectoryListing => self.directory_playlist.previous_song(),
-        }
-    }
-
     pub fn is_end(&self) -> bool {
         match self.get_type() {
             PlaylistType::PlaylistFile => self.file_playlist.is_end(),

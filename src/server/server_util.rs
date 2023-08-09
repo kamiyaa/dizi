@@ -216,6 +216,7 @@ pub fn process_client_request(
             let duration = Duration::from_secs(amount as u64);
             context.player_mut().rewind(duration)?;
         }
+        ClientRequest::ServerQueryAll => {}
         s => {
             if log_enabled!(Level::Debug) {
                 debug!("'{:?}' not implemented", s);

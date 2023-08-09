@@ -224,16 +224,85 @@ impl AudioPlayer for SymphoniaPlayer {
     }
 
     fn play_next(&mut self) -> DiziResult {
-        if let Some(entry) = self.playlist_mut().next_song_peak() {}
-        if let Some(entry) = self.playlist_mut().next_song() {
-            self.play(&entry.entry)?;
+        match self.playlist_context.get_type() {
+            PlaylistType::DirectoryListing => {
+                let playlist = self.playlist_mut().directory_playlist_mut();
+
+                let song_entry = playlist.next_song_peak().ok_or_else(|| {
+                    DiziError::new(DiziErrorKind::ParseError, "Playlist error".to_string())
+                })?;
+                playlist.set_playlist_index(Some(song_entry.playlist_index));
+
+                let song = playlist.entry_mut(song_entry.song_index);
+                if !song.metadata_loaded() {
+                    if let Err(err) = song.load_metadata() {
+                        log::error!("Failed to load metadata: {}", err);
+                        song.set_metadata_loaded(true);
+                    }
+                }
+                let song_clone = song.clone();
+                self.play(&song_clone)?
+            }
+            PlaylistType::PlaylistFile => {
+                let playlist = self.playlist_mut().file_playlist_mut();
+
+                let song_entry = playlist.next_song_peak().ok_or_else(|| {
+                    DiziError::new(DiziErrorKind::ParseError, "Playlist error".to_string())
+                })?;
+                playlist.set_playlist_index(Some(song_entry.playlist_index));
+
+                let song = playlist.entry_mut(song_entry.song_index);
+                if !song.metadata_loaded() {
+                    if let Err(err) = song.load_metadata() {
+                        log::error!("Failed to load metadata: {}", err);
+                        song.set_metadata_loaded(true);
+                    }
+                }
+                let song_clone = song.clone();
+                self.play(&song_clone)?
+            }
         }
         Ok(())
     }
 
     fn play_previous(&mut self) -> DiziResult {
-        if let Some(entry) = self.playlist_mut().previous_song() {
-            self.play(&entry.entry)?;
+        match self.playlist_context.get_type() {
+            PlaylistType::DirectoryListing => {
+                let playlist = self.playlist_mut().directory_playlist_mut();
+
+                let song_entry = playlist.previous_song_peak().ok_or_else(|| {
+                    DiziError::new(DiziErrorKind::ParseError, "Playlist error".to_string())
+                })?;
+                playlist.set_playlist_index(Some(song_entry.playlist_index));
+
+                let song = playlist.entry_mut(song_entry.song_index);
+                if !song.metadata_loaded() {
+                    if let Err(err) = song.load_metadata() {
+                        log::error!("Failed to load metadata: {}", err);
+                        song.set_metadata_loaded(true);
+                    }
+                }
+                let song_clone = song.clone();
+                self.play(&song_clone)?
+            }
+            PlaylistType::PlaylistFile => {
+                let playlist = self.playlist_mut().file_playlist_mut();
+
+                let song_entry = playlist.previous_song_peak().ok_or_else(|| {
+                    DiziError::new(DiziErrorKind::ParseError, "Playlist error".to_string())
+                })?;
+                playlist.set_playlist_index(Some(song_entry.playlist_index));
+
+                let song = playlist.entry_mut(song_entry.song_index);
+                if !song.metadata_loaded() {
+                    if let Err(err) = song.load_metadata() {
+                        log::error!("Failed to load metadata: {}", err);
+                        song.set_metadata_loaded(true);
+                    }
+                }
+                let song_clone = song.clone();
+                self.play(&song_clone)?
+            }
         }
         Ok(())
     }

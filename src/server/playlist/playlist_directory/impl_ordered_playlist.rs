@@ -87,7 +87,7 @@ impl OrderedPlaylist for PlaylistDirectory {
         })
     }
 
-    fn next_song(&mut self) -> Option<OrderedPlaylistEntry> {
+    fn goto_next_song(&mut self) -> Option<OrderedPlaylistEntry> {
         let playlist_index = self.get_playlist_index()?;
         let playlist_index = (playlist_index + 1) % self.len();
         self.set_playlist_index(Some(playlist_index));
@@ -100,7 +100,7 @@ impl OrderedPlaylist for PlaylistDirectory {
             entry: self.entry_ref(song_index).clone(),
         })
     }
-    fn previous_song(&mut self) -> Option<OrderedPlaylistEntry> {
+    fn goto_previous_song(&mut self) -> Option<OrderedPlaylistEntry> {
         let playlist_index = self.get_playlist_index()?;
         let playlist_index = (playlist_index + self.len() - 1) % self.len();
         self.set_playlist_index(Some(playlist_index));
