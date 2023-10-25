@@ -30,12 +30,13 @@ impl PlaylistDirectory {
     pub fn from_path(path: &Path) -> io::Result<Self> {
         // only process regular files
         // if we can't read it, then don't play it
-        let songs: Vec<Song> = fs::read_dir(path)?
+        let mut songs: Vec<Song> = fs::read_dir(path)?
             .filter_map(|entry| entry.ok())
             .map(|entry| entry.path())
             .filter(|p| p.is_file())
             .map(|path| Song::new(&path))
             .collect();
+        songs.sort_by(|a, b| a.file_name().cmp(b.file_name()));
 
         let len = songs.len();
         Ok(Self {

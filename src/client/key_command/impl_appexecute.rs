@@ -114,6 +114,9 @@ pub fn execute_request(context: &mut AppContext, request: &ClientRequest) -> Diz
             }
         }
         ClientRequest::PlaylistRemove { index: None } => {
+            if context.get_view_widget() != WidgetType::Playlist {
+                return Ok(());
+            }
             let playlist = context.server_state_ref().player_ref().playlist_ref();
             if let Some(index) = playlist.get_cursor_index() {
                 let request = ClientRequest::PlaylistRemove { index: Some(index) };
@@ -121,6 +124,9 @@ pub fn execute_request(context: &mut AppContext, request: &ClientRequest) -> Diz
             }
         }
         ClientRequest::PlaylistMoveUp { index: None } => {
+            if context.get_view_widget() != WidgetType::Playlist {
+                return Ok(());
+            }
             let playlist = context.server_state_ref().player_ref().playlist_ref();
             if let Some(index) = playlist.get_cursor_index() {
                 let request = ClientRequest::PlaylistMoveUp { index: Some(index) };
@@ -128,6 +134,9 @@ pub fn execute_request(context: &mut AppContext, request: &ClientRequest) -> Diz
             }
         }
         ClientRequest::PlaylistMoveDown { index: None } => {
+            if context.get_view_widget() != WidgetType::Playlist {
+                return Ok(());
+            }
             let playlist = context.server_state_ref().player_ref().playlist_ref();
             if let Some(index) = playlist.get_cursor_index() {
                 let request = ClientRequest::PlaylistMoveDown { index: Some(index) };

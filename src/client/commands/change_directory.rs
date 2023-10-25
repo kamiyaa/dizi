@@ -4,6 +4,7 @@ use std::path;
 use dizi_lib::error::DiziResult;
 
 use crate::commands::reload;
+use crate::config::option::WidgetType;
 use crate::context::AppContext;
 use crate::history::DirectoryHistory;
 
@@ -35,6 +36,10 @@ pub fn change_directory(context: &mut AppContext, path: &path::Path) -> DiziResu
 
 // ParentDirectory command
 pub fn parent_directory(context: &mut AppContext) -> DiziResult {
+    if context.get_view_widget() != WidgetType::FileBrowser {
+        return Ok(());
+    }
+
     if let Some(parent) = context
         .tab_context_ref()
         .curr_tab_ref()

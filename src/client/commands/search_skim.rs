@@ -56,7 +56,7 @@ fn search_playlist_skim(
         .enumerate()
         .map(|(i, item)| DiziSkimItem {
             idx: i,
-            value: item.file_name().to_string(),
+            value: format!("{:03} \u{02503} {}", i + 1, item.file_name()),
         })
         .collect();
 
