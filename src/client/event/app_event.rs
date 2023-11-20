@@ -30,7 +30,7 @@ pub struct Config {}
 pub struct Events {
     pub event_tx: mpsc::Sender<AppEvent>,
     event_rx: mpsc::Receiver<AppEvent>,
-    pub input_tx: mpsc::SyncSender<()>,
+    pub input_tx: mpsc::Sender<()>,
 }
 
 impl Events {
@@ -39,8 +39,11 @@ impl Events {
     }
 
     pub fn with_config() -> Self {
-        let (input_tx, input_rx) = mpsc::sync_channel(1);
+        let (input_tx, input_rx) = mpsc::channel();
         let (event_tx, event_rx) = mpsc::channel();
+
+        // edge case that starts off the input thread
+        let _ = input_tx.send(());
 
         // signal thread
         let event_tx2 = event_tx.clone();
@@ -60,25 +63,11 @@ impl Events {
         let _ = thread::spawn(move || {
             let stdin = io::stdin();
             let mut events = stdin.events();
-            match events.next() {
-                Some(event) => match event {
-                    Ok(event) => {
-                        if let Err(e) = event_tx2.send(AppEvent::Termion(event)) {
-                            eprintln!("Input thread send err: {:#?}", e);
-                            return;
-                        }
-                    }
-                    Err(_) => return,
-                },
-                None => return,
-            }
 
-            while input_rx.recv().is_ok() {
+            loop {
+                let _ = input_rx.recv();
                 if let Some(Ok(event)) = events.next() {
-                    if let Err(e) = event_tx2.send(AppEvent::Termion(event)) {
-                        eprintln!("Input thread send err: {:#?}", e);
-                        return;
-                    }
+                    let _ = event_tx2.send(AppEvent::Termion(event));
                 }
             }
         });
@@ -99,6 +88,10 @@ impl Events {
     }
 
     pub fn flush(&self) {
-        let _ = self.input_tx.send(());
+        loop {
+            if self.input_tx.send(()).is_ok() {
+                break;
+            }
+        }
     }
 }
