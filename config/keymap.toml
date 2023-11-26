@@ -47,6 +47,10 @@ keys = [ "page_down" ]
 command = "cursor_move_page_down"
 
 [[keymap]]
+keys = [ "=" ]
+command = "go_to_playing"
+
+[[keymap]]
 keys = [ "\t" ]
 command = "toggle_view"
 
