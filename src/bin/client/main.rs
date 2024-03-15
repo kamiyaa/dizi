@@ -18,9 +18,10 @@ use std::process;
 use std::thread;
 use std::time;
 
-use dizi::error::DiziResult;
+use clap::Parser;
 use lazy_static::lazy_static;
-use structopt::StructOpt;
+
+use dizi::error::DiziResult;
 
 use crate::config::{
     AppConfig, AppKeyMapping, AppLayout, AppTheme, JsonConfigFile, TomlConfigFile,
@@ -71,31 +72,31 @@ lazy_static! {
     static ref LAYOUT_T: AppLayout = AppLayout::get_config(LAYOUT_FILE);
 }
 
-#[derive(Clone, Debug, StructOpt)]
-pub struct Args {
+#[derive(Clone, Debug, Parser)]
+pub struct CommandArgs {
     // version
-    #[structopt(short = "v", long = "version")]
+    #[arg(short = 'v', long = "version")]
     version: bool,
 
     // query
-    #[structopt(short = "Q", long = "query")]
+    #[arg(short = 'Q', long = "query")]
     query: Option<String>,
     // query
-    #[structopt(long = "query-all")]
+    #[arg(long = "query-all")]
     query_all: bool,
 
     // controls
-    #[structopt(long = "exit")]
+    #[arg(long = "exit")]
     exit: bool,
-    #[structopt(long = "next")]
+    #[arg(long = "next")]
     next: bool,
-    #[structopt(long = "previous")]
+    #[arg(long = "previous")]
     previous: bool,
-    #[structopt(long = "pause")]
+    #[arg(long = "pause")]
     pause: bool,
-    #[structopt(long = "resume")]
+    #[arg(long = "resume")]
     resume: bool,
-    #[structopt(long = "toggle-pause")]
+    #[arg(long = "toggle-pause")]
     toggle_play: bool,
 }
 
@@ -113,7 +114,7 @@ fn create_context(config: AppConfig, cwd: &Path, stream: UnixStream) -> AppConte
     AppContext::new(config, cwd.to_path_buf(), stream)
 }
 
-fn run_app(args: Args) -> DiziResult {
+fn run_app(args: CommandArgs) -> DiziResult {
     // print version
     if args.version {
         let version = env!("CARGO_PKG_VERSION");
@@ -195,7 +196,7 @@ fn run_app(args: Args) -> DiziResult {
 }
 
 fn main() {
-    let args = Args::from_args();
+    let args = CommandArgs::parse();
 
     match run_app(args) {
         Ok(_) => {}

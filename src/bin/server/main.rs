@@ -12,9 +12,10 @@ mod util;
 
 use std::path::PathBuf;
 
+use clap::Parser;
+
 use lazy_static::lazy_static;
 use log::{debug, log_enabled, Level};
-use structopt::StructOpt;
 
 use dizi::error::DiziResult;
 
@@ -58,13 +59,13 @@ lazy_static! {
     static ref HOME_DIR: Option<PathBuf> = dirs_next::home_dir();
 }
 
-#[derive(Clone, Debug, StructOpt)]
-pub struct Args {
-    #[structopt(short = "v", long = "version")]
+#[derive(Clone, Debug, Parser)]
+pub struct CommandArgs {
+    #[arg(short = 'v', long = "version")]
     version: bool,
 }
 
-fn run_server(args: Args) -> DiziResult {
+fn run_server(args: CommandArgs) -> DiziResult {
     if args.version {
         let version = env!("CARGO_PKG_VERSION");
         println!("{}", version);
@@ -82,7 +83,7 @@ fn run_server(args: Args) -> DiziResult {
 fn main() {
     env_logger::init();
 
-    let args = Args::from_args();
+    let args = CommandArgs::parse();
     let res = run_server(args);
 
     match res {
