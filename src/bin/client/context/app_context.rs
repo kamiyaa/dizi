@@ -49,7 +49,7 @@ pub struct AppContext {
 }
 
 impl AppContext {
-    pub fn new(config: config::AppConfig, cwd: PathBuf, stream: UnixStream) -> Self {
+    pub fn new(config: config::AppConfig, _cwd: PathBuf, stream: UnixStream) -> Self {
         let events = Events::new();
 
         let mut commandline_context = CommandLineContext::new();
