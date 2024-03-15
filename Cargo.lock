@@ -582,7 +582,6 @@ dependencies = [
  "cpal",
  "crossbeam",
  "dirs-next",
- "dizi_lib",
  "env_logger 0.10.0",
  "globset",
  "lazy_static",
@@ -599,6 +598,7 @@ dependencies = [
  "shellexpand",
  "signal-hook",
  "skim",
+ "strfmt",
  "structopt",
  "symphonia",
  "termion",
@@ -608,22 +608,6 @@ dependencies = [
  "unicode-width",
  "uuid",
  "xdg",
-]
-
-[[package]]
-name = "dizi_lib"
-version = "0.1.0"
-dependencies = [
- "cpal",
- "crossbeam",
- "globset",
- "log",
- "serde",
- "serde_derive",
- "serde_json",
- "strfmt",
- "symphonia",
- "toml",
 ]
 
 [[package]]

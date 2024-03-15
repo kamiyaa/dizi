@@ -8,11 +8,11 @@ edition = "2021"
 
 [[bin]]
 name = "dizi-server"
-path = "src/server/main.rs"
+path = "src/bin/server/main.rs"
 
 [[bin]]
 name = "dizi"
-path = "src/client/main.rs"
+path = "src/bin/client/main.rs"
 
 [dependencies]
 alphanumeric-sort = "^1"
@@ -34,6 +34,7 @@ shell-words = "^1"
 shellexpand = "^2"
 signal-hook = "^0"
 skim = "^0"
+strfmt = "^0"
 structopt = "^0"
 termion = "^1"
 toml = "^0"
@@ -57,11 +58,6 @@ version = "^0"
 
 [dependencies.uuid]
 features = [ "v4" ]
-version = "^0"
-
-
-[dependencies.dizi_lib]
-path = "lib/dizi_lib"
 version = "^0"
 
 [target.'cfg(any(target_os = "linux", target_os = "dragonfly", target_os = "freebsd"))'.dependencies]
