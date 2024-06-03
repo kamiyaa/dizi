@@ -1,11 +1,11 @@
 use std::time;
 
 use dizi::playlist::PlaylistType;
-use tui::buffer::Buffer;
-use tui::layout::Rect;
-use tui::style::{Color, Modifier, Style};
-use tui::text::{Span, Spans};
-use tui::widgets::{Paragraph, Widget, Wrap};
+use ratatui::buffer::Buffer;
+use ratatui::layout::Rect;
+use ratatui::style::{Color, Modifier, Style};
+use ratatui::text::{Line, Span};
+use ratatui::widgets::{Paragraph, Widget, Wrap};
 
 use dizi::player::{PlayerState, PlayerStatus};
 
@@ -64,7 +64,7 @@ impl<'a> Widget for TuiPlayer<'a> {
             let player_status_style = Style::default()
                 .fg(Color::Green)
                 .add_modifier(Modifier::BOLD);
-            let text = Spans::from(vec![
+            let text = Line::from(vec![
                 Span::styled(
                     format!("Volume: {}%  ", self.player.get_volume(),),
                     player_status_style,
@@ -122,7 +122,7 @@ impl<'a> Widget for TuiPlayer<'a> {
                 PlayerStatus::Paused => "\u{2590} \u{258C}",
             };
 
-            let text = Spans::from(vec![
+            let text = Line::from(vec![
                 Span::raw(format!(
                     "{} {} / {}   ",
                     player_status, duration_played_str, total_duration_str

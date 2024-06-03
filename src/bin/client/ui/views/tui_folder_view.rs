@@ -1,7 +1,7 @@
-use tui::buffer::Buffer;
-use tui::layout::Rect;
+use ratatui::buffer::Buffer;
+use ratatui::layout::Rect;
 
-use tui::widgets::Widget;
+use ratatui::widgets::Widget;
 
 use crate::context::AppContext;
 use crate::ui::widgets::TuiDirListDetailed;

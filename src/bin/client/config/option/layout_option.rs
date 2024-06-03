@@ -1,6 +1,6 @@
 use std::str::FromStr;
 
-use tui::layout::Direction;
+use ratatui::layout::Direction;
 
 use dizi::error::{DiziError, DiziErrorKind, DiziResult};
 

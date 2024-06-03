@@ -1,12 +1,13 @@
 use dizi::error::DiziResult;
 use dizi::request::client::ClientRequest;
+use termion::event::Key;
 
-use crate::commands::*;
 use crate::config::option::WidgetType;
 use crate::config::AppKeyMapping;
 use crate::context::AppContext;
 use crate::ui::AppBackend;
 use crate::util::request::send_client_request;
+use crate::{commands::*, ui::widgets::TuiPrompt};
 
 use super::{AppExecute, Command};
 
@@ -50,7 +51,7 @@ impl AppExecute for Command {
                 selection::select_files(context, pattern.as_str(), options)?
             }
 
-            Self::ServerRequest(request) => execute_request(context, request)?,
+            Self::ServerRequest(request) => execute_request(backend, context, request)?,
 
             Self::ToggleHiddenFiles => show_hidden::toggle_hidden(context)?,
             Self::ToggleView => {
@@ -70,22 +71,48 @@ impl AppExecute for Command {
     }
 }
 
-pub fn execute_request(context: &mut AppContext, request: &ClientRequest) -> DiziResult {
+pub fn execute_request(
+    backend: &mut AppBackend,
+    context: &mut AppContext,
+    request: &ClientRequest,
+) -> DiziResult {
     match request {
         ClientRequest::ServerQuit => {
             quit::server_quit(context)?;
         }
         ClientRequest::PlaylistAppend { path: None } => {
-            if let Some(entry) = context
+            let entry_file_path = context
                 .tab_context_ref()
                 .curr_tab_ref()
                 .curr_list_ref()
                 .and_then(|s| s.curr_entry_ref())
-            {
-                let request = ClientRequest::PlaylistAppend {
-                    path: Some(entry.file_path().to_path_buf()),
+                .map(|e| e.file_path().to_path_buf());
+
+            if let Some(entry_path) = entry_file_path {
+                if !entry_path.is_dir() {
+                    let request = ClientRequest::PlaylistAppend {
+                        path: Some(entry_path),
+                    };
+                    send_client_request(context, &request)?;
+                    return Ok(());
+                }
+
+                let ch = {
+                    let prompt_str = format!("Add all songs in this directory? [Y/n]");
+                    let mut prompt = TuiPrompt::new(&prompt_str);
+                    prompt.get_key(backend, context)
                 };
-                send_client_request(context, &request)?;
+
+                match ch {
+                    Key::Char('Y') | Key::Char('y') | Key::Char('\n') => {
+                        let request = ClientRequest::PlaylistAppend {
+                            path: Some(entry_path),
+                        };
+                        send_client_request(context, &request)?;
+                        return Ok(());
+                    }
+                    _ => {}
+                }
             }
         }
         ClientRequest::PlaylistOpen {

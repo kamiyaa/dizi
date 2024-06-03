@@ -1,8 +1,8 @@
 use std::io::{BufRead, BufReader};
 use std::thread;
 
+use ratatui::layout::{Constraint, Rect};
 use termion::event::Event;
-use tui::layout::{Constraint, Rect};
 
 use dizi::error::DiziResult;
 use dizi::request::client::ClientRequest;

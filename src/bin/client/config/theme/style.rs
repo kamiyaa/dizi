@@ -1,6 +1,6 @@
 use serde_derive::Deserialize;
 
-use tui::style;
+use ratatui::style;
 
 const fn default_color() -> style::Color {
     style::Color::Reset

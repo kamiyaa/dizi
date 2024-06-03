@@ -1,8 +1,8 @@
-use tui::buffer::Buffer;
-use tui::layout::Rect;
-use tui::style::{Color, Style};
-use tui::text::{Span, Spans};
-use tui::widgets::{Paragraph, Widget};
+use ratatui::buffer::Buffer;
+use ratatui::layout::Rect;
+use ratatui::style::{Color, Style};
+use ratatui::text::{Line, Span};
+use ratatui::widgets::{Paragraph, Widget};
 
 use dizi::player::PlayerState;
 
@@ -47,6 +47,6 @@ impl<'a> Widget for TuiFooter<'a> {
             )),
         ];
 
-        Paragraph::new(Spans::from(text)).render(area, buf);
+        Paragraph::new(Line::from(text)).render(area, buf);
     }
 }

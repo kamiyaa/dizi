@@ -1,8 +1,8 @@
-use tui::buffer::Buffer;
-use tui::layout::{Constraint, Direction, Layout, Rect};
-use tui::style::{Color, Style};
-use tui::text::Span;
-use tui::widgets::{Block, Borders, Paragraph, Widget, Wrap};
+use ratatui::buffer::Buffer;
+use ratatui::layout::{Constraint, Direction, Layout, Rect};
+use ratatui::style::{Color, Style};
+use ratatui::text::Span;
+use ratatui::widgets::{Block, Borders, Paragraph, Widget, Wrap};
 
 use crate::config::option::{LayoutComposition, WidgetType};
 use crate::context::AppContext;
@@ -142,8 +142,8 @@ pub fn render_widget(
                 .direction(direction.clone())
                 .constraints(constraints)
                 .split(area);
-            for (widget, rect) in widgets.iter().zip(layout_rect) {
-                render_widget(context, widget, rect, buf);
+            for (widget, rect) in widgets.iter().zip(layout_rect.iter()) {
+                render_widget(context, widget, *rect, buf);
             }
         }
     }

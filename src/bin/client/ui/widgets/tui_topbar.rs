@@ -1,10 +1,10 @@
 use std::path::Path;
 
-use tui::buffer::Buffer;
-use tui::layout::Rect;
-use tui::style::{Color, Modifier, Style};
-use tui::text::{Span, Spans};
-use tui::widgets::{Paragraph, Widget};
+use ratatui::buffer::Buffer;
+use ratatui::layout::Rect;
+use ratatui::style::{Color, Modifier, Style};
+use ratatui::text::{Line, Span};
+use ratatui::widgets::{Paragraph, Widget};
 
 use crate::context::AppContext;
 
@@ -36,8 +36,8 @@ impl<'a> Widget for TuiTopBar<'a> {
         }
 
         let text = match ellipses {
-            Some(s) => Spans::from(vec![s, Span::styled(curr_path_str, path_style)]),
-            None => Spans::from(vec![Span::styled(curr_path_str, path_style)]),
+            Some(s) => Line::from(vec![s, Span::styled(curr_path_str, path_style)]),
+            None => Line::from(vec![Span::styled(curr_path_str, path_style)]),
         };
 
         Paragraph::new(text).render(area, buf);
