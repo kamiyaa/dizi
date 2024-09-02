@@ -25,7 +25,7 @@ impl<'a> Widget for TuiPlayer<'a> {
             return;
         }
 
-        let song = self.player.get_song();
+        let song = &self.player.song;
         {
             let song_name = match song {
                 Some(song) => match song.music_metadata().standard_tags.get("TrackTitle") {
@@ -51,12 +51,12 @@ impl<'a> Widget for TuiPlayer<'a> {
             let on_style = Style::default().fg(Color::Green);
             let off_style = Style::default().fg(Color::Black);
 
-            let playlist_file_style = match self.player.get_playlist_status() {
+            let playlist_file_style = match self.player.playlist_status {
                 PlaylistType::PlaylistFile => on_style,
                 PlaylistType::DirectoryListing => off_style,
             };
 
-            let playlist_directory_style = match self.player.get_playlist_status() {
+            let playlist_directory_style = match self.player.playlist_status {
                 PlaylistType::PlaylistFile => off_style,
                 PlaylistType::DirectoryListing => on_style,
             };
@@ -66,7 +66,7 @@ impl<'a> Widget for TuiPlayer<'a> {
                 .add_modifier(Modifier::BOLD);
             let text = Line::from(vec![
                 Span::styled(
-                    format!("Volume: {}%  ", self.player.get_volume(),),
+                    format!("Volume: {}%  ", self.player.volume,),
                     player_status_style,
                 ),
                 Span::styled("[PLAYLIST] ", playlist_file_style),
@@ -81,7 +81,7 @@ impl<'a> Widget for TuiPlayer<'a> {
             Paragraph::new(text).render(rect, buf);
         }
 
-        let duration_elapsed = self.player.get_elapsed();
+        let duration_elapsed = self.player.elapsed;
         let duration_played_str = {
             let total_secs = duration_elapsed.as_secs();
             let minutes = total_secs / 60;
@@ -90,6 +90,7 @@ impl<'a> Widget for TuiPlayer<'a> {
             format!("{:02}:{:02}:{:02}", hours, minutes, seconds)
         };
         let total_duration = song
+            .as_ref()
             .and_then(|song| song.audio_metadata().total_duration)
             .unwrap_or(time::Duration::from_secs(0));
         let total_duration_str = {
@@ -103,20 +104,20 @@ impl<'a> Widget for TuiPlayer<'a> {
             let on_style = Style::default().fg(Color::Yellow);
             let off_style = Style::default().fg(Color::Black);
 
-            let next_style = match self.player.next_enabled() {
+            let next_style = match self.player.next {
                 true => on_style,
                 false => off_style,
             };
-            let repeat_style = match self.player.repeat_enabled() {
+            let repeat_style = match self.player.repeat {
                 true => on_style,
                 false => off_style,
             };
-            let shuffle_style = match self.player.shuffle_enabled() {
+            let shuffle_style = match self.player.shuffle {
                 true => on_style,
                 false => off_style,
             };
 
-            let player_status = match self.player.get_player_status() {
+            let player_status = match self.player.status {
                 PlayerStatus::Playing => "\u{25B6}  ",
                 PlayerStatus::Stopped => "\u{2588}\u{2588}",
                 PlayerStatus::Paused => "\u{2590} \u{258C}",

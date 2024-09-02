@@ -183,7 +183,7 @@ where
                 process_message(msg);
             }
 
-            // if sample_offset is greater than samples_count, then we've reached the end
+            // if sample_offsetcurrent_volume is greater than samples_count, then we've reached the end
             let sample_offset = { *frame_index.read().unwrap() };
             if sample_offset >= samples_count {
                 if let Some(stream_tx) = stream_tx.take() {

@@ -60,7 +60,7 @@ impl<'a> Widget for TuiView<'a> {
                 width: area.width,
                 height: 1,
             };
-            TuiFooter::new(self.context.server_state_ref().player_ref()).render(rect, buf);
+            TuiFooter::new(&self.context.server_state_ref().player).render(rect, buf);
         }
 
         let topbar_width = area.width;
@@ -118,11 +118,10 @@ pub fn render_widget(
             match widget {
                 WidgetType::FileBrowser => TuiFolderView::new(context, focused).render(rect, buf),
                 WidgetType::MusicPlayer => {
-                    TuiPlayer::new(context.server_state_ref().player_ref()).render(rect, buf)
+                    TuiPlayer::new(&context.server_state_ref().player).render(rect, buf)
                 }
                 WidgetType::Playlist => {
-                    TuiPlaylist::new(context.server_state_ref().player_ref(), focused)
-                        .render(rect, buf)
+                    TuiPlaylist::new(&context.server_state_ref().player, focused).render(rect, buf)
                 }
             }
         }

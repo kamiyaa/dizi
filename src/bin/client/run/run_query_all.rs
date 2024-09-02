@@ -49,8 +49,8 @@ pub fn run_query_all(context: &mut AppContext) -> DiziResult {
                     break;
                 }
                 ServerBroadcastEvent::PlayerState { mut state } => {
-                    if !state.playlist_ref().is_empty() {
-                        state.playlist_mut().set_cursor_index(Some(0));
+                    if !state.playlist.is_empty() {
+                        state.playlist.set_cursor_index(Some(0));
                     }
                     let mut query_items = state.query_all();
                     let mut items_sorted: Vec<(String, String)> = query_items.drain().collect();

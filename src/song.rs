@@ -51,7 +51,7 @@ impl DiziFile {
         let file_name = path
             .file_name()
             .map(|s| s.to_string_lossy())
-            .unwrap()
+            .unwrap_or_default()
             .into_owned();
         Self {
             file_name,

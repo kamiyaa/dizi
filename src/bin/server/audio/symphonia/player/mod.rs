@@ -6,7 +6,7 @@ use std::thread::{self, JoinHandle};
 
 use cpal::traits::HostTrait;
 
-use dizi::error::DiziResult;
+use dizi::error::{DiziError, DiziErrorKind, DiziResult};
 use dizi::player::{PlayerState, PlayerStatus};
 use dizi::song::DiziAudioFile;
 
@@ -32,7 +32,11 @@ pub struct SymphoniaPlayer {
 impl SymphoniaPlayer {
     pub fn new(config_t: &config::AppConfig, event_tx: ServerEventSender) -> DiziResult<Self> {
         let audio_host = get_default_host(config_t.server_ref().audio_system);
-        let audio_device = audio_host.default_output_device().unwrap();
+        let audio_device = audio_host.default_output_device().ok_or_else(|| {
+            let error_msg = "Failed to get default output device";
+            tracing::error!("{error_msg}");
+            DiziError::new(DiziErrorKind::Symphonia, error_msg.to_string())
+        })?;
 
         let (player_req_tx, player_req_rx) = mpsc::channel();
         let (player_res_tx, player_res_rx) = mpsc::channel();

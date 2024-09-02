@@ -35,7 +35,7 @@ pub enum PlayerStreamEvent {
 pub struct PlayerStreamEventListener {
     pub stream_tx: mpsc::Sender<StreamEvent>,
     pub player_res_tx: mpsc::Sender<DiziResult>,
-    pub event_tx: mpsc::Sender<PlayerStreamEvent>,
+    pub _event_tx: mpsc::Sender<PlayerStreamEvent>,
     pub event_rx: mpsc::Receiver<PlayerStreamEvent>,
 }
 
@@ -71,7 +71,7 @@ impl PlayerStreamEventListener {
         Self {
             stream_tx,
             player_res_tx,
-            event_tx,
+            _event_tx: event_tx,
             event_rx,
         }
     }
@@ -247,177 +247,179 @@ impl PlayerStream {
             .format
             .tracks()
             .iter()
-            .find(|t| t.codec_params.codec != CODEC_TYPE_NULL);
+            .find(|t| t.codec_params.codec != CODEC_TYPE_NULL)
+            .ok_or_else(|| {
+                let error_msg = "No tracks found";
+                tracing::error!("{error_msg}");
+                DiziError::new(DiziErrorKind::Server, error_msg.to_string())
+            })?;
+        // Store the track identifier, it will be used to filter packets.
+        let track_id = track.id;
 
-        match track {
-            None => Err(DiziError::new(DiziErrorKind::NoDevice, "".to_string())),
-            Some(track) => {
-                // Store the track identifier, it will be used to filter packets.
-                let track_id = track.id;
+        tracing::debug!("track: {:#?}", track);
 
-                tracing::debug!("track: {:#?}", track);
+        // Use the default options for the decoder.
+        let dec_opts: DecoderOptions = Default::default();
 
-                // Use the default options for the decoder.
-                let dec_opts: DecoderOptions = Default::default();
+        // Create a decoder for the track.
+        let decoder = symphonia::default::get_codecs().make(&track.codec_params, &dec_opts)?;
 
-                // Create a decoder for the track.
-                let decoder =
-                    symphonia::default::get_codecs().make(&track.codec_params, &dec_opts)?;
+        let config = self.device.default_output_config().map_err(|err| {
+            let error_msg = "Failed to get default output config";
+            tracing::error!("{error_msg}: {err}");
+            DiziError::new(DiziErrorKind::Symphonia, error_msg.to_string())
+        })?;
 
-                let config = self.device.default_output_config().unwrap();
+        let audio_config = cpal::StreamConfig {
+            channels: track
+                .codec_params
+                .channels
+                .map(|c| c.count() as u16)
+                .unwrap_or(2u16),
+            sample_rate: cpal::SampleRate(
+                track
+                    .codec_params
+                    .sample_rate
+                    .unwrap_or_else(|| config.sample_rate().0),
+            ),
+            buffer_size: cpal::BufferSize::Default,
+        };
 
-                let audio_config = cpal::StreamConfig {
-                    channels: track
-                        .codec_params
-                        .channels
-                        .map(|c| c.count() as u16)
-                        .unwrap_or(2u16),
-                    sample_rate: cpal::SampleRate(
-                        track
-                            .codec_params
-                            .sample_rate
-                            .unwrap_or_else(|| config.sample_rate().0),
-                    ),
-                    buffer_size: cpal::BufferSize::Default,
-                };
+        tracing::debug!("audio_config: {:#?}", audio_config);
 
-                tracing::debug!("audio_config: {:#?}", audio_config);
+        let stream_tx = self.event_poller.stream_tx.clone();
 
-                let stream_tx = self.event_poller.stream_tx.clone();
+        let packet_reader = PacketReader::new(probed.format, track_id);
+        let mut packet_decoder = PacketDecoder::new(decoder);
 
-                let packet_reader = PacketReader::new(probed.format, track_id);
-                let mut packet_decoder = PacketDecoder::new(decoder);
-
-                match config.sample_format() {
-                    cpal::SampleFormat::U8 => {
-                        let mut samples = Vec::new();
-                        for packet in packet_reader {
-                            let packet_sample = packet_decoder.decode::<u8>(packet)?;
-                            samples.extend(packet_sample);
-                        }
-                        let res = stream_loop::<u8>(
-                            stream_tx,
-                            &self.device,
-                            &audio_config,
-                            samples,
-                            volume,
-                            |packet, volume| ((packet as f32) * volume) as u8,
-                        )?;
-                        Ok(res)
-                    }
-                    cpal::SampleFormat::U16 => {
-                        let mut samples = Vec::new();
-                        for packet in packet_reader {
-                            let packet_sample = packet_decoder.decode::<u16>(packet)?;
-                            samples.extend(packet_sample);
-                        }
-                        let res = stream_loop::<u16>(
-                            stream_tx,
-                            &self.device,
-                            &audio_config,
-                            samples,
-                            volume,
-                            |packet, volume| ((packet as f32) * volume) as u16,
-                        )?;
-                        Ok(res)
-                    }
-                    cpal::SampleFormat::U32 => {
-                        let mut samples = Vec::new();
-                        for packet in packet_reader {
-                            let packet_sample = packet_decoder.decode::<u32>(packet)?;
-                            samples.extend(packet_sample);
-                        }
-                        let res = stream_loop::<u32>(
-                            stream_tx,
-                            &self.device,
-                            &audio_config,
-                            samples,
-                            volume,
-                            |packet, volume| ((packet as f32) * volume) as u32,
-                        )?;
-                        Ok(res)
-                    }
-                    cpal::SampleFormat::I8 => {
-                        let mut samples = Vec::new();
-                        for packet in packet_reader {
-                            let packet_sample = packet_decoder.decode::<i8>(packet)?;
-                            samples.extend(packet_sample);
-                        }
-                        let res = stream_loop::<i8>(
-                            stream_tx,
-                            &self.device,
-                            &audio_config,
-                            samples,
-                            volume,
-                            |packet, volume| ((packet as f32) * volume) as i8,
-                        )?;
-                        Ok(res)
-                    }
-                    cpal::SampleFormat::I16 => {
-                        let mut samples = Vec::new();
-                        for packet in packet_reader {
-                            let packet_sample = packet_decoder.decode::<i16>(packet)?;
-                            samples.extend(packet_sample);
-                        }
-                        let res = stream_loop::<i16>(
-                            stream_tx,
-                            &self.device,
-                            &audio_config,
-                            samples,
-                            volume,
-                            |packet, volume| ((packet as f32) * volume) as i16,
-                        )?;
-                        Ok(res)
-                    }
-                    cpal::SampleFormat::I32 => {
-                        let mut samples = Vec::new();
-                        for packet in packet_reader {
-                            let packet_sample = packet_decoder.decode::<i32>(packet)?;
-                            samples.extend(packet_sample);
-                        }
-                        let res = stream_loop::<i32>(
-                            stream_tx,
-                            &self.device,
-                            &audio_config,
-                            samples,
-                            volume,
-                            |packet, volume| ((packet as f32) * volume) as i32,
-                        )?;
-                        Ok(res)
-                    }
-                    cpal::SampleFormat::F32 => {
-                        let mut samples = Vec::new();
-                        for packet in packet_reader {
-                            let packet_sample = packet_decoder.decode::<f32>(packet)?;
-                            samples.extend(packet_sample);
-                        }
-                        let res = stream_loop::<f32>(
-                            stream_tx,
-                            &self.device,
-                            &audio_config,
-                            samples,
-                            volume,
-                            |packet, volume| packet * volume,
-                        )?;
-                        Ok(res)
-                    }
-                    _ => {
-                        let mut samples = Vec::new();
-                        for packet in packet_reader {
-                            let packet_sample = packet_decoder.decode::<f64>(packet)?;
-                            samples.extend(packet_sample);
-                        }
-                        let res = stream_loop::<f64>(
-                            stream_tx,
-                            &self.device,
-                            &audio_config,
-                            samples,
-                            volume,
-                            |packet, volume| (packet * volume as f64) as f64,
-                        )?;
-                        Ok(res)
-                    }
+        match config.sample_format() {
+            cpal::SampleFormat::U8 => {
+                let mut samples = Vec::new();
+                for packet in packet_reader {
+                    let packet_sample = packet_decoder.decode::<u8>(packet)?;
+                    samples.extend(packet_sample);
                 }
+                let res = stream_loop::<u8>(
+                    stream_tx,
+                    &self.device,
+                    &audio_config,
+                    samples,
+                    volume,
+                    |packet, volume| ((packet as f32) * volume) as u8,
+                )?;
+                Ok(res)
+            }
+            cpal::SampleFormat::U16 => {
+                let mut samples = Vec::new();
+                for packet in packet_reader {
+                    let packet_sample = packet_decoder.decode::<u16>(packet)?;
+                    samples.extend(packet_sample);
+                }
+                let res = stream_loop::<u16>(
+                    stream_tx,
+                    &self.device,
+                    &audio_config,
+                    samples,
+                    volume,
+                    |packet, volume| ((packet as f32) * volume) as u16,
+                )?;
+                Ok(res)
+            }
+            cpal::SampleFormat::U32 => {
+                let mut samples = Vec::new();
+                for packet in packet_reader {
+                    let packet_sample = packet_decoder.decode::<u32>(packet)?;
+                    samples.extend(packet_sample);
+                }
+                let res = stream_loop::<u32>(
+                    stream_tx,
+                    &self.device,
+                    &audio_config,
+                    samples,
+                    volume,
+                    |packet, volume| ((packet as f32) * volume) as u32,
+                )?;
+                Ok(res)
+            }
+            cpal::SampleFormat::I8 => {
+                let mut samples = Vec::new();
+                for packet in packet_reader {
+                    let packet_sample = packet_decoder.decode::<i8>(packet)?;
+                    samples.extend(packet_sample);
+                }
+                let res = stream_loop::<i8>(
+                    stream_tx,
+                    &self.device,
+                    &audio_config,
+                    samples,
+                    volume,
+                    |packet, volume| ((packet as f32) * volume) as i8,
+                )?;
+                Ok(res)
+            }
+            cpal::SampleFormat::I16 => {
+                let mut samples = Vec::new();
+                for packet in packet_reader {
+                    let packet_sample = packet_decoder.decode::<i16>(packet)?;
+                    samples.extend(packet_sample);
+                }
+                let res = stream_loop::<i16>(
+                    stream_tx,
+                    &self.device,
+                    &audio_config,
+                    samples,
+                    volume,
+                    |packet, volume| ((packet as f32) * volume) as i16,
+                )?;
+                Ok(res)
+            }
+            cpal::SampleFormat::I32 => {
+                let mut samples = Vec::new();
+                for packet in packet_reader {
+                    let packet_sample = packet_decoder.decode::<i32>(packet)?;
+                    samples.extend(packet_sample);
+                }
+                let res = stream_loop::<i32>(
+                    stream_tx,
+                    &self.device,
+                    &audio_config,
+                    samples,
+                    volume,
+                    |packet, volume| ((packet as f32) * volume) as i32,
+                )?;
+                Ok(res)
+            }
+            cpal::SampleFormat::F32 => {
+                let mut samples = Vec::new();
+                for packet in packet_reader {
+                    let packet_sample = packet_decoder.decode::<f32>(packet)?;
+                    samples.extend(packet_sample);
+                }
+                let res = stream_loop::<f32>(
+                    stream_tx,
+                    &self.device,
+                    &audio_config,
+                    samples,
+                    volume,
+                    |packet, volume| packet * volume,
+                )?;
+                Ok(res)
+            }
+            _ => {
+                let mut samples = Vec::new();
+                for packet in packet_reader {
+                    let packet_sample = packet_decoder.decode::<f64>(packet)?;
+                    samples.extend(packet_sample);
+                }
+                let res = stream_loop::<f64>(
+                    stream_tx,
+                    &self.device,
+                    &audio_config,
+                    samples,
+                    volume,
+                    |packet, volume| (packet * volume as f64) as f64,
+                )?;
+                Ok(res)
             }
         }
     }

@@ -36,7 +36,6 @@ pub trait AudioPlayer {
     fn set_repeat(&mut self, repeat: bool);
     fn set_shuffle(&mut self, shuffle: bool);
 
-    fn get_elapsed(&self) -> time::Duration;
     fn set_elapsed(&mut self, elapsed: time::Duration);
 
     fn current_song_ref(&self) -> Option<&DiziAudioFile>;

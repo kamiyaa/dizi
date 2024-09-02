@@ -61,8 +61,8 @@ pub fn file_browser_open(context: &mut AppContext) -> DiziResult {
 pub fn playlist_open(context: &mut AppContext) -> DiziResult {
     if let Some(index) = context
         .server_state_ref()
-        .player_ref()
-        .playlist_ref()
+        .player
+        .playlist
         .get_cursor_index()
     {
         let request = ClientRequest::PlaylistPlay { index: Some(index) };

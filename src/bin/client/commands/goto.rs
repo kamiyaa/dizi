@@ -8,7 +8,7 @@ use crate::config::option::WidgetType;
 use crate::context::AppContext;
 
 fn _directory_goto_playing(context: &mut AppContext) -> DiziResult {
-    let player_state = context.server_state_ref().player_ref();
+    let player_state = &context.server_state_ref().player;
 
     if let Some(song) = player_state.song.clone() {
         let file_path = song.file_path();
@@ -22,7 +22,7 @@ fn _directory_goto_playing(context: &mut AppContext) -> DiziResult {
 }
 
 fn _playlist_goto_playing(context: &mut AppContext) -> DiziResult {
-    let player_state = context.server_state_ref().player_ref();
+    let player_state = &context.server_state_ref().player;
 
     match player_state.playlist_status {
         PlaylistType::DirectoryListing => {

@@ -28,7 +28,7 @@ impl<'a> Widget for TuiFolderView<'a> {
 
         let config = self.context.config_ref();
         let display_options = config.display_options_ref();
-        let currently_playing = self.context.server_state_ref().player_ref().song.as_ref();
+        let currently_playing = self.context.server_state_ref().player.song.as_ref();
 
         // render current view
         if let Some(list) = curr_list.as_ref() {

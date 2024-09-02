@@ -208,9 +208,6 @@ impl AudioPlayer for SymphoniaPlayer {
         }
     }
 
-    fn get_elapsed(&self) -> time::Duration {
-        self.state.elapsed
-    }
     fn set_elapsed(&mut self, elapsed: time::Duration) {
         self.state.elapsed = elapsed;
     }

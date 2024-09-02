@@ -51,68 +51,6 @@ impl PlayerState {
         Self::default()
     }
 
-    pub fn get_song(&self) -> Option<&DiziAudioFile> {
-        self.song.as_ref()
-    }
-    pub fn set_song(&mut self, song: Option<DiziAudioFile>) {
-        self.song = song;
-    }
-
-    pub fn get_elapsed(&self) -> time::Duration {
-        self.elapsed
-    }
-    pub fn set_elapsed(&mut self, elapsed: time::Duration) {
-        self.elapsed = elapsed;
-    }
-
-    pub fn get_player_status(&self) -> PlayerStatus {
-        self.status
-    }
-    pub fn set_player_status(&mut self, status: PlayerStatus) {
-        self.status = status;
-    }
-    pub fn get_playlist_status(&self) -> PlaylistType {
-        self.playlist_status
-    }
-    pub fn set_playlist_status(&mut self, status: PlaylistType) {
-        self.playlist_status = status;
-    }
-
-    pub fn get_volume(&self) -> usize {
-        self.volume
-    }
-    pub fn set_volume(&mut self, volume: usize) {
-        self.volume = volume;
-    }
-
-    pub fn repeat_enabled(&self) -> bool {
-        self.repeat
-    }
-    pub fn set_repeat(&mut self, repeat: bool) {
-        self.repeat = repeat;
-    }
-
-    pub fn shuffle_enabled(&self) -> bool {
-        self.shuffle
-    }
-    pub fn set_shuffle(&mut self, shuffle: bool) {
-        self.shuffle = shuffle;
-    }
-
-    pub fn next_enabled(&self) -> bool {
-        self.next
-    }
-    pub fn set_next(&mut self, next: bool) {
-        self.next = next;
-    }
-
-    pub fn playlist_ref(&self) -> &FilePlaylist {
-        &self.playlist
-    }
-    pub fn playlist_mut(&mut self) -> &mut FilePlaylist {
-        &mut self.playlist
-    }
-
     pub fn query(&self, query: &str) -> DiziResult<String> {
         let vars = self.query_all();
 
@@ -132,44 +70,38 @@ impl PlayerState {
     pub fn query_all(&self) -> HashMap<String, String> {
         let mut vars = HashMap::new();
         Self::load_player_query_vars(&mut vars, self);
-        if let Some(song) = self.get_song() {
+        if let Some(song) = self.song.as_ref() {
             Self::load_song_query_vars(&mut vars, song);
         }
         vars
     }
 
     fn load_player_query_vars(vars: &mut HashMap<String, String>, player_state: &PlayerState) {
-        vars.insert(
-            "player.status".to_string(),
-            player_state.get_player_status().to_string(),
-        );
+        vars.insert("player.status".to_string(), player_state.status.to_string());
         vars.insert(
             "player.volume".to_string(),
-            format!("{}", player_state.get_volume()),
+            format!("{}", player_state.volume),
         );
-        vars.insert(
-            "player.next".to_string(),
-            format!("{}", player_state.next_enabled()),
-        );
+        vars.insert("player.next".to_string(), format!("{}", player_state.next));
         vars.insert(
             "player.repeat".to_string(),
-            format!("{}", player_state.repeat_enabled()),
+            format!("{}", player_state.repeat),
         );
         vars.insert(
             "player.shuffle".to_string(),
-            format!("{}", player_state.shuffle_enabled()),
+            format!("{}", player_state.shuffle),
         );
         vars.insert(
             "playlist.status".to_string(),
-            player_state.get_playlist_status().to_string(),
+            player_state.playlist_status.to_string(),
         );
 
-        if let Some(index) = player_state.playlist_ref().get_playing_index() {
+        if let Some(index) = player_state.playlist.get_playing_index() {
             vars.insert("playlist.index".to_string(), format!("{}", index));
         }
         vars.insert(
             "playlist.length".to_string(),
-            format!("{}", player_state.playlist_ref().len()),
+            format!("{}", player_state.playlist.len()),
         );
         vars.insert("audio.host".to_string(), player_state.audio_host.clone());
     }

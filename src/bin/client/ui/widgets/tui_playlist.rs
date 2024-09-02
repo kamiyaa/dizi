@@ -31,7 +31,7 @@ impl<'a> TuiPlaylist<'a> {
         let x = area.left();
         let y = area.top();
 
-        let playlist = self.player.playlist_ref();
+        let playlist = &self.player.playlist;
 
         let drawing_width = area.width as usize;
         let skip_dist = playlist.first_index_for_viewport(area.height as usize);
@@ -62,7 +62,7 @@ impl<'a> TuiPlaylist<'a> {
             return;
         }
 
-        let playlist = self.player.playlist_ref();
+        let playlist = &self.player.playlist;
         let skip_dist = playlist.first_index_for_viewport(area.height as usize);
         let curr_index = playlist.get_cursor_index();
 
@@ -98,8 +98,7 @@ impl<'a> TuiPlaylist<'a> {
         let x = area.left();
         let y = area.top();
 
-        let playlist = self.player.playlist_ref();
-
+        let playlist = &self.player.playlist;
         let drawing_width = area.width as usize;
         let skip_dist = playlist.first_index_for_viewport(area.height as usize);
 

@@ -49,8 +49,8 @@ fn search_playlist_skim(
 
     let items: Vec<DiziSkimItem> = context
         .server_state_ref()
-        .player_ref()
-        .playlist_ref()
+        .player
+        .playlist
         .list_ref()
         .iter()
         .enumerate()

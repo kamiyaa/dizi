@@ -4,6 +4,8 @@ use std::io;
 #[derive(Debug)]
 pub enum DiziErrorKind {
     Server,
+    Symphonia,
+
     // io related
     IoError(io::ErrorKind),
 
@@ -20,8 +22,6 @@ pub enum DiziErrorKind {
 
     SendError,
     ReceiveError,
-
-    SymphoniaError(symphonia::core::errors::Error),
 
     CpalBuildStreamError(cpal::BuildStreamError),
     CpalPlayStreamError(cpal::PlayStreamError),
@@ -66,8 +66,8 @@ impl From<toml::de::Error> for DiziErrorKind {
 }
 
 impl From<symphonia::core::errors::Error> for DiziErrorKind {
-    fn from(e: symphonia::core::errors::Error) -> Self {
-        Self::SymphoniaError(e)
+    fn from(_: symphonia::core::errors::Error) -> Self {
+        Self::Symphonia
     }
 }
 
