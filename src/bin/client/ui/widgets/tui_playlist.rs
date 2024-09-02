@@ -1,5 +1,6 @@
 use std::cmp::Ordering;
 
+use dizi::song::DiziSongEntry;
 use ratatui::buffer::Buffer;
 use ratatui::layout::Rect;
 use ratatui::style::{Modifier, Style};
@@ -8,7 +9,6 @@ use ratatui::widgets::Widget;
 use unicode_width::UnicodeWidthStr;
 
 use dizi::player::PlayerState;
-use dizi::song::Song;
 
 use crate::util::string::UnicodeTruncate;
 use crate::util::style;
@@ -145,7 +145,7 @@ impl<'a> Widget for TuiPlaylist<'a> {
 
 fn print_entry(
     buf: &mut Buffer,
-    entry: &Song,
+    entry: &DiziSongEntry,
     index: usize,
     style: Style,
     (x, y): (u16, u16),

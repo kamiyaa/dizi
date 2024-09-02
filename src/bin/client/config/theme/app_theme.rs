@@ -1,4 +1,4 @@
-use serde_derive::Deserialize;
+use serde::Deserialize;
 use std::collections::HashMap;
 
 use dizi::error::DiziResult;

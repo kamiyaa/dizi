@@ -1,4 +1,4 @@
-use serde_derive::Deserialize;
+use serde::Deserialize;
 
 use crate::config::option::{SortOption, SortType, SortTypes};
 

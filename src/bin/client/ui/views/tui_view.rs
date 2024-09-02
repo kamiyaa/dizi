@@ -71,7 +71,7 @@ impl<'a> Widget for TuiView<'a> {
             height: 1,
         };
         let cwd = self.context.tab_context_ref().curr_tab_ref().cwd();
-        TuiTopBar::new(self.context, cwd).render(rect, buf);
+        TuiTopBar::new(cwd).render(rect, buf);
     }
 }
 

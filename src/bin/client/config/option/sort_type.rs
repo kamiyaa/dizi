@@ -3,7 +3,7 @@ use std::collections::VecDeque;
 use std::fs;
 use std::time;
 
-use serde_derive::Deserialize;
+use serde::Deserialize;
 
 use crate::config::option::SortOption;
 use crate::fs::JoshutoDirEntry;
@@ -122,8 +122,8 @@ fn size_sort(file1: &JoshutoDirEntry, file2: &JoshutoDirEntry) -> cmp::Ordering 
 }
 
 fn ext_sort(file1: &JoshutoDirEntry, file2: &JoshutoDirEntry) -> cmp::Ordering {
-    let f1_ext = file1.get_ext();
-    let f2_ext = file2.get_ext();
+    let f1_ext = file1.ext().unwrap_or_default();
+    let f2_ext = file2.ext().unwrap_or_default();
     alphanumeric_sort::compare_str(f1_ext, f2_ext)
 }
 

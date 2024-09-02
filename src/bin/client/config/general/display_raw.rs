@@ -1,6 +1,6 @@
 use std::convert::From;
 
-use serde_derive::Deserialize;
+use serde::Deserialize;
 
 use crate::config::option::DisplayOption;
 

@@ -1,6 +1,6 @@
 use std::io;
 
-use serde_derive::Serialize;
+use serde::Serialize;
 
 #[derive(Clone, Debug, Serialize)]
 pub struct AppError {

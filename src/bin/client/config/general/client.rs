@@ -1,7 +1,7 @@
 use std::convert::From;
 use std::path::{Path, PathBuf};
 
-use serde_derive::Deserialize;
+use serde::Deserialize;
 use shellexpand::tilde_with_context;
 
 use crate::config::option::DisplayOption;

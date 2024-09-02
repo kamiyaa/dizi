@@ -3,6 +3,7 @@ use std::io;
 
 #[derive(Debug)]
 pub enum DiziErrorKind {
+    Server,
     // io related
     IoError(io::ErrorKind),
 

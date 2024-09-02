@@ -1,58 +1,61 @@
 use std::{fs, io, path};
 
 use crate::config::option::DisplayOption;
-use crate::fs::{FileType, JoshutoMetadata};
-
-#[cfg(feature = "devicons")]
-use crate::util::devicons::*;
+use crate::fs::metadata::JoshutoMetadata;
 
 #[derive(Clone, Debug)]
 pub struct JoshutoDirEntry {
-    name: String,
-    label: String,
-    path: path::PathBuf,
+    pub name: String,
+    pub ext: Option<String>,
+    pub path: path::PathBuf,
     pub metadata: JoshutoMetadata,
+    /// Directly selected by the user, _not_ by a current visual mode selection
+    permanent_selected: bool,
+    /// Temporarily selected by the visual mode range
+    visual_mode_selected: bool,
+    _marked: bool,
 }
 
 impl JoshutoDirEntry {
-    pub fn from(direntry: &fs::DirEntry, options: &DisplayOption) -> io::Result<Self> {
-        let path = direntry.path();
+    pub fn from(
+        direntry: &fs::DirEntry,
+        base: &path::Path,
+        options: &DisplayOption,
+    ) -> io::Result<Self> {
+        let path = direntry.path().to_path_buf();
 
-        let metadata = JoshutoMetadata::from(&path)?;
         let name = direntry
-            .file_name()
-            .as_os_str()
+            .path()
+            .strip_prefix(base)
+            .unwrap()
             .to_string_lossy()
             .to_string();
 
-        #[cfg(feature = "devicons")]
-        let label = if options.show_icons() {
-            create_icon_label(name.as_str(), &metadata)
-        } else {
-            name.clone()
-        };
+        let ext = direntry
+            .path()
+            .extension()
+            .and_then(|s| s.to_str())
+            .map(|s| s.to_string());
 
-        #[cfg(not(feature = "devicons"))]
-        let label = name.clone();
+        let metadata = JoshutoMetadata::from(&path)?;
 
         Ok(Self {
             name,
-            label,
+            ext,
             path,
             metadata,
+            permanent_selected: false,
+            visual_mode_selected: false,
+            _marked: false,
         })
-    }
-
-    pub fn update_label(&mut self, label: String) {
-        self.label = label;
     }
 
     pub fn file_name(&self) -> &str {
         self.name.as_str()
     }
 
-    pub fn label(&self) -> &str {
-        self.label.as_str()
+    pub fn ext(&self) -> Option<&str> {
+        self.ext.as_deref()
     }
 
     pub fn file_path(&self) -> &path::Path {
@@ -63,12 +66,24 @@ impl JoshutoDirEntry {
         self.path.clone()
     }
 
-    pub fn get_ext(&self) -> &str {
-        let fname = self.file_name();
-        match fname.rfind('.') {
-            Some(pos) => &fname[pos..],
-            None => "",
-        }
+    pub fn is_selected(&self) -> bool {
+        self.permanent_selected || self.visual_mode_selected
+    }
+
+    pub fn is_permanent_selected(&self) -> bool {
+        self.permanent_selected
+    }
+
+    pub fn is_visual_mode_selected(&self) -> bool {
+        self.visual_mode_selected
+    }
+
+    pub fn set_permanent_selected(&mut self, selected: bool) {
+        self.permanent_selected = selected;
+    }
+
+    pub fn set_visual_mode_selected(&mut self, visual_mode_selected: bool) {
+        self.visual_mode_selected = visual_mode_selected;
     }
 }
 
@@ -103,22 +118,6 @@ impl std::cmp::Ord for JoshutoDirEntry {
     }
 }
 
-fn create_icon_label(name: &str, metadata: &JoshutoMetadata) -> String {
-    let label = {
-        let icon =
-            match metadata.file_type() {
-                FileType::Directory => DIR_NODE_EXACT_MATCHES
-                    .get(name)
-                    .cloned()
-                    .unwrap_or(DEFAULT_DIR),
-                _ => FILE_NODE_EXACT_MATCHES.get(name).cloned().unwrap_or(
-                    match name.rsplit_once('.') {
-                        Some((_, ext)) => FILE_NODE_EXTENSIONS.get(ext).unwrap_or(&DEFAULT_FILE),
-                        None => DEFAULT_FILE,
-                    },
-                ),
-            };
-        format!("{} {}", icon, name)
-    };
-    label
+fn get_directory_size(path: &path::Path) -> io::Result<usize> {
+    fs::read_dir(path).map(|s| s.count())
 }

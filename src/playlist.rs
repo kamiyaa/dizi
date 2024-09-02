@@ -1,8 +1,8 @@
 use std::path::PathBuf;
 
-use serde_derive::{Deserialize, Serialize};
+use serde::{Deserialize, Serialize};
 
-use crate::song::Song;
+use crate::song::DiziSongEntry;
 
 #[derive(Copy, Clone, Debug, PartialEq, Serialize, Deserialize)]
 pub enum PlaylistType {
@@ -21,7 +21,7 @@ impl ToString for PlaylistType {
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
 pub struct FilePlaylist {
-    pub list: Vec<Song>,
+    pub list: Vec<DiziSongEntry>,
     pub cursor_index: Option<usize>,
     pub playing_index: Option<usize>,
 }
@@ -38,7 +38,7 @@ impl FilePlaylist {
         }
     }
 
-    pub fn playlist(&self) -> &[Song] {
+    pub fn playlist(&self) -> &[DiziSongEntry] {
         self.list.as_slice()
     }
 
@@ -48,11 +48,11 @@ impl FilePlaylist {
         self.playing_index = None;
     }
 
-    pub fn append_song(&mut self, s: Song) {
+    pub fn append_song(&mut self, s: DiziSongEntry) {
         self.list_mut().push(s);
     }
 
-    pub fn remove_song(&mut self, index: usize) -> Song {
+    pub fn remove_song(&mut self, index: usize) -> DiziSongEntry {
         let song = self.list_mut().remove(index);
         if self.list_ref().is_empty() {
             self.set_cursor_index(None);
@@ -95,10 +95,10 @@ impl FilePlaylist {
         self.list.is_empty()
     }
 
-    pub fn list_ref(&self) -> &Vec<Song> {
+    pub fn list_ref(&self) -> &[DiziSongEntry] {
         &self.list
     }
-    pub fn list_mut(&mut self) -> &mut Vec<Song> {
+    pub fn list_mut(&mut self) -> &mut Vec<DiziSongEntry> {
         &mut self.list
     }
 }

@@ -5,18 +5,6 @@ use crate::context::AppContext;
 use crate::event::AppEvent;
 use crate::fs::JoshutoDirList;
 
-#[derive(Debug, Clone)]
-pub enum PreviewDirState {
-    Loading,
-    Error { message: String },
-}
-
-impl PreviewDirState {
-    pub fn is_loading(&self) -> bool {
-        matches!(*self, Self::Loading)
-    }
-}
-
 pub struct Background {}
 
 impl Background {

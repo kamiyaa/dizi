@@ -8,44 +8,71 @@ use symphonia::core::io::MediaSourceStream;
 use symphonia::core::meta::{MetadataOptions, MetadataRevision};
 use symphonia::core::probe::Hint;
 
-use serde_derive::{Deserialize, Serialize};
+use serde::{Deserialize, Serialize};
 
-use crate::error::DiziResult;
+use crate::error::{DiziError, DiziResult};
 
-#[derive(Clone, Debug, Serialize, Deserialize)]
-pub struct Song {
-    _file_name: String,
-    #[serde(rename = "path")]
-    _path: PathBuf,
-    #[serde(rename = "audio_metadata")]
-    _audio_metadata: AudioMetadata,
-    #[serde(rename = "music_metadata")]
-    _music_metadata: MusicMetadata,
-    #[serde(rename = "metadata_loaded")]
-    _metadata_loaded: bool,
+#[derive(Clone, Debug, Deserialize, Serialize)]
+pub enum DiziSongEntry {
+    Unloaded(DiziFile),
+    Loaded(DiziAudioFile),
 }
 
-impl Song {
+impl DiziSongEntry {
+    pub fn load_metadata(self) -> DiziResult<DiziAudioFile> {
+        match self {
+            Self::Unloaded(s) => DiziAudioFile::try_from(s),
+            Self::Loaded(s) => Ok(s),
+        }
+    }
+    pub fn file_path(&self) -> &Path {
+        match self {
+            Self::Unloaded(s) => &s.file_path,
+            Self::Loaded(s) => &s.file.file_path,
+        }
+    }
+
+    pub fn file_name(&self) -> &str {
+        match self {
+            Self::Unloaded(s) => &s.file_name,
+            Self::Loaded(s) => &s.file.file_name,
+        }
+    }
+}
+
+#[derive(Clone, Debug, Serialize, Deserialize)]
+pub struct DiziFile {
+    pub file_name: String,
+    pub file_path: PathBuf,
+}
+
+impl DiziFile {
     pub fn new(path: &Path) -> Self {
         let file_name = path
             .file_name()
             .map(|s| s.to_string_lossy())
             .unwrap()
             .into_owned();
-        let song = Self {
-            _file_name: file_name,
-            _path: path.to_path_buf(),
-            _metadata_loaded: false,
-            _audio_metadata: AudioMetadata::default(),
-            _music_metadata: MusicMetadata::default(),
-        };
-        song
+        Self {
+            file_name,
+            file_path: path.to_path_buf(),
+        }
     }
+}
 
-    pub fn load_metadata(&mut self) -> DiziResult {
-        tracing::debug!("Loading metadata for {:?}", self.file_path());
+#[derive(Clone, Debug, Serialize, Deserialize)]
+pub struct DiziAudioFile {
+    pub file: DiziFile,
+    pub audio_metadata: AudioMetadata,
+    pub music_metadata: MusicMetadata,
+}
+
+impl TryFrom<DiziFile> for DiziAudioFile {
+    type Error = DiziError;
+    fn try_from(value: DiziFile) -> Result<Self, Self::Error> {
+        tracing::debug!("Loading metadata for {:?}", value.file_path);
         let mut hint = Hint::new();
-        if let Some(ext) = self.file_path().extension().and_then(|e| e.to_str()) {
+        if let Some(ext) = value.file_path.extension().and_then(|e| e.to_str()) {
             hint.with_extension(ext);
         };
 
@@ -53,7 +80,7 @@ impl Song {
         let meta_opts: MetadataOptions = Default::default();
         let fmt_opts: FormatOptions = Default::default();
 
-        let src = std::fs::File::open(self.file_path())?;
+        let src = std::fs::File::open(&value.file_path)?;
 
         // Create the media source stream.
         let mss = MediaSourceStream::new(Box::new(src), Default::default());
@@ -76,35 +103,29 @@ impl Song {
             .skip_to_latest()
             .map(|metadata| MusicMetadata::from(metadata))
             .unwrap_or_else(|| MusicMetadata::default());
-
-        self._audio_metadata = audio_metadata;
-        self._music_metadata = music_metadata;
-        self._metadata_loaded = true;
-        Ok(())
+        Ok(Self {
+            file: value,
+            audio_metadata,
+            music_metadata,
+        })
     }
+}
 
-    pub fn metadata_loaded(&self) -> bool {
-        self._metadata_loaded
-    }
-
-    pub fn set_metadata_loaded(&mut self, loaded: bool) {
-        self._metadata_loaded = loaded;
-    }
-
+impl DiziAudioFile {
     pub fn file_path(&self) -> &Path {
-        self._path.as_path()
+        self.file.file_path.as_path()
     }
 
     pub fn file_name(&self) -> &str {
-        &self._file_name
+        &self.file.file_name
     }
 
     pub fn audio_metadata(&self) -> &AudioMetadata {
-        &self._audio_metadata
+        &self.audio_metadata
     }
 
     pub fn music_metadata(&self) -> &MusicMetadata {
-        &self._music_metadata
+        &self.music_metadata
     }
 }
 

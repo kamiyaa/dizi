@@ -32,14 +32,14 @@ pub enum PlayerStreamEvent {
 }
 
 #[derive(Debug)]
-pub struct PlayerStreamEventPoller {
+pub struct PlayerStreamEventListener {
     pub stream_tx: mpsc::Sender<StreamEvent>,
     pub player_res_tx: mpsc::Sender<DiziResult>,
     pub event_tx: mpsc::Sender<PlayerStreamEvent>,
-    event_rx: mpsc::Receiver<PlayerStreamEvent>,
+    pub event_rx: mpsc::Receiver<PlayerStreamEvent>,
 }
 
-impl PlayerStreamEventPoller {
+impl PlayerStreamEventListener {
     pub fn new(
         player_res_tx: mpsc::Sender<DiziResult>,
         player_req_rx: mpsc::Receiver<PlayerRequest>,
@@ -92,7 +92,7 @@ pub struct PlayerStreamState {
 
 pub struct PlayerStream {
     event_tx: ServerEventSender,
-    event_poller: PlayerStreamEventPoller,
+    event_poller: PlayerStreamEventListener,
     device: cpal::Device,
     state: Option<PlayerStreamState>,
 }
@@ -104,7 +104,7 @@ impl PlayerStream {
         player_req_rx: mpsc::Receiver<PlayerRequest>,
         device: cpal::Device,
     ) -> Self {
-        let event_poller = PlayerStreamEventPoller::new(player_res_tx, player_req_rx);
+        let event_poller = PlayerStreamEventListener::new(player_res_tx, player_req_rx);
         Self {
             event_tx,
             event_poller,
@@ -235,6 +235,7 @@ impl PlayerStream {
         let fmt_opts: FormatOptions = Default::default();
 
         let file = std::fs::File::open(path)?;
+        // let mmap = unsafe { memmap::MmapOptions::new().map(&file)? };
 
         // Create the media source stream.
         let mss = MediaSourceStream::new(Box::new(file), Default::default());

@@ -8,17 +8,12 @@ use crate::ui::widgets::TuiDirListDetailed;
 
 pub struct TuiFolderView<'a> {
     pub context: &'a AppContext,
-    pub show_bottom_status: bool,
     pub focused: bool,
 }
 
 impl<'a> TuiFolderView<'a> {
     pub fn new(context: &'a AppContext, focused: bool) -> Self {
-        Self {
-            context,
-            show_bottom_status: true,
-            focused,
-        }
+        Self { context, focused }
     }
 }
 

@@ -1,4 +1,4 @@
-use serde_derive::Deserialize;
+use serde::Deserialize;
 
 use crate::config::{parse_toml_to_config, TomlConfigFile};
 
@@ -24,10 +24,6 @@ impl From<AppConfigRaw> for AppConfig {
 }
 
 impl AppConfig {
-    pub fn new(server: ServerConfig) -> Self {
-        Self { server }
-    }
-
     pub fn server_ref(&self) -> &ServerConfig {
         &self.server
     }

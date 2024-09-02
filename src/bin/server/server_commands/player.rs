@@ -5,33 +5,34 @@ use dizi::player::PlayerStatus;
 
 use crate::context::AppContext;
 use crate::server_util::run_on_song_change;
+use crate::traits::AudioPlayer;
 
 pub fn player_play(context: &mut AppContext, path: &Path) -> DiziResult {
-    context.player_mut().play_directory(path)?;
+    context.player.play_directory(path)?;
 
     run_on_song_change(context);
     Ok(())
 }
 
 pub fn player_pause(context: &mut AppContext) -> DiziResult {
-    context.player_mut().pause()
+    context.player.pause()
 }
 
 pub fn player_resume(context: &mut AppContext) -> DiziResult {
-    context.player_mut().resume()
+    context.player.resume()
 }
 
 pub fn player_toggle_play(context: &mut AppContext) -> DiziResult<PlayerStatus> {
-    let status = context.player_mut().toggle_play()?;
+    let status = context.player.toggle_play()?;
     Ok(status)
 }
 
 pub fn player_get_volume(context: &mut AppContext) -> usize {
-    context.player_mut().get_volume()
+    context.player.get_volume()
 }
 
 pub fn player_set_volume(context: &mut AppContext, volume: usize) -> DiziResult {
-    context.player_mut().set_volume(volume)?;
+    context.player.set_volume(volume)?;
     Ok(())
 }
 
@@ -60,19 +61,19 @@ pub fn player_volume_decrease(context: &mut AppContext, amount: usize) -> DiziRe
 }
 
 pub fn player_play_again(context: &mut AppContext) -> DiziResult {
-    context.player_mut().play_again()?;
+    context.player.play_again()?;
     run_on_song_change(context);
     Ok(())
 }
 
 pub fn player_play_next(context: &mut AppContext) -> DiziResult {
-    context.player_mut().play_next()?;
+    context.player.play_next()?;
     run_on_song_change(context);
     Ok(())
 }
 
 pub fn player_play_previous(context: &mut AppContext) -> DiziResult {
-    context.player_mut().play_previous()?;
+    context.player.play_previous()?;
     run_on_song_change(context);
     Ok(())
 }

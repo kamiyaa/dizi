@@ -188,7 +188,7 @@ where
 {
     let results: Vec<JoshutoDirEntry> = fs::read_dir(path)?
         .filter(filter_func)
-        .filter_map(|res| JoshutoDirEntry::from(&res.ok()?, options).ok())
+        .filter_map(|res| JoshutoDirEntry::from(&res.ok()?, path, options).ok())
         .collect();
 
     Ok(results)

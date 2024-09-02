@@ -1,10 +1,10 @@
 use std::time::Duration;
 
-use dizi::song::Song;
+use dizi::song::DiziAudioFile;
 
 #[derive(Clone, Debug)]
 pub enum PlayerRequest {
-    Play { song: Song, volume: f32 },
+    Play { song: DiziAudioFile, volume: f32 },
     Pause,
     Resume,
     Stop,

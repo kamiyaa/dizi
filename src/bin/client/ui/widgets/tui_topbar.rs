@@ -6,16 +6,13 @@ use ratatui::style::{Color, Modifier, Style};
 use ratatui::text::{Line, Span};
 use ratatui::widgets::{Paragraph, Widget};
 
-use crate::context::AppContext;
-
 pub struct TuiTopBar<'a> {
-    pub context: &'a AppContext,
     path: &'a Path,
 }
 
 impl<'a> TuiTopBar<'a> {
-    pub fn new(context: &'a AppContext, path: &'a Path) -> Self {
-        Self { context, path }
+    pub fn new(path: &'a Path) -> Self {
+        Self { path }
     }
 }
 

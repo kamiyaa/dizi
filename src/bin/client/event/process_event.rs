@@ -1,6 +1,7 @@
 use std::io;
 use std::path;
 
+use dizi::song::DiziSongEntry;
 use signal_hook::consts::signal;
 use termion::event::{Event, Key};
 
@@ -115,7 +116,7 @@ pub fn process_server_event(context: &mut AppContext, s: &str) -> DiziResult {
                 .message_queue_mut()
                 .push_success(format!("Loaded {} songs to playlist", len));
         }
-        ServerBroadcastEvent::PlayerFilePlay { song } => {
+        ServerBroadcastEvent::PlayerFilePlay { file: song } => {
             context.server_state_mut().player_mut().set_song(Some(song));
             context
                 .server_state_mut()
@@ -196,13 +197,18 @@ pub fn process_server_event(context: &mut AppContext, s: &str) -> DiziResult {
                 .message_queue_mut()
                 .push_success(format!("Removed {} songs from playlist", len));
         }
-        ServerBroadcastEvent::PlaylistAppend { songs } => {
+        ServerBroadcastEvent::PlaylistAppend { audio_files } => {
+            let len = audio_files.len();
+            let entries: Vec<_> = audio_files
+                .into_iter()
+                .map(|s| DiziSongEntry::Loaded(s))
+                .collect();
             context
                 .server_state_mut()
                 .player_mut()
                 .playlist_mut()
                 .list_mut()
-                .extend_from_slice(&songs);
+                .extend_from_slice(&entries);
             if context
                 .server_state_ref()
                 .player_ref()
@@ -218,7 +224,7 @@ pub fn process_server_event(context: &mut AppContext, s: &str) -> DiziResult {
             }
             context
                 .message_queue_mut()
-                .push_success(format!("Added {} songs to playlist", songs.len()));
+                .push_success(format!("Added {len} songs to playlist"));
         }
         ServerBroadcastEvent::PlaylistRemove { index } => {
             let playlist = context.server_state_mut().player_mut().playlist_mut();
@@ -227,14 +233,7 @@ pub fn process_server_event(context: &mut AppContext, s: &str) -> DiziResult {
         ServerBroadcastEvent::PlaylistPlay { index } => {
             let len = context.server_state_ref().player_ref().playlist_ref().len();
             if index < len {
-                let song = context
-                    .server_state_ref()
-                    .player_ref()
-                    .playlist_ref()
-                    .list_ref()[index]
-                    .clone();
                 let player = context.server_state_mut().player_mut();
-                player.set_song(Some(song));
                 player.set_player_status(PlayerStatus::Playing);
                 player.set_playlist_status(PlaylistType::PlaylistFile);
                 let cursor_index = player.playlist_ref().get_cursor_index();

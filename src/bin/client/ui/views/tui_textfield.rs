@@ -49,14 +49,6 @@ pub struct TuiTextField<'a> {
 }
 
 impl<'a> TuiTextField<'a> {
-    pub fn menu_items<I>(&mut self, items: I) -> &mut Self
-    where
-        I: Iterator<Item = &'a str>,
-    {
-        self._menu_items = items.collect();
-        self
-    }
-
     pub fn prompt(&mut self, prompt: &'a str) -> &mut Self {
         self._prompt = prompt;
         self
@@ -96,7 +88,7 @@ impl<'a> TuiTextField<'a> {
         loop {
             terminal
                 .draw(|frame| {
-                    let area: Rect = frame.size();
+                    let area: Rect = frame.area();
                     if area.height == 0 {
                         return;
                     }
@@ -158,7 +150,7 @@ impl<'a> TuiTextField<'a> {
                     frame.render_widget(multiline, multiline_rect);
 
                     // render cursor
-                    frame.set_cursor(cursor_info.x as u16, cursor_info.y as u16);
+                    frame.set_cursor_position((cursor_info.x as u16, cursor_info.y as u16));
                 })
                 .unwrap();
 

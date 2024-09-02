@@ -6,11 +6,11 @@ use std::thread;
 use dizi::error::DiziResult;
 use dizi::response::server::ServerBroadcastEvent;
 
+use crate::audio::symphonia::player::SymphoniaPlayer;
 use crate::config::AppConfig;
 use crate::context::{AppContext, QuitType};
-use crate::events::{AppEvent, ServerEvent, ServerEventSender};
+use crate::events::{AppEvent, Events, ServerEvent, ServerEventSender};
 use crate::server_util;
-use crate::traits::OrderedPlaylist;
 
 pub fn setup_socket(config: &AppConfig) -> DiziResult<UnixListener> {
     let socket = Path::new(config.server_ref().socket_ref());
@@ -22,7 +22,17 @@ pub fn setup_socket(config: &AppConfig) -> DiziResult<UnixListener> {
 }
 
 pub fn serve(config: AppConfig) -> DiziResult {
-    let mut context = AppContext::new(config);
+    let events = Events::new();
+    let event_tx2 = events.server_event_sender().clone();
+
+    let player = SymphoniaPlayer::new(&config, event_tx2)?;
+
+    let mut context = AppContext {
+        events,
+        config,
+        quit: QuitType::DoNot,
+        player,
+    };
 
     let listener = setup_socket(context.config_ref())?;
     {
@@ -61,13 +71,13 @@ pub fn serve(config: AppConfig) -> DiziResult {
     }
 
     let playlist_path = context.config_ref().server_ref().playlist_ref();
-    let playlist = context.player_ref().playlist_ref().file_playlist_ref();
+    let playlist = &context.player.playlist;
 
     tracing::debug!("Saving playlist to '{}'", playlist_path.to_string_lossy());
 
     let mut file = std::fs::File::create(playlist_path)?;
     let mut writer = m3u::Writer::new(&mut file);
-    for song in playlist.iter() {
+    for song in playlist.contents.iter() {
         let entry = m3u::Entry::Path(song.file_path().to_path_buf());
         writer.write_entry(&entry)?;
     }

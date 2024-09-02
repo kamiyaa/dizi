@@ -1,6 +1,6 @@
 use std::path::PathBuf;
 
-use serde_derive::{Deserialize, Serialize};
+use serde::{Deserialize, Serialize};
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
 #[serde(tag = "api")]

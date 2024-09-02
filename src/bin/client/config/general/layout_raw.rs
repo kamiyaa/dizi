@@ -1,4 +1,4 @@
-use serde_derive::Deserialize;
+use serde::Deserialize;
 use std::convert::From;
 
 use crate::config::option::LayoutComposition;

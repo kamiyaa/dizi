@@ -15,7 +15,7 @@ use crate::client;
 use crate::context::AppContext;
 use crate::events::ServerEvent;
 use crate::server_commands::*;
-use crate::traits::OrderedPlaylist;
+use crate::traits::{AudioPlayer, DiziPlaylistTrait};
 
 pub fn process_server_event(context: &mut AppContext, event: ServerEvent) -> DiziResult {
     match event {
@@ -33,7 +33,7 @@ pub fn process_server_event(context: &mut AppContext, event: ServerEvent) -> Diz
                 .add_broadcast_listener(uuid_string, server_tx);
         }
         ServerEvent::PlayerProgressUpdate(elapsed) => {
-            context.player_mut().set_elapsed(elapsed);
+            context.player.set_elapsed(elapsed);
             context
                 .events
                 .broadcast_event(ServerBroadcastEvent::PlayerProgressUpdate { elapsed });
@@ -65,18 +65,18 @@ pub fn process_client_request(
             let _ = context.events.server_broadcast_listeners.remove(&uuid);
         }
         ClientRequest::PlayerState => {
-            let state = context.player_ref().player_state();
+            let state = context.player.player_state();
             context
                 .events
                 .broadcast_event(ServerBroadcastEvent::PlayerState { state });
         }
         ClientRequest::PlayerFilePlay { path: Some(p) } => {
             player_play(context, p.as_path())?;
-            if let Some(song) = context.player_ref().current_song_ref() {
+            if let Some(song) = context.player.current_song_ref() {
                 let song = song.clone();
                 context
                     .events
-                    .broadcast_event(ServerBroadcastEvent::PlayerFilePlay { song });
+                    .broadcast_event(ServerBroadcastEvent::PlayerFilePlay { file: song });
             }
         }
         ClientRequest::PlayerPause => {
@@ -135,7 +135,7 @@ pub fn process_client_request(
             let songs = playlist::playlist_append(context, &p)?;
             context
                 .events
-                .broadcast_event(ServerBroadcastEvent::PlaylistAppend { songs });
+                .broadcast_event(ServerBroadcastEvent::PlaylistAppend { audio_files: songs });
         }
         ClientRequest::PlaylistRemove { index: Some(index) } => {
             playlist::playlist_remove(context, index)?;
@@ -178,39 +178,39 @@ pub fn process_client_request(
             path: Some(path),
         } => {
             playlist::playlist_load(context, &cwd, &path)?;
-            let state = context.player_ref().player_state();
+            let state = context.player.player_state();
             context
                 .events
                 .broadcast_event(ServerBroadcastEvent::PlaylistOpen { state });
         }
         ClientRequest::PlayerToggleNext => {
-            let enabled = context.player_ref().next_enabled();
-            context.player_mut().set_next(!enabled);
+            let enabled = context.player.next_enabled();
+            context.player.set_next(!enabled);
             context
                 .events
                 .broadcast_event(ServerBroadcastEvent::PlayerNext { on: !enabled });
         }
         ClientRequest::PlayerToggleRepeat => {
-            let enabled = context.player_ref().repeat_enabled();
-            context.player_mut().set_repeat(!enabled);
+            let enabled = context.player.repeat_enabled();
+            context.player.set_repeat(!enabled);
             context
                 .events
                 .broadcast_event(ServerBroadcastEvent::PlayerRepeat { on: !enabled });
         }
         ClientRequest::PlayerToggleShuffle => {
-            let enabled = context.player_ref().shuffle_enabled();
-            context.player_mut().set_shuffle(!enabled);
+            let enabled = context.player.shuffle_enabled();
+            context.player.set_shuffle(!enabled);
             context
                 .events
                 .broadcast_event(ServerBroadcastEvent::PlayerShuffle { on: !enabled });
         }
         ClientRequest::PlayerFastForward { amount } => {
             let duration = Duration::from_secs(amount as u64);
-            context.player_mut().fast_forward(duration)?;
+            context.player.fast_forward(duration)?;
         }
         ClientRequest::PlayerRewind { amount } => {
             let duration = Duration::from_secs(amount as u64);
-            context.player_mut().rewind(duration)?;
+            context.player.rewind(duration)?;
         }
         ClientRequest::ServerQueryAll => {}
         s => {
@@ -221,23 +221,21 @@ pub fn process_client_request(
 }
 
 pub fn send_latest_song_info(context: &mut AppContext) -> DiziResult {
-    match context.player_ref().playlist_ref().get_type() {
+    match context.player.playlist.playlist_type {
         PlaylistType::DirectoryListing => {
-            if let Some(song) = context.player_ref().current_song_ref() {
-                let song = song.clone();
+            if let Some(file) = context.player.current_song_ref() {
+                let file = file.clone();
                 context
                     .events
-                    .broadcast_event(ServerBroadcastEvent::PlayerFilePlay { song });
+                    .broadcast_event(ServerBroadcastEvent::PlayerFilePlay { file });
             }
         }
         PlaylistType::PlaylistFile => {
-            let playlist = &context.player_ref().playlist_ref().file_playlist;
-
-            if let Some(entry) = playlist.current_song() {
-                let index = entry.song_index;
+            if let Some(order_index) = context.player.playlist.order_index {
+                let entry_index = context.player.playlist.order[order_index];
                 context
                     .events
-                    .broadcast_event(ServerBroadcastEvent::PlaylistPlay { index });
+                    .broadcast_event(ServerBroadcastEvent::PlaylistPlay { index: entry_index });
             }
         }
     }
@@ -247,12 +245,12 @@ pub fn send_latest_song_info(context: &mut AppContext) -> DiziResult {
 pub fn process_done_song(context: &mut AppContext) -> DiziResult {
     tracing::debug!("Processing done song trigger");
 
-    let next_enabled = context.player_ref().next_enabled();
-    let repeat_enabled = context.player_ref().repeat_enabled();
+    let next_enabled = context.player.next_enabled();
+    let repeat_enabled = context.player.repeat_enabled();
 
     if next_enabled {
         if !repeat_enabled && end_of_playlist(context) {
-            context.player_mut().stop()?;
+            context.player.stop()?;
             context
                 .events
                 .broadcast_event(ServerBroadcastEvent::PlayerStop);
@@ -270,7 +268,7 @@ pub fn process_done_song(context: &mut AppContext) -> DiziResult {
 }
 
 pub fn end_of_playlist(context: &AppContext) -> bool {
-    context.player_ref().playlist_ref().is_end()
+    context.player.playlist.is_end()
 }
 
 pub fn run_on_song_change(context: &AppContext) {

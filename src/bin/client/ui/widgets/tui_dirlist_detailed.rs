@@ -1,12 +1,11 @@
 use std::cmp::Ordering;
 
+use dizi::song::DiziAudioFile;
 use ratatui::buffer::Buffer;
 use ratatui::layout::Rect;
 use ratatui::style::{Color, Modifier, Style};
 use ratatui::widgets::Widget;
 use unicode_width::UnicodeWidthStr;
-
-use dizi::song::Song;
 
 use crate::config::option::DisplayOption;
 use crate::fs::{FileType, JoshutoDirEntry, JoshutoDirList, LinkType};
@@ -21,14 +20,14 @@ const ELLIPSIS: &str = "…";
 pub struct TuiDirListDetailed<'a> {
     dirlist: &'a JoshutoDirList,
     display_options: &'a DisplayOption,
-    currently_playing: Option<&'a Song>,
+    currently_playing: Option<&'a DiziAudioFile>,
     focused: bool,
 }
 impl<'a> TuiDirListDetailed<'a> {
     pub fn new(
         dirlist: &'a JoshutoDirList,
         display_options: &'a DisplayOption,
-        currently_playing: Option<&'a Song>,
+        currently_playing: Option<&'a DiziAudioFile>,
         focused: bool,
     ) -> Self {
         Self {
@@ -121,7 +120,7 @@ fn print_entry(
         LinkType::Normal => "",
         LinkType::Symlink(_, _) => "-> ",
     };
-    let left_label_original = entry.label();
+    let left_label_original = entry.file_name();
     let right_label_original = format!(" {}{} ", symlink_string, size_string);
 
     let (left_label, right_label) = factor_labels_for_entry(

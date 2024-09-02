@@ -1,4 +1,4 @@
-use serde_derive::Deserialize;
+use serde::Deserialize;
 
 use std::collections::{hash_map::Entry, HashMap};
 use std::convert::{AsMut, AsRef, From};

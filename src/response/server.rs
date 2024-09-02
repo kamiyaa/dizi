@@ -1,10 +1,10 @@
 use std::collections::HashMap;
 use std::time;
 
-use serde_derive::{Deserialize, Serialize};
+use serde::{Deserialize, Serialize};
 
 use crate::player::PlayerState;
-use crate::song::Song;
+use crate::song::DiziAudioFile;
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
 pub enum ServerBroadcastEvent {
@@ -26,7 +26,7 @@ pub enum ServerBroadcastEvent {
     },
 
     PlayerFilePlay {
-        song: Song,
+        file: DiziAudioFile,
     },
 
     PlayerPause,
@@ -58,7 +58,7 @@ pub enum ServerBroadcastEvent {
         index: usize,
     },
     PlaylistAppend {
-        songs: Vec<Song>,
+        audio_files: Vec<DiziAudioFile>,
     },
     PlaylistRemove {
         index: usize,

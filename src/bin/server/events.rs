@@ -25,7 +25,6 @@ pub enum AppEvent {
     },
 }
 
-pub type AppEventSender = mpsc::Sender<AppEvent>;
 pub type AppEventReceiver = mpsc::Receiver<AppEvent>;
 
 pub type ClientRequestSender = mpsc::Sender<(String, ClientRequest)>;
@@ -48,7 +47,6 @@ pub struct Events {
     pub server_event_tx: ServerEventSender,
 
     // main listening loop
-    pub app_event_tx: AppEventSender,
     pub app_event_rx: AppEventReceiver,
 
     pub server_broadcast_listeners: HashMap<String, ServerBroadcastEventSender>,
@@ -84,7 +82,6 @@ impl Events {
         Events {
             client_request_tx,
             server_event_tx,
-            app_event_tx,
             app_event_rx,
             server_broadcast_listeners: HashMap::new(),
         }

@@ -1,0 +1,224 @@
+use std::path;
+use std::time;
+
+use dizi::error::{DiziError, DiziErrorKind, DiziResult};
+use dizi::player::{PlayerState, PlayerStatus};
+use dizi::playlist::PlaylistType;
+use dizi::song::DiziAudioFile;
+use dizi::song::DiziSongEntry;
+
+use crate::audio::request::PlayerRequest;
+use crate::playlist::DiziPlaylist;
+use crate::traits::{AudioPlayer, DiziPlaylistTrait};
+use crate::util::mimetype::{get_mimetype, is_mimetype_audio, is_mimetype_video};
+
+use super::SymphoniaPlayer;
+
+impl AudioPlayer for SymphoniaPlayer {
+    fn player_state(&self) -> PlayerState {
+        let mut state = self.state.clone();
+        state.playlist = self.playlist.to_file_playlist();
+        state
+    }
+
+    fn play_directory(&mut self, path: &path::Path) -> DiziResult {
+        let mimetype = get_mimetype(path)?;
+        if !is_mimetype_audio(&mimetype) && !is_mimetype_video(&mimetype) {
+            return Err(DiziError::new(
+                DiziErrorKind::NotAudioFile,
+                format!("File mimetype is not of type audio: '{}'", mimetype),
+            ));
+        }
+
+        let shuffle_enabled = self.shuffle_enabled();
+        if let Some(parent) = path.parent() {
+            let mut playlist = DiziPlaylist::from_dir(parent)?;
+            // find the song we're playing in the playlist and set playing index
+            // equal to the playing song
+            let index = playlist
+                .contents
+                .iter()
+                .enumerate()
+                .find(|(_, p)| p.file_path() == path)
+                .map(|(i, _)| i);
+
+            playlist.order_index = index;
+            if shuffle_enabled {
+                playlist.shuffle();
+            }
+
+            let order_index = playlist.order_index.ok_or_else(|| {
+                let error_msg = "Order index is None";
+                tracing::error!("{error_msg}");
+                DiziError::new(DiziErrorKind::Server, error_msg.to_string())
+            })?;
+
+            let entry = playlist.contents[order_index].clone();
+            // lazily load metadata before playing
+            let audio_file = entry.load_metadata()?;
+            self.play(&audio_file)?;
+            playlist.contents[order_index] = DiziSongEntry::Loaded(audio_file);
+
+            self.playlist = playlist;
+            self.state.playlist_status = PlaylistType::DirectoryListing;
+        }
+        Ok(())
+    }
+
+    fn play_from_playlist(&mut self, index: usize) -> DiziResult {
+        let shuffle_enabled = self.shuffle_enabled();
+        let playlist = &mut self.playlist;
+
+        // unshuffle the playlist before choosing setting the new index
+        playlist.order_index = Some(index);
+        // reshuffle playlist upon playing new file
+        if shuffle_enabled {
+            playlist.shuffle();
+        }
+
+        let entry = playlist.contents[index].clone();
+        // lazily load metadata before playing
+        let audio_file = entry.load_metadata()?;
+        playlist.contents[index] = DiziSongEntry::Loaded(audio_file.clone());
+        self.state.playlist_status = PlaylistType::PlaylistFile;
+
+        self.play(&audio_file)?;
+
+        Ok(())
+    }
+
+    fn play_again(&mut self) -> DiziResult {
+        Ok(())
+    }
+
+    fn play_next(&mut self) -> DiziResult {
+        let playlist = &mut self.playlist;
+
+        let song_entry = playlist.next_song_peak().ok_or_else(|| {
+            DiziError::new(DiziErrorKind::ParseError, "Playlist error".to_string())
+        })?;
+        playlist.order_index = Some(song_entry.order_index);
+
+        let entry_index = playlist.order[song_entry.order_index];
+        let audio_file = song_entry.entry.load_metadata()?;
+        playlist.contents[entry_index] = DiziSongEntry::Loaded(audio_file.clone());
+
+        self.play(&audio_file)?;
+        Ok(())
+    }
+
+    fn play_previous(&mut self) -> DiziResult {
+        let playlist = &mut self.playlist;
+
+        let song_entry = playlist.previous_song_peak().ok_or_else(|| {
+            DiziError::new(DiziErrorKind::ParseError, "Playlist error".to_string())
+        })?;
+        playlist.order_index = Some(song_entry.order_index);
+
+        let entry_index = playlist.order[song_entry.order_index];
+        let audio_file = song_entry.entry.load_metadata()?;
+        playlist.contents[entry_index] = DiziSongEntry::Loaded(audio_file.clone());
+
+        self.play(&audio_file)?;
+        Ok(())
+    }
+
+    fn pause(&mut self) -> DiziResult {
+        self.player_stream_req().send(PlayerRequest::Pause)?;
+
+        self.player_stream_res().recv()??;
+        self.state.status = PlayerStatus::Paused;
+        Ok(())
+    }
+
+    fn resume(&mut self) -> DiziResult {
+        self.player_stream_req().send(PlayerRequest::Resume)?;
+
+        self.player_stream_res().recv()??;
+        self.state.status = PlayerStatus::Playing;
+        Ok(())
+    }
+
+    fn stop(&mut self) -> DiziResult {
+        self.player_stream_req().send(PlayerRequest::Stop)?;
+
+        self.player_stream_res().recv()??;
+        self.state.status = PlayerStatus::Stopped;
+        Ok(())
+    }
+
+    fn toggle_play(&mut self) -> DiziResult<PlayerStatus> {
+        match self.state.status {
+            PlayerStatus::Playing => {
+                self.pause()?;
+                Ok(PlayerStatus::Paused)
+            }
+            PlayerStatus::Paused => {
+                self.resume()?;
+                Ok(PlayerStatus::Playing)
+            }
+            s => Ok(s),
+        }
+    }
+    fn fast_forward(&mut self, offset: time::Duration) -> DiziResult {
+        self.player_stream_req()
+            .send(PlayerRequest::FastForward { offset })?;
+        Ok(())
+    }
+    fn rewind(&mut self, offset: time::Duration) -> DiziResult {
+        self.player_stream_req()
+            .send(PlayerRequest::Rewind { offset })?;
+        Ok(())
+    }
+
+    fn get_volume(&self) -> usize {
+        self.state.volume
+    }
+    fn set_volume(&mut self, volume: usize) -> DiziResult {
+        self.player_stream_req().send(PlayerRequest::SetVolume {
+            volume: volume as f32 / 100.0,
+        })?;
+
+        self.player_stream_res().recv()??;
+        self.state.volume = volume;
+        Ok(())
+    }
+    fn next_enabled(&self) -> bool {
+        self.state.next
+    }
+    fn repeat_enabled(&self) -> bool {
+        self.state.repeat
+    }
+    fn shuffle_enabled(&self) -> bool {
+        self.state.shuffle
+    }
+
+    fn set_next(&mut self, next: bool) {
+        self.state.next = next;
+    }
+    fn set_repeat(&mut self, repeat: bool) {
+        self.state.repeat = repeat;
+    }
+    fn set_shuffle(&mut self, shuffle: bool) {
+        self.state.shuffle = shuffle;
+        if self.shuffle_enabled() {
+            self.playlist.shuffle();
+        } else {
+            self.playlist.unshuffle();
+        }
+    }
+
+    fn get_elapsed(&self) -> time::Duration {
+        self.state.elapsed
+    }
+    fn set_elapsed(&mut self, elapsed: time::Duration) {
+        self.state.elapsed = elapsed;
+    }
+
+    fn current_song_ref(&self) -> Option<&DiziAudioFile> {
+        self.state.song.as_ref()
+    }
+    fn playlist_mut(&mut self) -> &mut DiziPlaylist {
+        &mut self.playlist
+    }
+}

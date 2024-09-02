@@ -2,13 +2,13 @@ use std::collections::HashMap;
 use std::string::ToString;
 use std::time;
 
-use serde_derive::{Deserialize, Serialize};
+use serde::{Deserialize, Serialize};
 
 use strfmt::strfmt;
 
 use crate::error::{DiziError, DiziErrorKind, DiziResult};
 use crate::playlist::{FilePlaylist, PlaylistType};
-use crate::song::Song;
+use crate::song::DiziAudioFile;
 
 #[derive(Copy, Clone, Debug, PartialEq, Serialize, Deserialize)]
 pub enum PlayerStatus {
@@ -29,7 +29,7 @@ impl ToString for PlayerStatus {
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct PlayerState {
-    pub song: Option<Song>,
+    pub song: Option<DiziAudioFile>,
     pub elapsed: time::Duration,
 
     pub status: PlayerStatus,
@@ -51,10 +51,10 @@ impl PlayerState {
         Self::default()
     }
 
-    pub fn get_song(&self) -> Option<&Song> {
+    pub fn get_song(&self) -> Option<&DiziAudioFile> {
         self.song.as_ref()
     }
-    pub fn set_song(&mut self, song: Option<Song>) {
+    pub fn set_song(&mut self, song: Option<DiziAudioFile>) {
         self.song = song;
     }
 
@@ -174,7 +174,7 @@ impl PlayerState {
         vars.insert("audio.host".to_string(), player_state.audio_host.clone());
     }
 
-    fn load_song_query_vars(vars: &mut HashMap<String, String>, song: &Song) {
+    fn load_song_query_vars(vars: &mut HashMap<String, String>, song: &DiziAudioFile) {
         vars.insert("song.file_name".to_string(), song.file_name().to_string());
         vars.insert(
             "song.file_path".to_string(),
