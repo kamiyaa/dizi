@@ -3,8 +3,6 @@ use std::sync::mpsc;
 use std::thread;
 use std::time::Duration;
 
-use log::{debug, log_enabled, Level};
-
 use uuid::Uuid;
 
 use dizi::error::DiziResult;
@@ -52,9 +50,7 @@ pub fn process_client_request(
     uuid: &str,
     event: ClientRequest,
 ) -> DiziResult {
-    if log_enabled!(Level::Debug) {
-        debug!("request: {:?} {:?}", uuid, event);
-    }
+    tracing::debug!("request: {:?} {:?}", uuid, event);
     match event {
         ClientRequest::ServerQuit => {
             server::quit_server(context)?;
@@ -218,9 +214,7 @@ pub fn process_client_request(
         }
         ClientRequest::ServerQueryAll => {}
         s => {
-            if log_enabled!(Level::Debug) {
-                debug!("'{:?}' not implemented", s);
-            }
+            tracing::debug!("'{:?}' not implemented", s);
         }
     }
     Ok(())
@@ -251,9 +245,7 @@ pub fn send_latest_song_info(context: &mut AppContext) -> DiziResult {
 }
 
 pub fn process_done_song(context: &mut AppContext) -> DiziResult {
-    if log_enabled!(Level::Debug) {
-        debug!("Processing done song trigger");
-    }
+    tracing::debug!("Processing done song trigger");
 
     let next_enabled = context.player_ref().next_enabled();
     let repeat_enabled = context.player_ref().repeat_enabled();

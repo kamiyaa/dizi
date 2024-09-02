@@ -1,7 +1,5 @@
 use std::path::Path;
 
-use log::{debug, log_enabled, Level};
-
 use dizi::error::DiziResult;
 use dizi::player::PlayerStatus;
 
@@ -47,9 +45,7 @@ pub fn player_volume_increase(context: &mut AppContext, amount: usize) -> DiziRe
     };
     player_set_volume(context, volume)?;
 
-    if log_enabled!(Level::Debug) {
-        debug!("volume is now: {}", volume);
-    }
+    tracing::debug!("volume is now: {volume}");
     Ok(volume)
 }
 
@@ -59,9 +55,7 @@ pub fn player_volume_decrease(context: &mut AppContext, amount: usize) -> DiziRe
     let volume = if amount > volume { 0 } else { volume - amount };
     player_set_volume(context, volume)?;
 
-    if log_enabled!(Level::Debug) {
-        debug!("volume is now: {}", volume);
-    }
+    tracing::debug!("volume is now: {volume}");
     Ok(volume)
 }
 

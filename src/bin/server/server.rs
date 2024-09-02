@@ -3,8 +3,6 @@ use std::os::unix::net::UnixListener;
 use std::path::Path;
 use std::thread;
 
-use log::{debug, log_enabled, Level};
-
 use dizi::error::DiziResult;
 use dizi::response::server::ServerBroadcastEvent;
 
@@ -39,17 +37,13 @@ pub fn serve(config: AppConfig) -> DiziResult {
             Err(_) => return Ok(()),
         };
 
-        if log_enabled!(Level::Debug) {
-            debug!("Server Event: {:?}", event);
-        }
+        tracing::debug!("Server Event: {:?}", event);
 
         match event {
             AppEvent::Client { uuid, request } => {
                 let res = server_util::process_client_request(&mut context, &uuid, request);
                 if let Err(err) = res {
-                    if log_enabled!(Level::Debug) {
-                        debug!("Error: {:?}", err);
-                    }
+                    tracing::debug!("Error: {:?}", err);
                     context
                         .events
                         .broadcast_event(ServerBroadcastEvent::ServerError {
@@ -59,10 +53,8 @@ pub fn serve(config: AppConfig) -> DiziResult {
             }
             AppEvent::Server(event) => {
                 let res = server_util::process_server_event(&mut context, event);
-                if log_enabled!(Level::Debug) {
-                    if let Err(err) = res {
-                        debug!("Error: {:?}", err);
-                    }
+                if let Err(err) = res {
+                    tracing::debug!("Error: {:?}", err);
                 }
             }
         }
@@ -71,9 +63,7 @@ pub fn serve(config: AppConfig) -> DiziResult {
     let playlist_path = context.config_ref().server_ref().playlist_ref();
     let playlist = context.player_ref().playlist_ref().file_playlist_ref();
 
-    if log_enabled!(Level::Debug) {
-        debug!("Saving playlist to '{}'", playlist_path.to_string_lossy());
-    }
+    tracing::debug!("Saving playlist to '{}'", playlist_path.to_string_lossy());
 
     let mut file = std::fs::File::create(playlist_path)?;
     let mut writer = m3u::Writer::new(&mut file);
@@ -81,9 +71,7 @@ pub fn serve(config: AppConfig) -> DiziResult {
         let entry = m3u::Entry::Path(song.file_path().to_path_buf());
         writer.write_entry(&entry)?;
     }
-    if log_enabled!(Level::Debug) {
-        debug!("Playlist saved!");
-    }
+    tracing::debug!("Playlist saved!");
 
     context
         .events

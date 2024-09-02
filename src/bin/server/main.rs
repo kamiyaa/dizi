@@ -14,10 +14,9 @@ use std::path::PathBuf;
 
 use clap::Parser;
 
-use lazy_static::lazy_static;
-use log::{debug, log_enabled, Level};
-
 use dizi::error::DiziResult;
+use lazy_static::lazy_static;
+use tracing_subscriber::{prelude::*, EnvFilter};
 
 use crate::config::{AppConfig, TomlConfigFile};
 
@@ -74,15 +73,18 @@ fn run_server(args: CommandArgs) -> DiziResult {
 
     let config = AppConfig::get_config(CONFIG_FILE);
 
-    if log_enabled!(Level::Debug) {
-        debug!("{:#?}", config);
-    }
+    let env_filter = EnvFilter::from_default_env();
+    let fmt_layer = tracing_subscriber::fmt::layer();
+    tracing_subscriber::registry()
+        .with(env_filter)
+        .with(fmt_layer)
+        .init();
+
+    tracing::debug!("{:#?}", config);
     server::serve(config)
 }
 
 fn main() {
-    env_logger::init();
-
     let args = CommandArgs::parse();
     let res = run_server(args);
 

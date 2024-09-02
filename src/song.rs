@@ -43,7 +43,7 @@ impl Song {
     }
 
     pub fn load_metadata(&mut self) -> DiziResult {
-        log::debug!("Loading metadata for {:?}", self.file_path());
+        tracing::debug!("Loading metadata for {:?}", self.file_path());
         let mut hint = Hint::new();
         if let Some(ext) = self.file_path().extension().and_then(|e| e.to_str()) {
             hint.with_extension(ext);

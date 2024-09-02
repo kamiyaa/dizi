@@ -99,7 +99,7 @@ impl PacketDecoder {
             Err(SymphoniaError::IoError(_)) => Ok(vec![]),
             Err(SymphoniaError::DecodeError(_)) => Ok(vec![]),
             Err(err) => {
-                log::error!("Unhandled symphonia error: {}", err);
+                tracing::error!("Unhandled symphonia error: {}", err);
                 Err(DiziError::from(err))
             }
         }

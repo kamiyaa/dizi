@@ -1,11 +1,7 @@
-use log::{debug, log_enabled, Level};
-
 pub fn get_default_host(host_id: cpal::HostId) -> cpal::Host {
-    if log_enabled!(Level::Debug) {
-        debug!("Available audio systems:");
-        for host in cpal::available_hosts() {
-            debug!("host: {:?}", host);
-        }
+    tracing::debug!("Available audio systems:");
+    for host in cpal::available_hosts() {
+        tracing::debug!("host: {:?}", host);
     }
     cpal::host_from_id(
         cpal::available_hosts()

@@ -45,7 +45,13 @@ pub fn run_ui(
 
     while context.quit == QuitType::DoNot {
         // do the ui
-        if let Ok(area) = backend.terminal_ref().size() {
+        if let Ok(size) = backend.terminal_ref().size() {
+            let area = Rect {
+                x: 0,
+                y: 0,
+                width: size.width,
+                height: size.height,
+            };
             // pre-calculate some ui attributes
             calculate_ui_context(context, area);
 

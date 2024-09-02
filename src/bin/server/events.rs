@@ -4,8 +4,6 @@ use std::sync::mpsc;
 use std::thread;
 use std::time;
 
-use log::{debug, log_enabled, Level};
-
 use dizi::request::client::ClientRequest;
 use dizi::response::server::ServerBroadcastEvent;
 
@@ -109,16 +107,14 @@ impl Events {
     }
 
     pub fn broadcast_event(&mut self, event: ServerBroadcastEvent) {
-        if log_enabled!(Level::Debug) {
-            match &event {
-                ServerBroadcastEvent::PlayerState { .. } => {}
-                event => {
-                    debug!(
-                        "Server broadcast: {:#?} to {} clients",
-                        event,
-                        self.server_broadcast_listeners.len()
-                    );
-                }
+        match &event {
+            ServerBroadcastEvent::PlayerState { .. } => {}
+            event => {
+                tracing::debug!(
+                    "Server broadcast: {:#?} to {} clients",
+                    event,
+                    self.server_broadcast_listeners.len()
+                );
             }
         }
         for (_, server_tx) in self.server_broadcast_listeners.iter() {

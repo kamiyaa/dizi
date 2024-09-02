@@ -3,7 +3,6 @@ use std::sync::mpsc;
 use std::thread;
 use std::time::Duration;
 
-use log::{debug, log_enabled, Level};
 use symphonia::core::codecs::{DecoderOptions, CODEC_TYPE_NULL};
 use symphonia::core::formats::FormatOptions;
 use symphonia::core::io::MediaSourceStream;
@@ -255,9 +254,7 @@ impl PlayerStream {
                 // Store the track identifier, it will be used to filter packets.
                 let track_id = track.id;
 
-                if log_enabled!(Level::Debug) {
-                    debug!("track: {:#?}", track);
-                }
+                tracing::debug!("track: {:#?}", track);
 
                 // Use the default options for the decoder.
                 let dec_opts: DecoderOptions = Default::default();
@@ -283,9 +280,7 @@ impl PlayerStream {
                     buffer_size: cpal::BufferSize::Default,
                 };
 
-                if log_enabled!(Level::Debug) {
-                    debug!("audio_config: {:#?}", audio_config);
-                }
+                tracing::debug!("audio_config: {:#?}", audio_config);
 
                 let stream_tx = self.event_poller.stream_tx.clone();
 

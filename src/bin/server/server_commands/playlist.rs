@@ -2,8 +2,6 @@ use std::cmp::Ordering;
 use std::fs;
 use std::path::{Path, PathBuf};
 
-use log::{debug, log_enabled, Level};
-
 use dizi::error::{DiziError, DiziErrorKind, DiziResult};
 use dizi::song::Song;
 
@@ -138,9 +136,7 @@ fn find_songs_rec(songs: &mut Vec<Song>, path: &Path) {
             if entry_path.is_dir() {
                 find_songs_rec(songs, &entry_path);
             } else if let Ok(true) = is_playable(&entry_path) {
-                if log_enabled!(Level::Debug) {
-                    debug!("Adding {:?} to playlist", entry_path);
-                }
+                tracing::debug!("Adding {:?} to playlist", entry_path);
                 songs.push(Song::new(&entry_path));
             }
         }

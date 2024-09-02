@@ -9,7 +9,6 @@ use dizi::error::{DiziError, DiziErrorKind, DiziResult};
 use dizi::player::{PlayerState, PlayerStatus};
 use dizi::playlist::PlaylistType;
 use dizi::song::Song;
-use log::{debug, log_enabled, Level};
 
 use crate::audio::device::get_default_host;
 use crate::audio::request::PlayerRequest;
@@ -84,9 +83,7 @@ impl SymphoniaPlayer {
     }
 
     fn play(&mut self, song: &Song) -> DiziResult {
-        if log_enabled!(Level::Debug) {
-            debug!("Song: {:#?}", song);
-        }
+        tracing::debug!("Song: {:#?}", song);
 
         self.player_stream_req().send(PlayerRequest::Play {
             song: song.clone(),
@@ -138,7 +135,7 @@ impl AudioPlayer for SymphoniaPlayer {
                 let song = playlist.entry_mut(entry.song_index);
                 if !song.metadata_loaded() {
                     if let Err(err) = song.load_metadata() {
-                        log::error!("Failed to load metadata: {}", err);
+                        tracing::error!("Failed to load metadata: {}", err);
                         song.set_metadata_loaded(true);
                     }
                 }
@@ -171,7 +168,7 @@ impl AudioPlayer for SymphoniaPlayer {
             let song = playlist.entry_mut(entry.song_index);
             if !song.metadata_loaded() {
                 if let Err(err) = song.load_metadata() {
-                    log::error!("Failed to load metadata: {}", err);
+                    tracing::error!("Failed to load metadata: {}", err);
                     song.set_metadata_loaded(true);
                 }
             }
@@ -196,7 +193,7 @@ impl AudioPlayer for SymphoniaPlayer {
                     let song = playlist.entry_mut(entry.song_index);
                     if !song.metadata_loaded() {
                         if let Err(err) = song.load_metadata() {
-                            log::error!("Failed to load metadata: {}", err);
+                            tracing::error!("Failed to load metadata: {}", err);
                             song.set_metadata_loaded(true);
                         }
                     }
@@ -210,7 +207,7 @@ impl AudioPlayer for SymphoniaPlayer {
                     let song = playlist.entry_mut(entry.song_index);
                     if !song.metadata_loaded() {
                         if let Err(err) = song.load_metadata() {
-                            log::error!("Failed to load metadata: {}", err);
+                            tracing::error!("Failed to load metadata: {}", err);
                             song.set_metadata_loaded(true);
                         }
                     }
@@ -236,7 +233,7 @@ impl AudioPlayer for SymphoniaPlayer {
                 let song = playlist.entry_mut(song_entry.song_index);
                 if !song.metadata_loaded() {
                     if let Err(err) = song.load_metadata() {
-                        log::error!("Failed to load metadata: {}", err);
+                        tracing::error!("Failed to load metadata: {}", err);
                         song.set_metadata_loaded(true);
                     }
                 }
@@ -254,7 +251,7 @@ impl AudioPlayer for SymphoniaPlayer {
                 let song = playlist.entry_mut(song_entry.song_index);
                 if !song.metadata_loaded() {
                     if let Err(err) = song.load_metadata() {
-                        log::error!("Failed to load metadata: {}", err);
+                        tracing::error!("Failed to load metadata: {}", err);
                         song.set_metadata_loaded(true);
                     }
                 }
@@ -278,7 +275,7 @@ impl AudioPlayer for SymphoniaPlayer {
                 let song = playlist.entry_mut(song_entry.song_index);
                 if !song.metadata_loaded() {
                     if let Err(err) = song.load_metadata() {
-                        log::error!("Failed to load metadata: {}", err);
+                        tracing::error!("Failed to load metadata: {}", err);
                         song.set_metadata_loaded(true);
                     }
                 }
@@ -296,7 +293,7 @@ impl AudioPlayer for SymphoniaPlayer {
                 let song = playlist.entry_mut(song_entry.song_index);
                 if !song.metadata_loaded() {
                     if let Err(err) = song.load_metadata() {
-                        log::error!("Failed to load metadata: {}", err);
+                        tracing::error!("Failed to load metadata: {}", err);
                         song.set_metadata_loaded(true);
                     }
                 }

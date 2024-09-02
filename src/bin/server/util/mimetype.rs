@@ -2,8 +2,6 @@ use std::io;
 use std::path::Path;
 use std::process::Command;
 
-use log::{debug, log_enabled, Level};
-
 pub fn get_mimetype(p: &Path) -> io::Result<String> {
     let output = Command::new("file")
         .arg("-b")
@@ -14,9 +12,7 @@ pub fn get_mimetype(p: &Path) -> io::Result<String> {
 
     let mimetype = stdout.to_string();
 
-    if log_enabled!(Level::Debug) {
-        debug!("{:?} mimetype: {}", p, mimetype);
-    }
+    tracing::debug!("{:?} mimetype: {}", p, mimetype);
 
     Ok(mimetype)
 }
