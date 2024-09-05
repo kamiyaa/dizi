@@ -19,8 +19,12 @@ pub fn playlist_play(context: &mut AppContext, index: usize) -> DiziResult {
 
 pub fn playlist_load(context: &mut AppContext, cwd: &Path, path: &Path) -> DiziResult {
     let shuffle_enabled = context.player.shuffle_enabled();
-    let playlist = context.player.playlist_mut();
-    if !playlist.is_empty() {
+    if !context
+        .player
+        .playlist_context_mut()
+        .file_playlist
+        .is_empty()
+    {
         return Err(DiziError::new(
             DiziErrorKind::InvalidParameters,
             "playlist cannot be loaded because current playlist is not empty".to_string(),
@@ -31,12 +35,16 @@ pub fn playlist_load(context: &mut AppContext, cwd: &Path, path: &Path) -> DiziR
     if shuffle_enabled {
         new_playlist.shuffle();
     }
-    context.player.playlist = new_playlist;
+    context.player.playlist_context.file_playlist = new_playlist;
     Ok(())
 }
 
 pub fn playlist_clear(context: &mut AppContext) -> DiziResult {
-    context.player.playlist.clear();
+    context
+        .player
+        .playlist_context_mut()
+        .current_playlist_mut()
+        .clear();
     Ok(())
 }
 
@@ -45,14 +53,22 @@ pub fn playlist_append(context: &mut AppContext, path: &Path) -> DiziResult<Vec<
         let audio_files = recursively_find_songs(path);
         for audio_file in audio_files.iter() {
             let entry = DiziSongEntry::Loaded(audio_file.clone());
-            context.player.playlist_mut().push(entry);
+            context
+                .player
+                .playlist_context_mut()
+                .current_playlist_mut()
+                .push(entry);
         }
         Ok(audio_files)
     } else if is_playable(path)? {
         let file = DiziFile::new(path);
         let audio_file = DiziAudioFile::try_from(file)?;
         let entry = DiziSongEntry::Loaded(audio_file.clone());
-        context.player.playlist_mut().push(entry);
+        context
+            .player
+            .playlist_context_mut()
+            .current_playlist_mut()
+            .push(entry);
         Ok(vec![audio_file])
     } else {
         Ok(vec![])
@@ -60,9 +76,13 @@ pub fn playlist_append(context: &mut AppContext, path: &Path) -> DiziResult<Vec<
 }
 
 pub fn playlist_remove(context: &mut AppContext, index: usize) -> DiziResult {
-    let len = context.player.playlist.len();
+    let len = context.player.playlist_context.current_playlist_ref().len();
     if index <= len {
-        context.player.playlist.remove(index);
+        context
+            .player
+            .playlist_context
+            .current_playlist_mut()
+            .remove(index);
     }
     Ok(())
 }
@@ -75,7 +95,7 @@ pub fn playlist_move_up(context: &mut AppContext, index: usize) -> DiziResult {
         ));
     }
 
-    let playlist = context.player.playlist_mut();
+    let playlist = &mut context.player.playlist_context_mut().file_playlist;
     if index >= playlist.len() {
         return Err(DiziError::new(
             DiziErrorKind::InvalidParameters,
@@ -89,7 +109,7 @@ pub fn playlist_move_up(context: &mut AppContext, index: usize) -> DiziResult {
 }
 
 pub fn playlist_move_down(context: &mut AppContext, index: usize) -> DiziResult {
-    let playlist = context.player.playlist_mut();
+    let playlist = &mut context.player.playlist_context_mut().file_playlist;
 
     if index + 1 >= playlist.len() {
         return Err(DiziError::new(

@@ -4,8 +4,8 @@ use std::fs;
 use std::io;
 use std::path::Path;
 
+use dizi::error::DiziResult;
 use dizi::playlist::FilePlaylist;
-use dizi::playlist::PlaylistType;
 use dizi::song::{DiziFile, DiziSongEntry};
 
 #[derive(Clone, Debug)]
@@ -13,17 +13,15 @@ pub struct DiziPlaylist {
     pub contents: Vec<DiziSongEntry>,
     pub order: Vec<usize>,
     pub order_index: Option<usize>,
-    pub playlist_type: PlaylistType,
 }
 
 impl DiziPlaylist {
-    pub fn new(contents: Vec<DiziSongEntry>, playlist_type: PlaylistType) -> Self {
+    pub fn new(contents: Vec<DiziSongEntry>) -> Self {
         let content_count = contents.len();
         Self {
             contents,
             order: (0..content_count).collect(),
             order_index: None,
-            playlist_type,
         }
     }
 
@@ -43,7 +41,6 @@ impl DiziPlaylist {
             contents,
             order: (0..len).collect(),
             order_index: None,
-            playlist_type: PlaylistType::DirectoryListing,
         })
     }
 
@@ -64,7 +61,7 @@ impl DiziPlaylist {
                 entries.push(entry);
             }
         }
-        let playlist = DiziPlaylist::new(entries, PlaylistType::PlaylistFile);
+        let playlist = DiziPlaylist::new(entries);
         Ok(playlist)
     }
 
@@ -76,6 +73,16 @@ impl DiziPlaylist {
             playing_index,
         }
     }
+
+    pub fn load_current_entry_metadata(&mut self) -> DiziResult<()> {
+        if let Some(order_index) = self.order_index {
+            let entry_index = self.order[order_index];
+            let entry = self.contents[entry_index].clone();
+            let audio_file = entry.load_metadata()?;
+            self.contents[entry_index] = DiziSongEntry::Loaded(audio_file);
+        }
+        Ok(())
+    }
 }
 
 impl std::default::Default for DiziPlaylist {
@@ -84,7 +91,6 @@ impl std::default::Default for DiziPlaylist {
             contents: Vec::new(),
             order: Vec::new(),
             order_index: None,
-            playlist_type: PlaylistType::PlaylistFile,
         }
     }
 }

@@ -21,7 +21,7 @@ pub trait DiziPlaylistTrait {
 
     fn entry_ref(&self, index: usize) -> &DiziSongEntry;
 
-    fn current_song(&self) -> Option<DiziPlaylistEntry>;
+    fn current_entry(&self) -> Option<DiziPlaylistEntry>;
 
     fn next_song_peak(&self) -> Option<DiziPlaylistEntry>;
     fn previous_song_peak(&self) -> Option<DiziPlaylistEntry>;

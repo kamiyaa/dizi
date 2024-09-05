@@ -5,7 +5,7 @@ use dizi::error::DiziResult;
 use dizi::player::{PlayerState, PlayerStatus};
 use dizi::song::DiziAudioFile;
 
-use crate::playlist::DiziPlaylist;
+use crate::context::PlaylistContext;
 
 pub trait AudioPlayer {
     fn player_state(&self) -> PlayerState;
@@ -39,5 +39,6 @@ pub trait AudioPlayer {
     fn set_elapsed(&mut self, elapsed: time::Duration);
 
     fn current_song_ref(&self) -> Option<&DiziAudioFile>;
-    fn playlist_mut(&mut self) -> &mut DiziPlaylist;
+
+    fn playlist_context_mut(&mut self) -> &mut PlaylistContext;
 }

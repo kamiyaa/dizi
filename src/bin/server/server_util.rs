@@ -15,7 +15,7 @@ use crate::client;
 use crate::context::AppContext;
 use crate::events::ServerEvent;
 use crate::server_commands::*;
-use crate::traits::{AudioPlayer, DiziPlaylistTrait};
+use crate::traits::AudioPlayer;
 
 pub fn process_server_event(context: &mut AppContext, event: ServerEvent) -> DiziResult {
     match event {
@@ -221,7 +221,7 @@ pub fn process_client_request(
 }
 
 pub fn send_latest_song_info(context: &mut AppContext) -> DiziResult {
-    match context.player.playlist.playlist_type {
+    match context.player.playlist_context.current_playlist_type {
         PlaylistType::DirectoryListing => {
             if let Some(file) = context.player.current_song_ref() {
                 let file = file.clone();
@@ -231,8 +231,8 @@ pub fn send_latest_song_info(context: &mut AppContext) -> DiziResult {
             }
         }
         PlaylistType::PlaylistFile => {
-            if let Some(order_index) = context.player.playlist.order_index {
-                let entry_index = context.player.playlist.order[order_index];
+            if let Some(order_index) = context.player.playlist_context.file_playlist.order_index {
+                let entry_index = context.player.playlist_context.file_playlist.order[order_index];
                 context
                     .events
                     .broadcast_event(ServerBroadcastEvent::PlaylistPlay { index: entry_index });
@@ -268,7 +268,7 @@ pub fn process_done_song(context: &mut AppContext) -> DiziResult {
 }
 
 pub fn end_of_playlist(context: &AppContext) -> bool {
-    context.player.playlist.is_end()
+    context.player.playlist_context.is_end()
 }
 
 pub fn run_on_song_change(context: &AppContext) {

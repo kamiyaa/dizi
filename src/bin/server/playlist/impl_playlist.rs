@@ -51,7 +51,7 @@ impl DiziPlaylistTrait for DiziPlaylist {
         &self.contents[index]
     }
 
-    fn current_song(&self) -> Option<DiziPlaylistEntry> {
+    fn current_entry(&self) -> Option<DiziPlaylistEntry> {
         let playlist_index = self.order_index?;
         let song_index = self.order[playlist_index];
 
@@ -92,7 +92,7 @@ impl DiziPlaylistTrait for DiziPlaylist {
 
         // the current song being played should be the
         // first value of the random order
-        match self.current_song() {
+        match self.current_entry() {
             Some(entry) => {
                 new_shuffle_order.remove(entry.entry_index);
                 new_shuffle_order.shuffle(&mut thread_rng());

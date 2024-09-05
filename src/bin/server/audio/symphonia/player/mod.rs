@@ -8,12 +8,14 @@ use cpal::traits::HostTrait;
 
 use dizi::error::{DiziError, DiziErrorKind, DiziResult};
 use dizi::player::{PlayerState, PlayerStatus};
+use dizi::playlist::PlaylistType;
 use dizi::song::DiziAudioFile;
 
 use crate::audio::device::get_default_host;
 use crate::audio::request::PlayerRequest;
 use crate::audio::symphonia::stream::PlayerStream;
 use crate::config;
+use crate::context::PlaylistContext;
 use crate::events::ServerEventSender;
 use crate::playlist::DiziPlaylist;
 use crate::traits::AudioPlayer;
@@ -21,7 +23,7 @@ use crate::traits::AudioPlayer;
 #[derive(Debug)]
 pub struct SymphoniaPlayer {
     pub state: PlayerState,
-    pub playlist: DiziPlaylist,
+    pub playlist_context: PlaylistContext,
 
     pub player_req_tx: mpsc::Sender<PlayerRequest>,
     pub player_res_rx: mpsc::Receiver<DiziResult>,
@@ -43,7 +45,7 @@ impl SymphoniaPlayer {
 
         let stream_handle: JoinHandle<DiziResult> = thread::spawn(move || {
             let mut stream =
-                PlayerStream::new(event_tx, player_res_tx, player_req_rx, audio_device);
+                PlayerStream::new(event_tx, player_res_tx, player_req_rx, audio_device)?;
             stream.listen_for_events()?;
             Ok(())
         });
@@ -51,7 +53,14 @@ impl SymphoniaPlayer {
         let server_config = config_t.server_ref();
         let player_config = server_config.player_ref();
 
-        let playlist = DiziPlaylist::from_file(&PathBuf::from("/"), server_config.playlist_ref())?;
+        let playlist_context = PlaylistContext {
+            file_playlist: DiziPlaylist::from_file(
+                &PathBuf::from("/"),
+                server_config.playlist_ref(),
+            )
+            .unwrap_or_default(),
+            ..Default::default()
+        };
         let state = PlayerState {
             next: player_config.next,
             repeat: player_config.repeat,
@@ -63,7 +72,7 @@ impl SymphoniaPlayer {
 
         Ok(Self {
             state,
-            playlist,
+            playlist_context,
             player_req_tx,
             player_res_rx,
             _stream_handle: stream_handle,
@@ -90,5 +99,10 @@ impl SymphoniaPlayer {
         self.state.status = PlayerStatus::Playing;
         self.state.song = Some(song.clone());
         Ok(())
+    }
+
+    fn set_playlist_type(&mut self, playlist_type: PlaylistType) {
+        self.playlist_context.current_playlist_type = playlist_type;
+        self.state.playlist_status = playlist_type;
     }
 }

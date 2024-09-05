@@ -62,7 +62,7 @@ impl AppBackend {
         W: Widget,
     {
         let _ = self.terminal_mut().draw(|frame| {
-            let rect = frame.size();
+            let rect = frame.area();
             frame.render_widget(widget, rect);
         });
     }

@@ -3,7 +3,7 @@ use std::sync::mpsc;
 use std::thread;
 use std::time::Duration;
 
-use symphonia::core::codecs::{DecoderOptions, CODEC_TYPE_NULL};
+use symphonia::core::codecs::DecoderOptions;
 use symphonia::core::formats::FormatOptions;
 use symphonia::core::io::MediaSourceStream;
 use symphonia::core::meta::MetadataOptions;
@@ -94,6 +94,7 @@ pub struct PlayerStream {
     event_tx: ServerEventSender,
     event_poller: PlayerStreamEventListener,
     device: cpal::Device,
+    stream_config: cpal::SupportedStreamConfig,
     state: Option<PlayerStreamState>,
 }
 
@@ -103,14 +104,24 @@ impl PlayerStream {
         player_res_tx: mpsc::Sender<DiziResult>,
         player_req_rx: mpsc::Receiver<PlayerRequest>,
         device: cpal::Device,
-    ) -> Self {
+    ) -> DiziResult<Self> {
         let event_poller = PlayerStreamEventListener::new(player_res_tx, player_req_rx);
-        Self {
+
+        let stream_config = device.default_output_config().map_err(|err| {
+            let error_msg = "Failed to get default output config";
+            tracing::error!("{error_msg}: {err}");
+            DiziError::new(DiziErrorKind::Symphonia, error_msg.to_string())
+        })?;
+
+        tracing::debug!("stream config: {:#?}", stream_config);
+
+        Ok(Self {
             event_tx,
             event_poller,
             device,
+            stream_config,
             state: None,
-        }
+        })
     }
 
     pub fn pause(&mut self) -> DiziResult {
@@ -243,32 +254,19 @@ impl PlayerStream {
         let probed = symphonia::default::get_probe().format(&hint, mss, &fmt_opts, &meta_opts)?;
 
         // Get the instantiated format reader.
-        let track = probed
-            .format
-            .tracks()
-            .iter()
-            .find(|t| t.codec_params.codec != CODEC_TYPE_NULL)
-            .ok_or_else(|| {
-                let error_msg = "No tracks found";
-                tracing::error!("{error_msg}");
-                DiziError::new(DiziErrorKind::Server, error_msg.to_string())
-            })?;
+        let track = probed.format.default_track().ok_or_else(|| {
+            let error_msg = "No tracks found";
+            tracing::error!("{error_msg}");
+            DiziError::new(DiziErrorKind::Server, error_msg.to_string())
+        })?;
         // Store the track identifier, it will be used to filter packets.
         let track_id = track.id;
-
-        tracing::debug!("track: {:#?}", track);
 
         // Use the default options for the decoder.
         let dec_opts: DecoderOptions = Default::default();
 
         // Create a decoder for the track.
         let decoder = symphonia::default::get_codecs().make(&track.codec_params, &dec_opts)?;
-
-        let config = self.device.default_output_config().map_err(|err| {
-            let error_msg = "Failed to get default output config";
-            tracing::error!("{error_msg}: {err}");
-            DiziError::new(DiziErrorKind::Symphonia, error_msg.to_string())
-        })?;
 
         let audio_config = cpal::StreamConfig {
             channels: track
@@ -280,7 +278,7 @@ impl PlayerStream {
                 track
                     .codec_params
                     .sample_rate
-                    .unwrap_or_else(|| config.sample_rate().0),
+                    .unwrap_or_else(|| self.stream_config.sample_rate().0),
             ),
             buffer_size: cpal::BufferSize::Default,
         };
@@ -292,7 +290,7 @@ impl PlayerStream {
         let packet_reader = PacketReader::new(probed.format, track_id);
         let mut packet_decoder = PacketDecoder::new(decoder);
 
-        match config.sample_format() {
+        match self.stream_config.sample_format() {
             cpal::SampleFormat::U8 => {
                 let mut samples = Vec::new();
                 for packet in packet_reader {

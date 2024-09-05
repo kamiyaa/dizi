@@ -38,14 +38,6 @@ impl Iterator for PacketReader {
                 Err(_) => return None,
             };
 
-            // Consume any new metadata that has been read since the last packet.
-            while !self.format.metadata().is_latest() {
-                // Pop the old head of the metadata queue.
-                self.format.metadata().pop();
-
-                // Consume the new metadata at the head of the metadata queue.
-            }
-
             // If the packet does not belong to the selected track, skip over it.
             if packet.track_id() != self.track_id {
                 continue;
@@ -131,20 +123,14 @@ where
         + symphonia::core::conv::FromSample<symphonia::core::sample::i24>
         + symphonia::core::conv::FromSample<symphonia::core::sample::u24>,
 {
-    let err_fn = |err| eprintln!("A playback error has occured! {}", err);
-
-    let (playback_loop_tx, playback_loop_rx) = mpsc::channel();
+    let err_fn = |err| {
+        tracing::error!("A playback error has occured! {}", err);
+    };
 
     let time_base = TimeBase {
         numer: 1,
         denom: config.sample_rate.0 * config.channels as u32,
     };
-
-    let _ = stream_tx.send(StreamEvent::Progress(Duration::from_secs(0)));
-
-    // if stream_tx is None, then we've already sent a StreamEnded message
-    // and we don't need to send another one
-    let mut stream_tx = Some(stream_tx);
 
     let samples_count = samples.len();
 
@@ -152,6 +138,14 @@ where
     let frame_index = Arc::new(RwLock::new(0_usize));
     let volume = Arc::new(RwLock::new(volume));
     let playback_duration = Arc::new(RwLock::new(0));
+
+    let _ = stream_tx.send(StreamEvent::Progress(Duration::from_secs(0)));
+
+    // if stream_tx is None, then we've already sent a StreamEnded message
+    // and we don't need to send another one
+    let mut stream_tx = Some(stream_tx);
+
+    let (playback_loop_tx, playback_loop_rx) = mpsc::channel();
 
     let stream = device.build_output_stream(
         config,
@@ -183,7 +177,7 @@ where
                 process_message(msg);
             }
 
-            // if sample_offsetcurrent_volume is greater than samples_count, then we've reached the end
+            // if sample_offset is greater than samples_count, then we've reached the end
             let sample_offset = { *frame_index.read().unwrap() };
             if sample_offset >= samples_count {
                 if let Some(stream_tx) = stream_tx.take() {
@@ -194,7 +188,7 @@ where
 
             let current_volume = { *volume.read().unwrap() };
             let mut i = 0;
-            for d in data {
+            for d in data.iter_mut() {
                 if sample_offset + i >= samples_count {
                     let mut offset = frame_index.write().unwrap();
                     *offset = samples_count + 1;

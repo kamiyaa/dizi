@@ -8,6 +8,7 @@ use dizi::song::DiziAudioFile;
 use dizi::song::DiziSongEntry;
 
 use crate::audio::request::PlayerRequest;
+use crate::context::PlaylistContext;
 use crate::playlist::DiziPlaylist;
 use crate::traits::{AudioPlayer, DiziPlaylistTrait};
 use crate::util::mimetype::{get_mimetype, is_mimetype_audio, is_mimetype_video};
@@ -17,7 +18,8 @@ use super::SymphoniaPlayer;
 impl AudioPlayer for SymphoniaPlayer {
     fn player_state(&self) -> PlayerState {
         let mut state = self.state.clone();
-        state.playlist = self.playlist.to_file_playlist();
+        state.playlist = self.playlist_context.file_playlist.to_file_playlist();
+        state.playlist_status = self.playlist_context.current_playlist_type;
         state
     }
 
@@ -47,28 +49,22 @@ impl AudioPlayer for SymphoniaPlayer {
                 playlist.shuffle();
             }
 
-            let order_index = playlist.order_index.ok_or_else(|| {
-                let error_msg = "Order index is None";
-                tracing::error!("{error_msg}");
-                DiziError::new(DiziErrorKind::Server, error_msg.to_string())
-            })?;
+            playlist.load_current_entry_metadata()?;
+            if let Some(entry) = playlist.current_entry() {
+                if let DiziSongEntry::Loaded(audio_file) = entry.entry {
+                    self.play(&audio_file)?;
+                }
+            }
 
-            let entry = playlist.contents[order_index].clone();
-            // lazily load metadata before playing
-            let audio_file = entry.load_metadata()?;
-            self.play(&audio_file)?;
-            playlist.contents[order_index] = DiziSongEntry::Loaded(audio_file);
-
-            self.playlist = playlist;
-            self.state.playlist_status = PlaylistType::DirectoryListing;
+            self.playlist_context.directory_playlist = playlist;
+            self.set_playlist_type(PlaylistType::DirectoryListing);
         }
         Ok(())
     }
 
     fn play_from_playlist(&mut self, index: usize) -> DiziResult {
         let shuffle_enabled = self.shuffle_enabled();
-        let playlist = &mut self.playlist;
-
+        let playlist = &mut self.playlist_context.file_playlist;
         // unshuffle the playlist before choosing setting the new index
         playlist.order_index = Some(index);
         // reshuffle playlist upon playing new file
@@ -76,13 +72,13 @@ impl AudioPlayer for SymphoniaPlayer {
             playlist.shuffle();
         }
 
-        let entry = playlist.contents[index].clone();
-        // lazily load metadata before playing
-        let audio_file = entry.load_metadata()?;
-        playlist.contents[index] = DiziSongEntry::Loaded(audio_file.clone());
-        self.state.playlist_status = PlaylistType::PlaylistFile;
-
-        self.play(&audio_file)?;
+        playlist.load_current_entry_metadata()?;
+        if let Some(entry) = playlist.current_entry() {
+            if let DiziSongEntry::Loaded(audio_file) = entry.entry {
+                self.play(&audio_file)?;
+            }
+        }
+        self.set_playlist_type(PlaylistType::PlaylistFile);
 
         Ok(())
     }
@@ -92,34 +88,36 @@ impl AudioPlayer for SymphoniaPlayer {
     }
 
     fn play_next(&mut self) -> DiziResult {
-        let playlist = &mut self.playlist;
+        let playlist = self.playlist_context.current_playlist_mut();
 
         let song_entry = playlist.next_song_peak().ok_or_else(|| {
             DiziError::new(DiziErrorKind::ParseError, "Playlist error".to_string())
         })?;
         playlist.order_index = Some(song_entry.order_index);
 
-        let entry_index = playlist.order[song_entry.order_index];
-        let audio_file = song_entry.entry.load_metadata()?;
-        playlist.contents[entry_index] = DiziSongEntry::Loaded(audio_file.clone());
-
-        self.play(&audio_file)?;
+        playlist.load_current_entry_metadata()?;
+        if let Some(entry) = playlist.current_entry() {
+            if let DiziSongEntry::Loaded(audio_file) = entry.entry {
+                self.play(&audio_file)?;
+            }
+        }
         Ok(())
     }
 
     fn play_previous(&mut self) -> DiziResult {
-        let playlist = &mut self.playlist;
+        let playlist = self.playlist_context.current_playlist_mut();
 
         let song_entry = playlist.previous_song_peak().ok_or_else(|| {
             DiziError::new(DiziErrorKind::ParseError, "Playlist error".to_string())
         })?;
         playlist.order_index = Some(song_entry.order_index);
 
-        let entry_index = playlist.order[song_entry.order_index];
-        let audio_file = song_entry.entry.load_metadata()?;
-        playlist.contents[entry_index] = DiziSongEntry::Loaded(audio_file.clone());
-
-        self.play(&audio_file)?;
+        playlist.load_current_entry_metadata()?;
+        if let Some(entry) = playlist.current_entry() {
+            if let DiziSongEntry::Loaded(audio_file) = entry.entry {
+                self.play(&audio_file)?;
+            }
+        }
         Ok(())
     }
 
@@ -201,10 +199,11 @@ impl AudioPlayer for SymphoniaPlayer {
     }
     fn set_shuffle(&mut self, shuffle: bool) {
         self.state.shuffle = shuffle;
+
         if self.shuffle_enabled() {
-            self.playlist.shuffle();
+            self.playlist_context.current_playlist_mut().shuffle();
         } else {
-            self.playlist.unshuffle();
+            self.playlist_context.current_playlist_mut().unshuffle();
         }
     }
 
@@ -215,7 +214,7 @@ impl AudioPlayer for SymphoniaPlayer {
     fn current_song_ref(&self) -> Option<&DiziAudioFile> {
         self.state.song.as_ref()
     }
-    fn playlist_mut(&mut self) -> &mut DiziPlaylist {
-        &mut self.playlist
+    fn playlist_context_mut(&mut self) -> &mut PlaylistContext {
+        &mut self.playlist_context
     }
 }

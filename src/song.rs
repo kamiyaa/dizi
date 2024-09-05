@@ -2,8 +2,7 @@ use std::collections::HashMap;
 use std::path::{Path, PathBuf};
 use std::time;
 
-use symphonia::core::codecs::{CodecParameters, CODEC_TYPE_NULL};
-use symphonia::core::formats::FormatOptions;
+use symphonia::core::formats::{FormatOptions, Track};
 use symphonia::core::io::MediaSourceStream;
 use symphonia::core::meta::{MetadataOptions, MetadataRevision};
 use symphonia::core::probe::Hint;
@@ -92,10 +91,8 @@ impl TryFrom<DiziFile> for DiziAudioFile {
         let mut format = probed.format;
 
         let audio_metadata = format
-            .tracks()
-            .iter()
-            .find(|t| t.codec_params.codec != CODEC_TYPE_NULL)
-            .map(|track| AudioMetadata::from(&track.codec_params))
+            .default_track()
+            .map(|track| AudioMetadata::from(track))
             .unwrap_or_else(|| AudioMetadata::default());
 
         let music_metadata = format
@@ -131,6 +128,10 @@ impl DiziAudioFile {
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct AudioMetadata {
+    #[serde(rename = "track_id")]
+    pub track_id: u32,
+    #[serde(rename = "bit_depth")]
+    pub bit_depth: u32,
     #[serde(rename = "channels")]
     pub channels: Option<usize>,
     #[serde(rename = "sample_rate")]
@@ -142,6 +143,8 @@ pub struct AudioMetadata {
 impl std::default::Default for AudioMetadata {
     fn default() -> Self {
         Self {
+            track_id: 0,
+            bit_depth: 16,
             channels: None,
             sample_rate: None,
             total_duration: None,
@@ -149,12 +152,17 @@ impl std::default::Default for AudioMetadata {
     }
 }
 
-impl std::convert::From<&CodecParameters> for AudioMetadata {
-    fn from(source: &CodecParameters) -> Self {
-        let channels = source.channels.map(|c| c.count());
-        let sample_rate = source.sample_rate;
+impl std::convert::From<&Track> for AudioMetadata {
+    fn from(value: &Track) -> Self {
+        tracing::debug!("track: {:#?}", value);
 
-        let total_duration = match (source.time_base, source.n_frames) {
+        let track_id = value.id;
+        let channels = value.codec_params.channels.map(|c| c.count());
+        let sample_rate = value.codec_params.sample_rate;
+
+        let bit_depth = value.codec_params.bits_per_sample.unwrap_or(16);
+
+        let total_duration = match (value.codec_params.time_base, value.codec_params.n_frames) {
             (Some(time_base), Some(n_frames)) => {
                 let unit_time = time_base.calc_time(n_frames);
                 let duration = time::Duration::from_secs(unit_time.seconds);
@@ -164,6 +172,8 @@ impl std::convert::From<&CodecParameters> for AudioMetadata {
         };
 
         Self {
+            track_id,
+            bit_depth,
             channels,
             sample_rate,
             total_duration,

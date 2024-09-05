@@ -71,7 +71,7 @@ pub fn serve(config: AppConfig) -> DiziResult {
     }
 
     let playlist_path = context.config_ref().server_ref().playlist_ref();
-    let playlist = &context.player.playlist;
+    let playlist = &context.player.playlist_context.file_playlist;
 
     tracing::debug!("Saving playlist to '{}'", playlist_path.to_string_lossy());
 
