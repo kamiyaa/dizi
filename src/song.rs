@@ -5,7 +5,7 @@ use std::time;
 use symphonia::core::formats::{FormatOptions, Track};
 use symphonia::core::io::MediaSourceStream;
 use symphonia::core::meta::{MetadataOptions, MetadataRevision};
-use symphonia::core::probe::Hint;
+use symphonia::core::probe::{Hint, ProbeResult};
 
 use serde::{Deserialize, Serialize};
 
@@ -43,6 +43,7 @@ impl DiziSongEntry {
 pub struct DiziFile {
     pub file_name: String,
     pub file_path: PathBuf,
+    pub file_ext: Option<String>,
 }
 
 impl DiziFile {
@@ -52,10 +53,34 @@ impl DiziFile {
             .map(|s| s.to_string_lossy())
             .unwrap_or_default()
             .into_owned();
+        let file_ext = path
+            .extension()
+            .and_then(|e| e.to_str())
+            .map(|s| s.to_string());
+
         Self {
             file_name,
             file_path: path.to_path_buf(),
+            file_ext,
         }
+    }
+
+    pub fn get_probe_result(&self) -> DiziResult<ProbeResult> {
+        let mut hint = Hint::new();
+        if let Some(ext) = self.file_ext.as_ref() {
+            hint.with_extension(ext);
+        };
+
+        // Use the default options for metadata and format readers.
+        let meta_opts: MetadataOptions = Default::default();
+        let fmt_opts: FormatOptions = Default::default();
+
+        let src = std::fs::File::open(&self.file_path)?;
+        // Create the media source stream.
+        let mss = MediaSourceStream::new(Box::new(src), Default::default());
+        // get probe
+        let probed = symphonia::default::get_probe().format(&hint, mss, &fmt_opts, &meta_opts)?;
+        Ok(probed)
     }
 }
 
@@ -71,7 +96,7 @@ impl TryFrom<DiziFile> for DiziAudioFile {
     fn try_from(value: DiziFile) -> Result<Self, Self::Error> {
         tracing::debug!("Loading metadata for {:?}", value.file_path);
         let mut hint = Hint::new();
-        if let Some(ext) = value.file_path.extension().and_then(|e| e.to_str()) {
+        if let Some(ext) = value.file_ext.as_ref() {
             hint.with_extension(ext);
         };
 
@@ -80,10 +105,8 @@ impl TryFrom<DiziFile> for DiziAudioFile {
         let fmt_opts: FormatOptions = Default::default();
 
         let src = std::fs::File::open(&value.file_path)?;
-
         // Create the media source stream.
         let mss = MediaSourceStream::new(Box::new(src), Default::default());
-
         // get probe
         let probed = symphonia::default::get_probe().format(&hint, mss, &fmt_opts, &meta_opts)?;
 

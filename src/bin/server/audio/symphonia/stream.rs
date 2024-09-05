@@ -1,13 +1,9 @@
-use std::path::Path;
 use std::sync::mpsc;
 use std::thread;
 use std::time::Duration;
 
+use dizi::song::DiziAudioFile;
 use symphonia::core::codecs::DecoderOptions;
-use symphonia::core::formats::FormatOptions;
-use symphonia::core::io::MediaSourceStream;
-use symphonia::core::meta::MetadataOptions;
-use symphonia::core::probe::Hint;
 
 use cpal::traits::{DeviceTrait, StreamTrait};
 use cpal::Stream;
@@ -178,7 +174,7 @@ impl PlayerStream {
     fn process_player_req(&mut self, req: PlayerRequest) -> DiziResult {
         match req {
             PlayerRequest::Play { song, volume } => {
-                let stream_res = self.play(song.file_path(), volume);
+                let stream_res = self.play(song, volume);
                 match stream_res {
                     Ok(stream_res) => {
                         let (stream, playback_loop_tx) = stream_res;
@@ -233,50 +229,38 @@ impl PlayerStream {
 
     pub fn play(
         &self,
-        path: &Path,
+        audio_file: DiziAudioFile,
         volume: f32,
     ) -> DiziResult<(Stream, mpsc::Sender<PlayerRequest>)> {
-        let mut hint = Hint::new();
-        if let Some(ext) = path.extension().and_then(|e| e.to_str()) {
-            hint.with_extension(ext);
-        };
+        let track_id = audio_file.audio_metadata.track_id;
 
-        // Use the default options for metadata and format readers.
-        let meta_opts: MetadataOptions = Default::default();
-        let fmt_opts: FormatOptions = Default::default();
+        let probe_result = audio_file.file.get_probe_result()?;
 
-        let file = std::fs::File::open(path)?;
-        // let mmap = unsafe { memmap::MmapOptions::new().map(&file)? };
-
-        // Create the media source stream.
-        let mss = MediaSourceStream::new(Box::new(file), Default::default());
-
-        let probed = symphonia::default::get_probe().format(&hint, mss, &fmt_opts, &meta_opts)?;
-
-        // Get the instantiated format reader.
-        let track = probed.format.default_track().ok_or_else(|| {
-            let error_msg = "No tracks found";
-            tracing::error!("{error_msg}");
-            DiziError::new(DiziErrorKind::Server, error_msg.to_string())
-        })?;
-        // Store the track identifier, it will be used to filter packets.
-        let track_id = track.id;
+        let codec_params = probe_result
+            .format
+            .default_track()
+            .map(|t| &t.codec_params)
+            .ok_or_else(|| {
+                let error_msg = "Failed to get default track codec_params";
+                tracing::error!("{error_msg}");
+                DiziError::new(DiziErrorKind::Symphonia, error_msg.to_string())
+            })?;
 
         // Use the default options for the decoder.
         let dec_opts: DecoderOptions = Default::default();
 
         // Create a decoder for the track.
-        let decoder = symphonia::default::get_codecs().make(&track.codec_params, &dec_opts)?;
+        let decoder = symphonia::default::get_codecs().make(&codec_params, &dec_opts)?;
 
         let audio_config = cpal::StreamConfig {
-            channels: track
-                .codec_params
+            channels: audio_file
+                .audio_metadata
                 .channels
-                .map(|c| c.count() as u16)
-                .unwrap_or(2u16),
+                .map(|c| c as u16)
+                .unwrap_or_else(|| self.stream_config.channels()),
             sample_rate: cpal::SampleRate(
-                track
-                    .codec_params
+                audio_file
+                    .audio_metadata
                     .sample_rate
                     .unwrap_or_else(|| self.stream_config.sample_rate().0),
             ),
@@ -287,7 +271,7 @@ impl PlayerStream {
 
         let stream_tx = self.event_poller.stream_tx.clone();
 
-        let packet_reader = PacketReader::new(probed.format, track_id);
+        let packet_reader = PacketReader::new(probe_result.format, track_id);
         let mut packet_decoder = PacketDecoder::new(decoder);
 
         match self.stream_config.sample_format() {

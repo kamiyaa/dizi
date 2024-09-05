@@ -112,13 +112,13 @@ impl PlayerState {
             "song.file_path".to_string(),
             song.file_path().to_string_lossy().to_string(),
         );
-        for (tag, value) in song.music_metadata().standard_tags.iter() {
+        for (tag, value) in song.music_metadata.standard_tags.iter() {
             vars.insert(
                 format!("song.tag.{}", tag.to_lowercase()),
                 value.to_string(),
             );
         }
-        if let Some(total_duration) = song.audio_metadata().total_duration.as_ref() {
+        if let Some(total_duration) = song.audio_metadata.total_duration.as_ref() {
             vars.insert(
                 "song.total_duration".to_string(),
                 total_duration.as_secs().to_string(),
