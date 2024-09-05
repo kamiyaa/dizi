@@ -44,6 +44,9 @@ impl AudioPlayer for SymphoniaPlayer {
                 .find(|(_, p)| p.file_path() == path)
                 .map(|(i, _)| i);
 
+            if shuffle_enabled {
+                playlist.unshuffle();
+            }
             playlist.order_index = index;
             if shuffle_enabled {
                 playlist.shuffle();
@@ -65,6 +68,10 @@ impl AudioPlayer for SymphoniaPlayer {
     fn play_from_playlist(&mut self, index: usize) -> DiziResult {
         let shuffle_enabled = self.shuffle_enabled();
         let playlist = &mut self.playlist_context.file_playlist;
+
+        if shuffle_enabled {
+            playlist.unshuffle();
+        }
         // unshuffle the playlist before choosing setting the new index
         playlist.order_index = Some(index);
         // reshuffle playlist upon playing new file
