@@ -40,11 +40,7 @@ pub fn playlist_load(context: &mut AppContext, cwd: &Path, path: &Path) -> DiziR
 }
 
 pub fn playlist_clear(context: &mut AppContext) -> DiziResult {
-    context
-        .player
-        .playlist_context_mut()
-        .current_playlist_mut()
-        .clear();
+    context.player.playlist_context_mut().file_playlist.clear();
     Ok(())
 }
 
@@ -56,7 +52,7 @@ pub fn playlist_append(context: &mut AppContext, path: &Path) -> DiziResult<Vec<
             context
                 .player
                 .playlist_context_mut()
-                .current_playlist_mut()
+                .file_playlist
                 .push(entry);
         }
         Ok(audio_files)
@@ -67,7 +63,7 @@ pub fn playlist_append(context: &mut AppContext, path: &Path) -> DiziResult<Vec<
         context
             .player
             .playlist_context_mut()
-            .current_playlist_mut()
+            .file_playlist
             .push(entry);
         Ok(vec![audio_file])
     } else {
@@ -80,8 +76,8 @@ pub fn playlist_remove(context: &mut AppContext, index: usize) -> DiziResult {
     if index <= len {
         context
             .player
-            .playlist_context
-            .current_playlist_mut()
+            .playlist_context_mut()
+            .file_playlist
             .remove(index);
     }
     Ok(())

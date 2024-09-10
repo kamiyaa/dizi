@@ -91,6 +91,13 @@ impl AudioPlayer for SymphoniaPlayer {
     }
 
     fn play_again(&mut self) -> DiziResult {
+        let playlist = self.playlist_context.current_playlist_ref();
+
+        if let Some(entry) = playlist.current_entry() {
+            if let DiziSongEntry::Loaded(audio_file) = entry.entry {
+                self.play(&audio_file)?;
+            }
+        }
         Ok(())
     }
 
