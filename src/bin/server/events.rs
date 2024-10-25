@@ -27,6 +27,7 @@ pub enum AppEvent {
 
 pub type AppEventReceiver = mpsc::Receiver<AppEvent>;
 
+/// Send client requests for the server to process
 pub type ClientRequestSender = mpsc::Sender<(String, ClientRequest)>;
 // pub type ClientRequestReceiver = mpsc::Receiver<(String, ClientRequest)>;
 
@@ -45,7 +46,6 @@ pub struct Events {
     pub client_request_tx: ClientRequestSender,
     // use if you want to send server events
     pub server_event_tx: ServerEventSender,
-
     // main listening loop
     pub app_event_rx: AppEventReceiver,
 
@@ -64,20 +64,24 @@ impl Events {
         let (app_event_tx, app_event_rx) = mpsc::channel();
 
         // listen to client requests
-        let app_event_tx2 = app_event_tx.clone();
-        let _ = thread::spawn(move || loop {
-            if let Ok((uuid, request)) = client_request_rx.recv() {
-                let _ = app_event_tx2.send(AppEvent::Client { uuid, request });
-            }
-        });
+        {
+            let event_tx = app_event_tx.clone();
+            let _ = thread::spawn(move || loop {
+                if let Ok((uuid, request)) = client_request_rx.recv() {
+                    let _ = event_tx.send(AppEvent::Client { uuid, request });
+                }
+            });
+        }
 
         // listen to server requests
-        let app_event_tx2 = app_event_tx.clone();
-        let _ = thread::spawn(move || loop {
-            if let Ok(msg) = server_event_rx.recv() {
-                let _ = app_event_tx2.send(AppEvent::Server(msg));
-            }
-        });
+        {
+            let event_tx = app_event_tx.clone();
+            let _ = thread::spawn(move || loop {
+                if let Ok(msg) = server_event_rx.recv() {
+                    let _ = event_tx.send(AppEvent::Server(msg));
+                }
+            });
+        }
 
         Events {
             client_request_tx,

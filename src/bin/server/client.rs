@@ -24,7 +24,7 @@ pub fn handle_client(
 ) -> DiziResult {
     let (event_tx, event_rx) = mpsc::channel();
 
-    // listen for server events
+    // listen for events broadcasted by the server
     let event_tx_clone = event_tx.clone();
     let _ = thread::spawn(move || {
         while let Ok(server_event) = server_event_rx.recv() {
@@ -39,11 +39,12 @@ pub fn handle_client(
 
     let uuid_string = uuid.to_string();
 
-    // listen for client requests
+    // listen for requests sent by client
     let event_tx_clone = event_tx;
-    let stream_clone = stream.try_clone().unwrap();
+    let stream_clone = stream.try_clone().expect("Failed to clone UnixStream");
     let _ = thread::spawn(move || {
         let cursor = BufReader::new(stream_clone);
+        // keep listening for client requests
         for line in cursor.lines().flatten() {
             if event_tx_clone.send(ClientMessage::Client(line)).is_err() {
                 return;
@@ -53,7 +54,8 @@ pub fn handle_client(
         let response = ClientRequest::ClientLeave {
             uuid: uuid.to_string(),
         };
-        let json = serde_json::to_string(&response).unwrap();
+        let json = serde_json::to_string(&response).
+            expect("Failed to serialize ClientRequest");
         let _ = event_tx_clone.send(ClientMessage::Client(json));
     });
 
@@ -74,6 +76,7 @@ pub fn handle_client(
     Ok(())
 }
 
+/// Forwards client requests to the server via `ClientRequestSender`
 pub fn forward_client_request(
     client_request_tx: &ClientRequestSender,
     uuid: &str,
@@ -86,7 +89,6 @@ pub fn forward_client_request(
 
 pub fn process_server_event(stream: &mut UnixStream, event: &ServerBroadcastEvent) -> DiziResult {
     let json = serde_json::to_string(&event)?;
-
     stream.write_all(json.as_bytes())?;
     utils::flush(stream)?;
     Ok(())

@@ -23,8 +23,11 @@ pub fn process_server_event(context: &mut AppContext, event: ServerEvent) -> Diz
             let client_tx2 = context.events.client_request_sender().clone();
             let (server_tx, server_rx) = mpsc::channel();
 
+            // assign a uuid for client
             let client_uuid = Uuid::new_v4();
             let uuid_string = client_uuid.to_string();
+
+            // thread to listen to client requests
             thread::spawn(move || {
                 client::handle_client(client_uuid, stream, client_tx2, server_rx)
             });

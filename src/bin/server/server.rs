@@ -85,6 +85,7 @@ pub fn serve(config: AppConfig) -> DiziResult {
     }
     tracing::debug!("Playlist saved!");
 
+    // broadcast to all clients that the server has exited
     context
         .events
         .broadcast_event(ServerBroadcastEvent::ServerQuit);
