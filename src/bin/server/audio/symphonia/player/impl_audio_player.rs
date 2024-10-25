@@ -104,12 +104,18 @@ impl AudioPlayer for SymphoniaPlayer {
     fn play_next(&mut self) -> DiziResult {
         let playlist = self.playlist_context.current_playlist_mut();
 
-        let song_entry = playlist.next_song_peak().ok_or_else(|| {
-            DiziError::new(DiziErrorKind::ParseError, "Playlist error".to_string())
-        })?;
-        playlist.order_index = Some(song_entry.order_index);
+        // keep going through playlist until we find a song that can
+        // be parsed and played
+        loop {
+            let song_entry = playlist.next_song_peak().ok_or_else(|| {
+                DiziError::new(DiziErrorKind::ParseError, "Playlist error".to_string())
+            })?;
+            playlist.order_index = Some(song_entry.order_index);
 
-        playlist.load_current_entry_metadata()?;
+            if playlist.load_current_entry_metadata().is_ok() {
+                break;
+            };
+        }
         if let Some(entry) = playlist.current_entry() {
             if let DiziSongEntry::Loaded(audio_file) = entry.entry {
                 self.play(&audio_file)?;
@@ -121,12 +127,22 @@ impl AudioPlayer for SymphoniaPlayer {
     fn play_previous(&mut self) -> DiziResult {
         let playlist = self.playlist_context.current_playlist_mut();
 
-        let song_entry = playlist.previous_song_peak().ok_or_else(|| {
-            DiziError::new(DiziErrorKind::ParseError, "Playlist error".to_string())
-        })?;
-        playlist.order_index = Some(song_entry.order_index);
+        // keep going through playlist until we find a song that can
+        // be parsed and played
+        loop {
+            let song_entry = playlist.previous_song_peak().ok_or_else(|| {
+                DiziError::new(DiziErrorKind::ParseError, "Playlist error".to_string())
+            })?;
+            playlist.order_index = Some(song_entry.order_index);
 
-        playlist.load_current_entry_metadata()?;
+            if playlist.load_current_entry_metadata().is_ok() {
+                break;
+            };
+            tracing::debug!(
+                "Skipping '{}' because we failed to parse it",
+                song_entry.entry.file_name()
+            );
+        }
         if let Some(entry) = playlist.current_entry() {
             if let DiziSongEntry::Loaded(audio_file) = entry.entry {
                 self.play(&audio_file)?;
@@ -215,9 +231,11 @@ impl AudioPlayer for SymphoniaPlayer {
         self.state.shuffle = shuffle;
 
         if self.shuffle_enabled() {
-            self.playlist_context.current_playlist_mut().shuffle();
+            self.playlist_context.directory_playlist.shuffle();
+            self.playlist_context.file_playlist.shuffle();
         } else {
-            self.playlist_context.current_playlist_mut().unshuffle();
+            self.playlist_context.directory_playlist.unshuffle();
+            self.playlist_context.file_playlist.unshuffle();
         }
     }
 

@@ -83,6 +83,23 @@ impl DiziPlaylist {
         }
         Ok(())
     }
+
+    pub fn push_entry(&mut self, entry: DiziSongEntry) {
+        self.contents.push(entry);
+        self.order.push(self.contents.len() - 1);
+    }
+
+    pub fn remove_entry(&mut self, index: usize) {
+        self.contents.remove(index);
+        let new_len = self.contents.len();
+        let new_order: Vec<usize> = self
+            .order
+            .iter()
+            .filter(|i| **i < new_len)
+            .map(|i| *i)
+            .collect();
+        self.order = new_order;
+    }
 }
 
 impl std::default::Default for DiziPlaylist {

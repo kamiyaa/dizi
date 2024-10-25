@@ -52,13 +52,13 @@ impl DiziPlaylistTrait for DiziPlaylist {
     }
 
     fn current_entry(&self) -> Option<DiziPlaylistEntry> {
-        let playlist_index = self.order_index?;
-        let song_index = self.order[playlist_index];
+        let order_index = self.order_index?;
+        let playlist_index = self.order[order_index];
 
         Some(DiziPlaylistEntry {
-            entry_index: song_index,
-            order_index: playlist_index,
-            entry: self.entry_ref(song_index).clone(),
+            entry_index: playlist_index,
+            order_index,
+            entry: self.entry_ref(playlist_index).clone(),
         })
     }
 
@@ -88,22 +88,25 @@ impl DiziPlaylistTrait for DiziPlaylist {
     }
 
     fn shuffle(&mut self) {
-        let mut new_shuffle_order: Vec<usize> = (0..self.len()).collect();
-
         // the current song being played should be the
         // first value of the random order
         match self.current_entry() {
             Some(entry) => {
-                new_shuffle_order.remove(entry.entry_index);
+                let entry_index = entry.entry_index;
+                let mut new_shuffle_order: Vec<usize> =
+                    (0..self.len()).filter(|i| *i != entry_index).collect();
                 new_shuffle_order.shuffle(&mut thread_rng());
-                new_shuffle_order.insert(0, entry.entry_index);
+                new_shuffle_order.insert(0, entry_index);
+
+                self.order = new_shuffle_order;
                 self.order_index = Some(0);
             }
             None => {
+                let mut new_shuffle_order: Vec<usize> = (0..self.len()).collect();
                 new_shuffle_order.shuffle(&mut thread_rng());
+                self.order = new_shuffle_order;
             }
         }
-        self.order = new_shuffle_order;
     }
 
     fn unshuffle(&mut self) {

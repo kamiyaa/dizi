@@ -54,6 +54,12 @@ impl FilePlaylist {
 
     pub fn remove_song(&mut self, index: usize) -> DiziSongEntry {
         let song = self.list_mut().remove(index);
+
+        if let Some(playing_index) = self.playing_index {
+            if playing_index == index {
+                self.set_playing_index(None);
+            }
+        }
         if self.list_ref().is_empty() {
             self.set_cursor_index(None);
         } else {

@@ -23,9 +23,11 @@ pub fn setup_socket(config: &AppConfig) -> DiziResult<UnixListener> {
 
 pub fn serve(config: AppConfig) -> DiziResult {
     let events = Events::new();
-    let event_tx2 = events.server_event_sender().clone();
 
-    let player = SymphoniaPlayer::new(&config, event_tx2)?;
+    let player = {
+        let server_event_tx = events.server_event_sender().clone();
+        SymphoniaPlayer::new(&config, server_event_tx)?
+    };
 
     let mut context = AppContext {
         events,
@@ -35,10 +37,10 @@ pub fn serve(config: AppConfig) -> DiziResult {
     };
 
     let listener = setup_socket(context.config_ref())?;
+    // thread for listening to new client connections
     {
-        // thread for listening to new client connections
-        let server_tx2 = context.events.server_event_sender().clone();
-        thread::spawn(|| listen_for_clients(listener, server_tx2));
+        let server_event_tx = context.events.server_event_sender().clone();
+        thread::spawn(|| listen_for_clients(listener, server_event_tx));
     }
 
     while context.quit == QuitType::DoNot {
