@@ -1,5 +1,5 @@
 use rand::prelude::SliceRandom;
-use rand::thread_rng;
+use rand::rng;
 
 use dizi::song::DiziSongEntry;
 
@@ -95,7 +95,7 @@ impl DiziPlaylistTrait for DiziPlaylist {
                 let entry_index = entry.entry_index;
                 let mut new_shuffle_order: Vec<usize> =
                     (0..self.len()).filter(|i| *i != entry_index).collect();
-                new_shuffle_order.shuffle(&mut thread_rng());
+                new_shuffle_order.shuffle(&mut rng());
                 new_shuffle_order.insert(0, entry_index);
 
                 self.order = new_shuffle_order;
@@ -103,7 +103,7 @@ impl DiziPlaylistTrait for DiziPlaylist {
             }
             None => {
                 let mut new_shuffle_order: Vec<usize> = (0..self.len()).collect();
-                new_shuffle_order.shuffle(&mut thread_rng());
+                new_shuffle_order.shuffle(&mut rng());
                 self.order = new_shuffle_order;
             }
         }

@@ -47,6 +47,7 @@ fn default_audio_system_string() -> String {
 fn str_to_cpal_hostid(s: &str) -> Option<cpal::HostId> {
     match s {
         "alsa" => Some(cpal::HostId::Alsa),
+        #[cfg(feature = "jack")]
         "jack" => Some(cpal::HostId::Jack),
         _ => None,
     }
