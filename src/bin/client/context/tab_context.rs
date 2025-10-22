@@ -44,7 +44,7 @@ impl TabContext {
         self.tabs.remove(index)
     }
 
-    pub fn iter_mut(&mut self) -> IterMut<JoshutoTab> {
+    pub fn iter_mut<'a>(&'a mut self) -> IterMut<'a, JoshutoTab> {
         self.tabs.iter_mut()
     }
 }

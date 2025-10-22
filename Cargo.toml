@@ -56,7 +56,7 @@ cpal = "^0"
 # pipewire = { optional = true, version = "^0" }
 
 [features]
-default = [ "devicons" ]
+default = []
 devicons = [ "phf" ]
 jack = [ "cpal/jack" ]
 mouse = []

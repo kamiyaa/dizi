@@ -104,7 +104,7 @@ impl JoshutoDirList {
         }
     }
 
-    pub fn iter(&self) -> Iter<JoshutoDirEntry> {
+    pub fn iter<'a>(&'a self) -> Iter<'a, JoshutoDirEntry> {
         self.contents.iter()
     }
 

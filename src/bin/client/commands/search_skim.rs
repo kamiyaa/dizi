@@ -20,7 +20,7 @@ pub struct DiziSkimItem {
 }
 
 impl SkimItem for DiziSkimItem {
-    fn text(&self) -> Cow<str> {
+    fn text<'a>(&'a self) -> Cow<'a, str> {
         borrow::Cow::Borrowed(self.value.as_str())
     }
 }
