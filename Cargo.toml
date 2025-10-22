@@ -52,17 +52,11 @@ uuid = { version = "^0", features = ["v4"] }
 unicode-width = "^0"
 unicode-segmentation = "^1"
 xdg = "^2"
-
-[target.'cfg(any(target_os = "linux", target_os = "dragonfly", target_os = "freebsd"))'.dependencies]
-cpal = { features = [ "jack" ], version = "^0" }
+cpal = "^0"
 # pipewire = { optional = true, version = "^0" }
-
-[target.'cfg(target_os = "windows")'.dependencies]
-cpal = "^0"
-
-[target.'cfg(any(target_os = "macos", target_os = "ios"))'.dependencies]
-cpal = "^0"
 
 [features]
 default = [ "devicons" ]
 devicons = [ "phf" ]
+jack = [ "cpal/jack" ]
+mouse = []

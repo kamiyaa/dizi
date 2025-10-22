@@ -54,8 +54,7 @@ pub fn handle_client(
         let response = ClientRequest::ClientLeave {
             uuid: uuid.to_string(),
         };
-        let json = serde_json::to_string(&response).
-            expect("Failed to serialize ClientRequest");
+        let json = serde_json::to_string(&response).expect("Failed to serialize ClientRequest");
         let _ = event_tx_clone.send(ClientMessage::Client(json));
     });
 
