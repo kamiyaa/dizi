@@ -42,7 +42,7 @@ fn search_playlist_skim(
     widget: WidgetType,
 ) -> DiziResult {
     let options = SkimOptionsBuilder::default()
-        .height(Some("100%"))
+        .height("100%".to_string())
         .multi(true)
         .build()
         .unwrap();
@@ -118,7 +118,7 @@ fn search_directory_skim(
     widget: WidgetType,
 ) -> DiziResult {
     let options = SkimOptionsBuilder::default()
-        .height(Some("100%"))
+        .height("100%".to_string())
         .multi(true)
         .build()
         .unwrap();
