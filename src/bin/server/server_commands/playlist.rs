@@ -137,7 +137,7 @@ fn find_songs_rec(songs: &mut Vec<DiziAudioFile>, path: &Path) {
             }
 
             if let Ok(true) = is_playable(entry_path) {
-                tracing::debug!("Adding {:?} to playlist", entry_path);
+                tracing::debug!(file_path=?entry_path, "Adding file to playlist");
                 let file = DiziFile::new(entry_path);
                 if let Ok(audio_file) = DiziAudioFile::try_from(file) {
                     songs.push(audio_file);

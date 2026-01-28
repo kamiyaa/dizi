@@ -139,8 +139,8 @@ impl AudioPlayer for SymphoniaPlayer {
                 break;
             };
             tracing::debug!(
-                "Skipping '{}' because we failed to parse it",
-                song_entry.entry.file_name()
+                file_name = song_entry.entry.file_name(),
+                "Failed to parse file, skipping",
             );
         }
         if let Some(entry) = playlist.current_entry() {

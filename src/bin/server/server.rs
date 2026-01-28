@@ -12,6 +12,7 @@ use crate::context::{AppContext, QuitType};
 use crate::events::{AppEvent, Events, ServerEvent, ServerEventSender};
 use crate::server_util;
 
+/// Setup a unix socket
 pub fn setup_socket(config: &AppConfig) -> DiziResult<UnixListener> {
     let socket = Path::new(config.server_ref().socket_ref());
     if socket.exists() {
@@ -21,7 +22,8 @@ pub fn setup_socket(config: &AppConfig) -> DiziResult<UnixListener> {
     Ok(stream)
 }
 
-pub fn serve(config: AppConfig) -> DiziResult {
+/// run server
+pub fn run(config: AppConfig) -> DiziResult {
     let events = Events::new();
 
     let player = {
@@ -49,13 +51,12 @@ pub fn serve(config: AppConfig) -> DiziResult {
             Err(_) => return Ok(()),
         };
 
-        tracing::debug!("Server Event: {:?}", event);
-
+        tracing::debug!(?event, "Received server event");
         match event {
             AppEvent::Client { uuid, request } => {
-                let res = server_util::process_client_request(&mut context, &uuid, request);
+                let res = server_util::process_client_request(&mut context, &uuid, &request);
                 if let Err(err) = res {
-                    tracing::debug!("Error: {:?}", err);
+                    tracing::debug!(?err, ?uuid, ?request, "Failed to process client request");
                     context
                         .events
                         .broadcast_event(ServerBroadcastEvent::ServerError {
@@ -66,7 +67,7 @@ pub fn serve(config: AppConfig) -> DiziResult {
             AppEvent::Server(event) => {
                 let res = server_util::process_server_event(&mut context, event);
                 if let Err(err) = res {
-                    tracing::debug!("Error: {:?}", err);
+                    tracing::debug!(?err, "Failed to process server event");
                 }
             }
         }
@@ -75,7 +76,7 @@ pub fn serve(config: AppConfig) -> DiziResult {
     let playlist_path = context.config_ref().server_ref().playlist_ref();
     let playlist = &context.player.playlist_context.file_playlist;
 
-    tracing::debug!("Saving playlist to '{}'", playlist_path.to_string_lossy());
+    tracing::debug!(?playlist_path, "Saving playlist");
 
     let mut file = std::fs::File::create(playlist_path)?;
     let mut writer = m3u::Writer::new(&mut file);
@@ -83,7 +84,7 @@ pub fn serve(config: AppConfig) -> DiziResult {
         let entry = m3u::Entry::Path(song.file_path().to_path_buf());
         writer.write_entry(&entry)?;
     }
-    tracing::debug!("Playlist saved!");
+    tracing::debug!(?playlist_path, "Playlist saved!");
 
     // broadcast to all clients that the server has exited
     context

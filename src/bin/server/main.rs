@@ -80,8 +80,8 @@ fn run_server(args: CommandArgs) -> DiziResult {
         .with(fmt_layer)
         .init();
 
-    tracing::debug!("{:#?}", config);
-    server::serve(config)
+    tracing::debug!(?config, "Config");
+    server::run(config)
 }
 
 fn main() {
@@ -90,6 +90,6 @@ fn main() {
 
     match res {
         Ok(_) => {}
-        Err(e) => eprintln!("Error: {}", e),
+        Err(err) => eprintln!("Error: {:?}", err),
     }
 }

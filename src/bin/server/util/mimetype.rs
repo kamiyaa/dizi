@@ -10,7 +10,7 @@ pub fn get_mimetype(p: &Path) -> io::Result<String> {
         .output()?;
     let stdout = std::str::from_utf8(&output.stdout).expect("Failed to read from stdout");
     let mimetype = stdout.to_string();
-    tracing::debug!("{:?} mimetype: {}", p, mimetype);
+    tracing::debug!(path=?p, mimetype, "Getting file mimetype");
     Ok(mimetype)
 }
 

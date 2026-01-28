@@ -20,7 +20,7 @@ use crate::traits::AudioPlayer;
 pub fn process_server_event(context: &mut AppContext, event: ServerEvent) -> DiziResult {
     match event {
         ServerEvent::NewClient(stream) => {
-            let client_tx2 = context.events.client_request_sender().clone();
+            let client_tx = context.events.client_request_sender().clone();
             let (server_tx, server_rx) = mpsc::channel();
 
             // assign a uuid for client
@@ -28,9 +28,7 @@ pub fn process_server_event(context: &mut AppContext, event: ServerEvent) -> Diz
             let uuid_string = client_uuid.to_string();
 
             // thread to listen to client requests
-            thread::spawn(move || {
-                client::handle_client(client_uuid, stream, client_tx2, server_rx)
-            });
+            thread::spawn(move || client::handle_client(client_uuid, stream, client_tx, server_rx));
             context
                 .events
                 .add_broadcast_listener(uuid_string, server_tx);
@@ -51,21 +49,21 @@ pub fn process_server_event(context: &mut AppContext, event: ServerEvent) -> Diz
 pub fn process_client_request(
     context: &mut AppContext,
     uuid: &str,
-    event: ClientRequest,
+    event: &ClientRequest,
 ) -> DiziResult {
-    tracing::debug!("request: {:?} {:?}", uuid, event);
+    tracing::debug!(uuid, request=?event, "Processing client request");
     match event {
         ClientRequest::ServerQuit => {
             server::quit_server(context)?;
         }
         ClientRequest::ServerQuery { query } => {
-            let res = server::query(context, &query)?;
+            let res = server::query(context, query)?;
             context
                 .events
                 .broadcast_event(ServerBroadcastEvent::ServerQuery { query: res });
         }
         ClientRequest::ClientLeave { uuid } => {
-            let _ = context.events.server_broadcast_listeners.remove(&uuid);
+            let _ = context.events.server_broadcast_listeners.remove(uuid);
         }
         ClientRequest::PlayerState => {
             let state = context.player.player_state();
@@ -95,13 +93,13 @@ pub fn process_client_request(
                 .broadcast_event(ServerBroadcastEvent::PlayerResume);
         }
         ClientRequest::PlayerVolumeUp { amount } => {
-            let volume = player_volume_increase(context, amount)?;
+            let volume = player_volume_increase(context, *amount)?;
             context
                 .events
                 .broadcast_event(ServerBroadcastEvent::PlayerVolumeUpdate { volume });
         }
         ClientRequest::PlayerVolumeDown { amount } => {
-            let volume = player_volume_decrease(context, amount)?;
+            let volume = player_volume_decrease(context, *amount)?;
             context
                 .events
                 .broadcast_event(ServerBroadcastEvent::PlayerVolumeUpdate { volume });
@@ -141,10 +139,10 @@ pub fn process_client_request(
                 .broadcast_event(ServerBroadcastEvent::PlaylistAppend { audio_files: songs });
         }
         ClientRequest::PlaylistRemove { index: Some(index) } => {
-            playlist::playlist_remove(context, index)?;
+            playlist::playlist_remove(context, *index)?;
             context
                 .events
-                .broadcast_event(ServerBroadcastEvent::PlaylistRemove { index });
+                .broadcast_event(ServerBroadcastEvent::PlaylistRemove { index: *index });
         }
         ClientRequest::PlaylistClear => {
             playlist::playlist_clear(context)?;
@@ -153,28 +151,28 @@ pub fn process_client_request(
                 .broadcast_event(ServerBroadcastEvent::PlaylistClear);
         }
         ClientRequest::PlaylistMoveUp { index: Some(index) } => {
-            playlist::playlist_move_up(context, index)?;
+            playlist::playlist_move_up(context, *index)?;
             context
                 .events
                 .broadcast_event(ServerBroadcastEvent::PlaylistSwapMove {
-                    index1: index,
+                    index1: *index,
                     index2: index - 1,
                 });
         }
         ClientRequest::PlaylistMoveDown { index: Some(index) } => {
-            playlist::playlist_move_down(context, index)?;
+            playlist::playlist_move_down(context, *index)?;
             context
                 .events
                 .broadcast_event(ServerBroadcastEvent::PlaylistSwapMove {
-                    index1: index,
+                    index1: *index,
                     index2: index + 1,
                 });
         }
         ClientRequest::PlaylistPlay { index: Some(index) } => {
-            playlist::playlist_play(context, index)?;
+            playlist::playlist_play(context, *index)?;
             context
                 .events
-                .broadcast_event(ServerBroadcastEvent::PlaylistPlay { index });
+                .broadcast_event(ServerBroadcastEvent::PlaylistPlay { index: *index });
         }
         ClientRequest::PlaylistOpen {
             cwd: Some(cwd),
@@ -208,16 +206,16 @@ pub fn process_client_request(
                 .broadcast_event(ServerBroadcastEvent::PlayerShuffle { on: !enabled });
         }
         ClientRequest::PlayerFastForward { amount } => {
-            let duration = Duration::from_secs(amount as u64);
+            let duration = Duration::from_secs(*amount as u64);
             context.player.fast_forward(duration)?;
         }
         ClientRequest::PlayerRewind { amount } => {
-            let duration = Duration::from_secs(amount as u64);
+            let duration = Duration::from_secs(*amount as u64);
             context.player.rewind(duration)?;
         }
         ClientRequest::ServerQueryAll => {}
-        s => {
-            tracing::debug!("'{:?}' not implemented", s);
+        request => {
+            tracing::warn!(?request, "Client request not implemented");
         }
     }
     Ok(())

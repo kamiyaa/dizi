@@ -46,7 +46,7 @@ pub fn player_volume_increase(context: &mut AppContext, amount: usize) -> DiziRe
     };
     player_set_volume(context, volume)?;
 
-    tracing::debug!("volume is now: {volume}");
+    tracing::debug!(volume, "New volume level");
     Ok(volume)
 }
 
@@ -56,7 +56,7 @@ pub fn player_volume_decrease(context: &mut AppContext, amount: usize) -> DiziRe
     let volume = if amount > volume { 0 } else { volume - amount };
     player_set_volume(context, volume)?;
 
-    tracing::debug!("volume is now: {volume}");
+    tracing::debug!(volume, "New volume level");
     Ok(volume)
 }
 

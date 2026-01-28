@@ -87,7 +87,7 @@ impl SymphoniaPlayer {
     }
 
     fn play(&mut self, song: &DiziAudioFile) -> DiziResult {
-        tracing::debug!("Song: {:#?}", song);
+        tracing::debug!(?song, "Playing song");
 
         self.player_stream_req().send(PlayerRequest::Play {
             song: song.clone(),

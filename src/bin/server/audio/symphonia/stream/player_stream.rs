@@ -1,91 +1,21 @@
 use std::sync::mpsc;
-use std::thread;
 use std::time::Duration;
 
-use dizi::song::DiziAudioFile;
+use cpal::traits::{DeviceTrait, StreamTrait};
 use symphonia::core::codecs::DecoderOptions;
 
-use cpal::traits::{DeviceTrait, StreamTrait};
-use cpal::Stream;
-
 use dizi::error::{DiziError, DiziErrorKind, DiziResult};
+use dizi::song::DiziAudioFile;
 
 use crate::audio::request::PlayerRequest;
+use crate::audio::symphonia::stream::{
+    PlayerStreamEvent, PlayerStreamEventListener, PlayerStreamState, StreamEvent,
+};
 use crate::events::{ServerEvent, ServerEventSender};
 
-use super::decode::{stream_loop, PacketDecoder, PacketReader};
-#[derive(Clone, Copy, Debug)]
+use super::super::decode::{PacketDecoder, PacketReader};
 
-pub enum StreamEvent {
-    Progress(Duration),
-    StreamEnded,
-}
-
-#[derive(Clone, Debug)]
-pub enum PlayerStreamEvent {
-    Stream(StreamEvent),
-    Player(PlayerRequest),
-}
-
-#[derive(Debug)]
-pub struct PlayerStreamEventListener {
-    pub stream_tx: mpsc::Sender<StreamEvent>,
-    pub player_res_tx: mpsc::Sender<DiziResult>,
-    pub _event_tx: mpsc::Sender<PlayerStreamEvent>,
-    pub event_rx: mpsc::Receiver<PlayerStreamEvent>,
-}
-
-impl PlayerStreamEventListener {
-    pub fn new(
-        player_res_tx: mpsc::Sender<DiziResult>,
-        player_req_rx: mpsc::Receiver<PlayerRequest>,
-    ) -> Self {
-        Self::init(player_res_tx, player_req_rx)
-    }
-
-    fn init(
-        player_res_tx: mpsc::Sender<DiziResult>,
-        player_req_rx: mpsc::Receiver<PlayerRequest>,
-    ) -> Self {
-        let (stream_tx, stream_rx) = mpsc::channel();
-        let (event_tx, event_rx) = mpsc::channel();
-
-        let event_tx_clone = event_tx.clone();
-        let _ = thread::spawn(move || loop {
-            if let Ok(event) = stream_rx.recv() {
-                let _ = event_tx_clone.send(PlayerStreamEvent::Stream(event));
-            }
-        });
-
-        let event_tx_clone = event_tx.clone();
-        let _ = thread::spawn(move || loop {
-            if let Ok(req) = player_req_rx.recv() {
-                let _ = event_tx_clone.send(PlayerStreamEvent::Player(req));
-            }
-        });
-
-        Self {
-            stream_tx,
-            player_res_tx,
-            _event_tx: event_tx,
-            event_rx,
-        }
-    }
-
-    pub fn next(&self) -> Result<PlayerStreamEvent, mpsc::RecvError> {
-        self.event_rx.recv()
-    }
-
-    pub fn player_res(&self) -> &mpsc::Sender<DiziResult> {
-        &self.player_res_tx
-    }
-}
-
-pub struct PlayerStreamState {
-    pub stream: Stream,
-    pub playback_loop_tx: mpsc::Sender<PlayerRequest>,
-}
-
+/// Stream
 pub struct PlayerStream {
     event_tx: ServerEventSender,
     event_poller: PlayerStreamEventListener,
@@ -105,11 +35,11 @@ impl PlayerStream {
 
         let stream_config = device.default_output_config().map_err(|err| {
             let error_msg = "Failed to get default output config";
-            tracing::error!("{error_msg}: {err}");
+            tracing::error!(?err, "{error_msg}");
             DiziError::new(DiziErrorKind::Symphonia, error_msg.to_string())
         })?;
 
-        tracing::debug!("stream config: {:#?}", stream_config);
+        tracing::debug!(?stream_config, "stream config");
 
         Ok(Self {
             event_tx,
@@ -174,14 +104,11 @@ impl PlayerStream {
     fn process_player_req(&mut self, req: PlayerRequest) -> DiziResult {
         match req {
             PlayerRequest::Play { song, volume } => {
-                let stream_res = self.play(song, volume);
-                match stream_res {
-                    Ok(stream_res) => {
-                        let (stream, playback_loop_tx) = stream_res;
-                        self.state = Some(PlayerStreamState {
-                            stream,
-                            playback_loop_tx,
-                        });
+                let stream_state = self.build_player_stream_state(song, volume);
+                match stream_state {
+                    Ok(stream_state) => {
+                        stream_state.stream.play()?;
+                        self.state = Some(stream_state);
                         self.event_poller.player_res().send(Ok(()))?;
                     }
                     Err(e) => self.event_poller.player_res().send(Err(e))?,
@@ -227,11 +154,11 @@ impl PlayerStream {
         Ok(())
     }
 
-    pub fn play(
+    pub fn build_player_stream_state(
         &self,
         audio_file: DiziAudioFile,
         volume: f32,
-    ) -> DiziResult<(Stream, mpsc::Sender<PlayerRequest>)> {
+    ) -> DiziResult<PlayerStreamState> {
         let track_id = audio_file.audio_metadata.track_id;
 
         let probe_result = audio_file.file.get_probe_result()?;
@@ -258,16 +185,14 @@ impl PlayerStream {
                 .channels
                 .map(|c| c as u16)
                 .unwrap_or_else(|| self.stream_config.channels()),
-            sample_rate: cpal::SampleRate(
-                audio_file
-                    .audio_metadata
-                    .sample_rate
-                    .unwrap_or_else(|| self.stream_config.sample_rate().0),
-            ),
+            sample_rate: audio_file
+                .audio_metadata
+                .sample_rate
+                .unwrap_or_else(|| self.stream_config.sample_rate()),
             buffer_size: cpal::BufferSize::Default,
         };
 
-        tracing::debug!("audio_config: {:#?}", audio_config);
+        tracing::debug!(?audio_config, "Audio config");
 
         let stream_tx = self.event_poller.stream_tx.clone();
 
@@ -281,7 +206,7 @@ impl PlayerStream {
                     let packet_sample = packet_decoder.decode::<u8>(packet)?;
                     samples.extend(packet_sample);
                 }
-                let res = stream_loop::<u8>(
+                let res = PlayerStreamState::build::<u8>(
                     stream_tx,
                     &self.device,
                     &audio_config,
@@ -297,7 +222,7 @@ impl PlayerStream {
                     let packet_sample = packet_decoder.decode::<u16>(packet)?;
                     samples.extend(packet_sample);
                 }
-                let res = stream_loop::<u16>(
+                let res = PlayerStreamState::build::<u16>(
                     stream_tx,
                     &self.device,
                     &audio_config,
@@ -313,7 +238,7 @@ impl PlayerStream {
                     let packet_sample = packet_decoder.decode::<u32>(packet)?;
                     samples.extend(packet_sample);
                 }
-                let res = stream_loop::<u32>(
+                let res = PlayerStreamState::build::<u32>(
                     stream_tx,
                     &self.device,
                     &audio_config,
@@ -329,7 +254,7 @@ impl PlayerStream {
                     let packet_sample = packet_decoder.decode::<i8>(packet)?;
                     samples.extend(packet_sample);
                 }
-                let res = stream_loop::<i8>(
+                let res = PlayerStreamState::build::<i8>(
                     stream_tx,
                     &self.device,
                     &audio_config,
@@ -345,7 +270,7 @@ impl PlayerStream {
                     let packet_sample = packet_decoder.decode::<i16>(packet)?;
                     samples.extend(packet_sample);
                 }
-                let res = stream_loop::<i16>(
+                let res = PlayerStreamState::build::<i16>(
                     stream_tx,
                     &self.device,
                     &audio_config,
@@ -361,7 +286,7 @@ impl PlayerStream {
                     let packet_sample = packet_decoder.decode::<i32>(packet)?;
                     samples.extend(packet_sample);
                 }
-                let res = stream_loop::<i32>(
+                let res = PlayerStreamState::build::<i32>(
                     stream_tx,
                     &self.device,
                     &audio_config,
@@ -377,7 +302,7 @@ impl PlayerStream {
                     let packet_sample = packet_decoder.decode::<f32>(packet)?;
                     samples.extend(packet_sample);
                 }
-                let res = stream_loop::<f32>(
+                let res = PlayerStreamState::build::<f32>(
                     stream_tx,
                     &self.device,
                     &audio_config,
@@ -393,7 +318,7 @@ impl PlayerStream {
                     let packet_sample = packet_decoder.decode::<f64>(packet)?;
                     samples.extend(packet_sample);
                 }
-                let res = stream_loop::<f64>(
+                let res = PlayerStreamState::build::<f64>(
                     stream_tx,
                     &self.device,
                     &audio_config,

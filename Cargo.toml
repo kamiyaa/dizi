@@ -44,7 +44,6 @@ skim = "^0"
 strfmt = "^0"
 symphonia = { version = "^0", features = ["all"] }
 termion = "^1"
-tokio = { version = "^1", features = [ "macros", "rt", "rt-multi-thread" ] }
 toml = "^0"
 tracing = "^0"
 tracing-subscriber = { version = "^0", features = [ "std", "env-filter" ] }

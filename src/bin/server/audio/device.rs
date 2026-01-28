@@ -1,7 +1,7 @@
 pub fn get_default_host(host_id: cpal::HostId) -> cpal::Host {
     tracing::debug!("Available audio systems:");
     for host in cpal::available_hosts() {
-        tracing::debug!("host: {:?}", host);
+        tracing::debug!(?host, "Audio host");
     }
     cpal::host_from_id(
         cpal::available_hosts()

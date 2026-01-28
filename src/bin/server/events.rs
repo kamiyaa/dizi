@@ -9,10 +9,11 @@ use dizi::response::server::ServerBroadcastEvent;
 
 #[derive(Debug)]
 pub enum ServerEvent {
-    // new client
+    // new client connected
     NewClient(UnixStream),
-
+    /// player duration update
     PlayerProgressUpdate(time::Duration),
+    /// song is done
     PlayerDone,
 }
 
@@ -112,9 +113,9 @@ impl Events {
             ServerBroadcastEvent::PlayerState { .. } => {}
             event => {
                 tracing::debug!(
-                    "Server broadcast: {:#?} to {} clients",
-                    event,
-                    self.server_broadcast_listeners.len()
+                    ?event,
+                    client_count = self.server_broadcast_listeners.len(),
+                    "Broadcasting event to all clients",
                 );
             }
         }

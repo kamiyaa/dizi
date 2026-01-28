@@ -94,7 +94,7 @@ pub struct DiziAudioFile {
 impl TryFrom<DiziFile> for DiziAudioFile {
     type Error = DiziError;
     fn try_from(value: DiziFile) -> Result<Self, Self::Error> {
-        tracing::debug!("Loading metadata for {:?}", value.file_path);
+        tracing::debug!(file_path=?value.file_path, "Loading metadata");
         let mut hint = Hint::new();
         if let Some(ext) = value.file_ext.as_ref() {
             hint.with_extension(ext);
@@ -177,7 +177,7 @@ impl std::default::Default for AudioMetadata {
 
 impl std::convert::From<&Track> for AudioMetadata {
     fn from(value: &Track) -> Self {
-        tracing::debug!("track: {:#?}", value);
+        tracing::debug!(?value, "track");
 
         let track_id = value.id;
         let channels = value.codec_params.channels.map(|c| c.count());
