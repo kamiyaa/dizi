@@ -1,11 +1,11 @@
+use ratatui::termion::event::Event;
 use serde::Deserialize;
 
 use std::collections::{hash_map::Entry, HashMap};
 use std::convert::{AsMut, AsRef, From};
 
-use termion::event::Event;
 #[cfg(feature = "mouse")]
-use termion::event::MouseEvent;
+use ratatui::termion::event::MouseEvent;
 
 use dizi::error::DiziResult;
 use dizi::request::client::ClientRequest;
@@ -118,7 +118,7 @@ fn vec_to_map(vec: &[CommandKeymap]) -> HashMap<Event, CommandKeybind> {
                     Err(e) => match e {
                         KeymapError::Conflict => {
                             let events_str: Vec<String> =
-                                events.iter().map(|e| e.to_string()).collect();
+                                events.iter().map(|event| event.to_key_string()).collect();
                             eprintln!("Error: Ambiguous Keymapping: Multiple commands mapped to key sequence {:?} {}", events_str, command_str);
                         }
                     },

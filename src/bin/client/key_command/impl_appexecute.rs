@@ -1,6 +1,6 @@
 use dizi::error::DiziResult;
 use dizi::request::client::ClientRequest;
-use termion::event::Key;
+use ratatui::termion::event::Key;
 
 use crate::config::option::WidgetType;
 use crate::config::AppKeyMapping;

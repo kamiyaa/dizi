@@ -1,8 +1,8 @@
 use ratatui::layout::Rect;
 use ratatui::style::{Color, Style};
+use ratatui::termion::event::{Event, Key};
 use ratatui::text::Span;
 use ratatui::widgets::{Clear, Paragraph, Wrap};
-use termion::event::{Event, Key};
 
 use crate::context::AppContext;
 use crate::event::process_event;
@@ -56,10 +56,10 @@ impl<'a> TuiPrompt<'a> {
 
             if let Ok(event) = context.poll_event() {
                 match event {
-                    AppEvent::Termion(Event::Key(key)) => {
+                    AppEvent::TerminalEvent(Event::Key(key)) => {
                         return key;
                     }
-                    AppEvent::Termion(_) => {
+                    AppEvent::TerminalEvent(_) => {
                         context.flush_event();
                     }
                     event => process_event::process_noninteractive(event, context),

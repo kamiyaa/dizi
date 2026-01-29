@@ -5,8 +5,8 @@ use rustyline::{
 };
 
 use ratatui::layout::Rect;
+use ratatui::termion::event::{Event, Key};
 use ratatui::widgets::Clear;
-use termion::event::{Event, Key};
 use unicode_width::UnicodeWidthStr;
 
 use crate::context::AppContext;
@@ -156,7 +156,7 @@ impl<'a> TuiTextField<'a> {
 
             if let Ok(event) = context.poll_event() {
                 match event {
-                    AppEvent::Termion(Event::Key(key)) => {
+                    AppEvent::TerminalEvent(Event::Key(key)) => {
                         let dirty = match key {
                             Key::Backspace => line_buffer.backspace(1),
                             Key::Delete => line_buffer.delete(1).is_some(),
@@ -258,7 +258,7 @@ impl<'a> TuiTextField<'a> {
                         }
                         context.flush_event();
                     }
-                    AppEvent::Termion(_) => {
+                    AppEvent::TerminalEvent(_) => {
                         context.flush_event();
                     }
                     event => process_event::process_noninteractive(event, context),

@@ -19,7 +19,9 @@ pub enum ServerEvent {
 
 #[derive(Debug)]
 pub enum AppEvent {
-    Server(ServerEvent),
+    Server {
+        event: ServerEvent,
+    },
     Client {
         uuid: String,
         request: ClientRequest,
@@ -78,8 +80,8 @@ impl Events {
         {
             let event_tx = app_event_tx.clone();
             let _ = thread::spawn(move || loop {
-                if let Ok(msg) = server_event_rx.recv() {
-                    let _ = event_tx.send(AppEvent::Server(msg));
+                if let Ok(event) = server_event_rx.recv() {
+                    let _ = event_tx.send(AppEvent::Server { event });
                 }
             });
         }

@@ -2,7 +2,7 @@ use std::io::{BufRead, BufReader};
 use std::thread;
 
 use ratatui::layout::{Constraint, Rect};
-use termion::event::Event;
+use ratatui::termion::event::Event;
 
 use dizi::error::DiziResult;
 use dizi::request::client::ClientRequest;
@@ -65,10 +65,10 @@ pub fn run_ui(
         };
 
         match event {
-            AppEvent::Termion(Event::Mouse(_event)) => {
+            AppEvent::TerminalEvent(Event::Mouse(_event)) => {
                 context.flush_event();
             }
-            AppEvent::Termion(key) => {
+            AppEvent::TerminalEvent(key) => {
                 if context.message_queue_ref().current_message().is_some() {
                     context.message_queue_mut().pop_front();
                 }
@@ -91,7 +91,7 @@ pub fn run_ui(
                         None => {
                             context
                                 .message_queue_mut()
-                                .push_info(format!("Unmapped input: {}", key.to_string()));
+                                .push_info(format!("Unmapped input: {}", key.to_key_string()));
                         }
                         Some(CommandKeybind::SimpleKeybind(command)) => {
                             if let Err(e) = command.execute(context, backend, &keymap_t) {

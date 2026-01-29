@@ -43,7 +43,6 @@ signal-hook = "^0"
 skim = "^0"
 strfmt = "^0"
 symphonia = { version = "^0", features = ["all"] }
-termion = "^1"
 toml = "^0"
 tracing = "^0"
 tracing-subscriber = { version = "^0", features = [ "std", "env-filter" ] }

@@ -64,7 +64,7 @@ pub fn run(config: AppConfig) -> DiziResult {
                         });
                 }
             }
-            AppEvent::Server(event) => {
+            AppEvent::Server { event } => {
                 let res = server_util::process_server_event(&mut context, event);
                 if let Err(err) = res {
                     tracing::debug!(?err, "Failed to process server event");

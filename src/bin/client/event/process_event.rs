@@ -2,8 +2,8 @@ use std::io;
 use std::path;
 
 use dizi::song::DiziSongEntry;
+use ratatui::termion::event::{Event, Key};
 use signal_hook::consts::signal;
-use termion::event::{Event, Key};
 
 use dizi::error::DiziResult;
 use dizi::player::PlayerStatus;
@@ -33,7 +33,7 @@ pub fn get_input_while_composite<'a>(
 
         if let Ok(event) = context.poll_event() {
             match event {
-                AppEvent::Termion(event) => {
+                AppEvent::TerminalEvent(event) => {
                     match event {
                         Event::Key(Key::Esc) => return None,
                         event => match keymap.get(&event) {

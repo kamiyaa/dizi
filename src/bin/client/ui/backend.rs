@@ -2,13 +2,13 @@ use std::io::stdout;
 use std::io::Write;
 
 use ratatui::backend::TermionBackend;
-use termion::raw::{IntoRawMode, RawTerminal};
-use termion::screen::AlternateScreen;
+use ratatui::termion::raw::{IntoRawMode, RawTerminal};
+use ratatui::termion::screen::AlternateScreen;
 
 use ratatui::widgets::Widget;
 
 #[cfg(feature = "mouse")]
-use termion::input::MouseTerminal;
+use ratatui::termion::input::MouseTerminal;
 
 trait New {
     fn new() -> std::io::Result<Self>
@@ -31,8 +31,10 @@ type Screen = AlternateScreen<RawTerminal<std::io::Stdout>>;
 #[cfg(not(feature = "mouse"))]
 impl New for Screen {
     fn new() -> std::io::Result<Self> {
+        use ratatui::termion::screen::IntoAlternateScreen;
+
         let stdout = std::io::stdout().into_raw_mode()?;
-        let alt_screen = AlternateScreen::from(stdout);
+        let alt_screen = AlternateScreen::from(stdout.into_alternate_screen().unwrap());
         Ok(alt_screen)
     }
 }
@@ -47,7 +49,7 @@ impl AppBackend {
     pub fn new() -> std::io::Result<Self> {
         let mut alt_screen = Screen::new()?;
         // clears the screen of artifacts
-        write!(alt_screen, "{}", termion::clear::All)?;
+        write!(alt_screen, "{}", ratatui::termion::clear::All)?;
 
         let backend = TermionBackend::new(alt_screen);
         let mut terminal = ratatui::Terminal::new(backend)?;

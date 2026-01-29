@@ -32,7 +32,7 @@ impl<'a> Widget for TuiCommandMenu<'a> {
         let mut display_vec: Vec<String> = self
             .keymap
             .iter()
-            .map(|(k, v)| format!("  {}        {}", k.to_string(), v))
+            .map(|(k, v)| format!("  {}        {}", k.to_key_string(), v))
             .collect();
         display_vec.sort();
         let display_str: Vec<&str> = display_vec.iter().map(|v| v.as_str()).collect();

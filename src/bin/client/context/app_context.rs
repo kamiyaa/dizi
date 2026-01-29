@@ -9,7 +9,7 @@ use dizi::utils;
 use crate::config;
 use crate::config::option::WidgetType;
 use crate::context::{CommandLineContext, MessageQueue, ServerState, TabContext};
-use crate::event::{AppEvent, Events};
+use crate::event::{AppEvent, AppEventListener};
 use crate::util::search::SearchPattern;
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -27,7 +27,7 @@ pub struct UiContext {
 pub struct AppContext {
     pub quit: QuitType,
     // event loop querying
-    pub events: Events,
+    pub event_listener: AppEventListener,
     // server unix socket
     pub stream: UnixStream,
     pub view_widget: WidgetType,
@@ -50,7 +50,7 @@ pub struct AppContext {
 
 impl AppContext {
     pub fn new(config: config::AppConfig, _cwd: PathBuf, stream: UnixStream) -> Self {
-        let events = Events::new();
+        let events = AppEventListener::new();
 
         let mut commandline_context = CommandLineContext::new();
         commandline_context.history_mut().set_max_len(20);
@@ -60,7 +60,7 @@ impl AppContext {
             config,
             stream,
             view_widget: WidgetType::FileBrowser,
-            events,
+            event_listener: events,
             commandline_context,
             search_context: None,
             tab_context: TabContext::new(),
@@ -80,13 +80,13 @@ impl AppContext {
 
     // event related
     pub fn poll_event(&self) -> Result<AppEvent, mpsc::RecvError> {
-        self.events.next()
+        self.event_listener.next()
     }
     pub fn flush_event(&self) {
-        self.events.flush();
+        self.event_listener.flush();
     }
     pub fn clone_event_tx(&self) -> mpsc::Sender<AppEvent> {
-        self.events.event_tx.clone()
+        self.event_listener.event_tx.clone()
     }
 
     pub fn config_ref(&self) -> &config::AppConfig {

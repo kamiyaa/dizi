@@ -13,7 +13,7 @@ pub fn run_query(context: &mut AppContext, query: String) -> DiziResult {
     // server listener
     {
         let stream = context.clone_stream()?;
-        let event_tx = context.events.event_tx.clone();
+        let event_tx = context.event_listener.event_tx.clone();
 
         let _ = thread::spawn(move || {
             let cursor = BufReader::new(stream);

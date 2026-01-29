@@ -664,7 +664,6 @@ dependencies = [
  "skim",
  "strfmt",
  "symphonia",
- "termion 1.5.6",
  "toml",
  "tracing",
  "tracing-subscriber",
@@ -1283,12 +1282,6 @@ dependencies = [
 
 [[package]]
 name = "numtoa"
-version = "0.1.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "b8f8bdf33df195859076e54ab11ee78a1b208382d3a26ec40d142ffc1ecc49ef"
-
-[[package]]
-name = "numtoa"
 version = "0.2.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "6aa2c4e539b869820a2b82e1aef6ff40aa85e65decdd5185e83fb4b1249cd00f"
@@ -1604,7 +1597,7 @@ checksum = "4cade85a8591fbc911e147951422f0d6fd40f4948b271b6216c7dc01838996f8"
 dependencies = [
  "instability",
  "ratatui-core",
- "termion 4.0.6",
+ "termion",
 ]
 
 [[package]]
@@ -1653,28 +1646,13 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "41cc0f7e4d5d4544e8861606a285bb08d3e70712ccc7d2b84d7c0ccfaf4b05ce"
 
 [[package]]
-name = "redox_syscall"
-version = "0.2.16"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "fb5a58c1855b4b6819d59012155603f0b22ad30cad752600aadfcb695265519a"
-dependencies = [
- "bitflags 1.3.2",
-]
-
-[[package]]
-name = "redox_termios"
-version = "0.1.3"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "20145670ba436b55d91fc92d25e71160fbfbdd57831631c8d7d36377a476f1cb"
-
-[[package]]
 name = "redox_users"
 version = "0.3.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "de0737333e7a9502c789a36d7c7fa6092a49895d4faa31ca5df163857ded2e9d"
 dependencies = [
  "getrandom 0.1.16",
- "redox_syscall 0.1.57",
+ "redox_syscall",
  "rust-argon2",
 ]
 
@@ -2222,24 +2200,12 @@ dependencies = [
 
 [[package]]
 name = "termion"
-version = "1.5.6"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "077185e2eac69c3f8379a4298e1e07cd36beb962290d4a51199acf0fdc10607e"
-dependencies = [
- "libc",
- "numtoa 0.1.0",
- "redox_syscall 0.2.16",
- "redox_termios",
-]
-
-[[package]]
-name = "termion"
 version = "4.0.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "f44138a9ae08f0f502f24104d82517ef4da7330c35acd638f1f29d3cd5475ecb"
 dependencies = [
  "libc",
- "numtoa 0.2.4",
+ "numtoa",
 ]
 
 [[package]]

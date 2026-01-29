@@ -1,11 +1,11 @@
-use termion::event::{Event, Key, MouseEvent};
+use ratatui::termion::event::{Event, Key, MouseEvent};
 
 pub trait ToString {
-    fn to_string(&self) -> String;
+    fn to_key_string(&self) -> String;
 }
 
 impl ToString for Key {
-    fn to_string(&self) -> String {
+    fn to_key_string(&self) -> String {
         match *self {
             Key::Char(c) => format!("{}", c),
             Key::Ctrl(c) => format!("ctrl+{}", c),
@@ -29,17 +29,17 @@ impl ToString for Key {
 }
 
 impl ToString for MouseEvent {
-    fn to_string(&self) -> String {
+    fn to_key_string(&self) -> String {
         let k = *self;
         format!("{:?}", k)
     }
 }
 
 impl ToString for Event {
-    fn to_string(&self) -> String {
+    fn to_key_string(&self) -> String {
         match self {
-            Event::Key(key) => key.to_string(),
-            Event::Mouse(mouse) => mouse.to_string(),
+            Event::Key(key) => key.to_key_string(),
+            Event::Mouse(mouse) => mouse.to_key_string(),
             Event::Unsupported(v) => format!("{:?}", v),
         }
     }
