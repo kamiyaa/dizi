@@ -10,7 +10,7 @@ use crate::config;
 use crate::config::option::WidgetType;
 use crate::context::{CommandLineContext, MessageQueue, ServerState, TabContext};
 use crate::event::{AppEvent, AppEventListener};
-use crate::util::search::SearchPattern;
+use crate::utils::search::SearchPattern;
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum QuitType {

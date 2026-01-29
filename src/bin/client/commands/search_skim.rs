@@ -11,7 +11,7 @@ use crate::commands::cursor_move;
 use crate::config::option::WidgetType;
 use crate::context::AppContext;
 use crate::ui::AppBackend;
-use crate::util::search::SearchPattern;
+use crate::utils::search::SearchPattern;
 
 #[derive(Clone, Debug)]
 pub struct DiziSkimItem {

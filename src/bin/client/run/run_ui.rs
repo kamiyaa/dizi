@@ -17,7 +17,7 @@ use crate::traits::ToString;
 use crate::ui::views;
 use crate::ui::views::TuiView;
 use crate::ui::AppBackend;
-use crate::util::request::send_client_request;
+use crate::utils::request::send_client_request;
 
 pub fn run_ui(
     backend: &mut AppBackend,

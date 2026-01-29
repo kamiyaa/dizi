@@ -3,7 +3,7 @@ use dizi::request::client::ClientRequest;
 
 use crate::config::option::WidgetType;
 use crate::context::AppContext;
-use crate::util::request::send_client_request;
+use crate::utils::request::send_client_request;
 
 use super::change_directory;
 

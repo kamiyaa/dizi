@@ -2,7 +2,7 @@ use dizi::error::DiziResult;
 
 use crate::context::AppContext;
 use crate::tab::JoshutoTab;
-use crate::util::search::SearchPattern;
+use crate::utils::search::SearchPattern;
 
 use super::cursor_move;
 

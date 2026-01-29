@@ -9,9 +9,9 @@ use unicode_width::UnicodeWidthStr;
 
 use crate::config::option::DisplayOption;
 use crate::fs::{FileType, JoshutoDirEntry, JoshutoDirList, LinkType};
-use crate::util::format;
-use crate::util::string::UnicodeTruncate;
-use crate::util::style;
+use crate::utils::format;
+use crate::utils::string::UnicodeTruncate;
+use crate::utils::style;
 
 const MIN_LEFT_LABEL_WIDTH: i32 = 15;
 

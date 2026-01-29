@@ -7,7 +7,7 @@ use dizi::response::server::ServerBroadcastEvent;
 
 use crate::context::AppContext;
 use crate::event::AppEvent;
-use crate::util::request::send_client_request;
+use crate::utils::request::send_client_request;
 
 pub fn run_query(context: &mut AppContext, query: String) -> DiziResult {
     // server listener

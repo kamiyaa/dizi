@@ -2,7 +2,7 @@ use dizi::error::DiziResult;
 use dizi::request::client::ClientRequest;
 
 use crate::context::{AppContext, QuitType};
-use crate::util::request::send_client_request;
+use crate::utils::request::send_client_request;
 
 pub fn close(context: &mut AppContext) -> DiziResult {
     context.quit = QuitType::Normal;

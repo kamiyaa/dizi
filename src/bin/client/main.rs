@@ -10,7 +10,7 @@ mod run;
 mod tab;
 mod traits;
 mod ui;
-mod util;
+mod utils;
 
 use std::os::unix::net::UnixStream;
 use std::path::{Path, PathBuf};
@@ -187,7 +187,7 @@ fn run_app(args: CommandArgs) -> DiziResult {
                 )?;
                 context.tab_context_mut().push_tab(tab);
 
-                let mut backend: ui::AppBackend = ui::AppBackend::new()?;
+                let mut backend: ui::AppBackend = ui::AppBackend::new(false)?;
                 run::run_ui(&mut backend, &mut context, keymap)?;
             }
         }

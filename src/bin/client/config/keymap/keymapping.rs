@@ -13,7 +13,7 @@ use dizi::request::client::ClientRequest;
 use crate::config::{parse_toml_to_config, TomlConfigFile};
 use crate::key_command::{AppCommand, Command, CommandKeybind};
 use crate::traits::ToString;
-use crate::util::keyparse::str_to_event;
+use crate::utils::keyparse::str_to_event;
 
 use super::default_keymap::DEFAULT_KEYMAP;
 

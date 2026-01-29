@@ -1,7 +1,7 @@
 use ratatui::style::Style;
 
 use crate::fs::{FileType, JoshutoDirEntry, LinkType};
-use crate::util::unix;
+use crate::utils::unix;
 
 use crate::THEME_T;
 

@@ -10,8 +10,8 @@ use unicode_width::UnicodeWidthStr;
 
 use dizi::player::PlayerState;
 
-use crate::util::string::UnicodeTruncate;
-use crate::util::style;
+use crate::utils::string::UnicodeTruncate;
+use crate::utils::style;
 
 const MIN_LEFT_LABEL_WIDTH: i32 = 15;
 

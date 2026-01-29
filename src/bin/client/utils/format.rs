@@ -17,3 +17,7 @@ pub fn file_size_to_string(file_size: u64) -> String {
         format!("{:>4.2} {}", file_size, FILE_UNITS[index])
     }
 }
+
+pub fn clear_screen() {
+    println!("{}", ratatui::termion::clear::All);
+}

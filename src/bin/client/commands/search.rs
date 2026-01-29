@@ -1,7 +1,7 @@
 use dizi::error::DiziResult;
 
 use crate::context::AppContext;
-use crate::util::search::SearchPattern;
+use crate::utils::search::SearchPattern;
 
 use super::cursor_move;
 use super::search_glob;

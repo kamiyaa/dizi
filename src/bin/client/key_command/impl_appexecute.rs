@@ -6,7 +6,7 @@ use crate::config::option::WidgetType;
 use crate::config::AppKeyMapping;
 use crate::context::AppContext;
 use crate::ui::AppBackend;
-use crate::util::request::send_client_request;
+use crate::utils::request::send_client_request;
 use crate::{commands::*, ui::widgets::TuiPrompt};
 
 use super::{AppExecute, Command};
