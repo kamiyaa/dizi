@@ -1,5 +1,6 @@
 use std::iter::Iterator;
 
+use symphonia::core::audio::conv::ConvertibleSample;
 use symphonia::core::codecs::audio::AudioDecoder;
 use symphonia::core::errors::Error as SymphoniaError;
 use symphonia::core::formats::FormatReader;
@@ -45,20 +46,7 @@ impl PacketDecoder {
 
     pub fn decode<T>(&mut self, packet: Packet) -> DiziResult<Vec<T>>
     where
-        T: symphonia::core::audio::sample::Sample
-            + cpal::Sample
-            + std::marker::Send
-            + 'static
-            + symphonia::core::audio::conv::FromSample<i8>
-            + symphonia::core::audio::conv::FromSample<i16>
-            + symphonia::core::audio::conv::FromSample<i32>
-            + symphonia::core::audio::conv::FromSample<u8>
-            + symphonia::core::audio::conv::FromSample<u16>
-            + symphonia::core::audio::conv::FromSample<u32>
-            + symphonia::core::audio::conv::FromSample<f32>
-            + symphonia::core::audio::conv::FromSample<f64>
-            + symphonia::core::audio::conv::FromSample<symphonia::core::audio::sample::i24>
-            + symphonia::core::audio::conv::FromSample<symphonia::core::audio::sample::u24>,
+        T: ConvertibleSample + cpal::Sample + Send + 'static,
     {
         // Decode the packet into audio samples.
         match self.decoder.decode(&packet) {
