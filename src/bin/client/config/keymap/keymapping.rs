@@ -151,7 +151,7 @@ fn insert_keycommand(
 
     match keymap.entry(event) {
         Entry::Occupied(mut entry) => match entry.get_mut() {
-            CommandKeybind::CompositeKeybind(ref mut m) => {
+            CommandKeybind::CompositeKeybind(m) => {
                 insert_keycommand(m, keycommand, &events[1..])
             }
             _ => Err(KeymapError::Conflict),

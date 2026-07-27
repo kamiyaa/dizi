@@ -2,16 +2,13 @@
 name = "dizi"
 version = "0.3.0"
 authors = ["Jiayi Zhao <jeff.no.zhao@gmail.com>"]
-edition = "2021"
+edition = "2024"
 description = "Terminal music player inspired by moc"
 homepage = "https://github.com/kamiyaa/dizi"
 repository = "https://github.com/kamiyaa/dizi"
 license = "LGPL-3.0"
 keywords = ["ratatui", "music-player"]
 categories = ['command-line-interface', 'command-line-utilities']
-
-
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [[bin]]
 name = "dizi-server"

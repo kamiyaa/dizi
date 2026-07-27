@@ -286,7 +286,7 @@ fn autocomplete(
     // so we don't split it with autocompletion.
     move_to_the_end(line_buffer);
 
-    if let Some(ref mut ct) = completion_tracker {
+    if let Some(ct) = completion_tracker {
         ct.index = if reversed {
             ct.index.checked_sub(1).unwrap_or(ct.candidates.len() - 1)
         } else {
