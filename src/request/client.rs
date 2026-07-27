@@ -79,7 +79,7 @@ pub enum ClientRequest {
 
 impl ClientRequest {
     pub fn api_path(&self) -> &'static str {
-        match &*self {
+        match self {
             Self::ClientLeave { .. } => "/client/leave",
             Self::ServerQuit => "/server/quit",
             Self::ServerQuery { .. } => "/server/query",

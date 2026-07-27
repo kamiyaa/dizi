@@ -112,7 +112,7 @@ where
     let (playback_loop_tx, playback_loop_rx) = mpsc::channel();
 
     let stream = device.build_output_stream(
-        config.clone(),
+        *config,
         move |data: &mut [T], _: &cpal::OutputCallbackInfo| {
             // Process any user requests
             if let Ok(msg) = playback_loop_rx.try_recv() {

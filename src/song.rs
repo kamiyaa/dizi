@@ -116,8 +116,8 @@ impl TryFrom<DiziFile> for DiziAudioFile {
         let music_metadata = probed
             .metadata()
             .skip_to_latest()
-            .map(|metadata| MusicMetadata::from(metadata))
-            .unwrap_or_else(|| MusicMetadata::default());
+            .map(MusicMetadata::from)
+            .unwrap_or_default();
         Ok(Self {
             file: value,
             audio_metadata,
@@ -178,7 +178,7 @@ impl AudioMetadata {
             _ => None,
         };
 
-        let track = reader.tracks().get(0).ok_or_else(|| {
+        let track = reader.tracks().first().ok_or_else(|| {
             let error_msg = "No tracks found";
             tracing::error!("{error_msg}");
             DiziError::new(DiziErrorKind::ParseError, error_msg.to_string())

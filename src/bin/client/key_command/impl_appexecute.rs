@@ -98,7 +98,7 @@ pub fn execute_request(
                 }
 
                 let ch = {
-                    let prompt_str = format!("Add all songs in this directory? [Y/n]");
+                    let prompt_str = "Add all songs in this directory? [Y/n]".to_string();
                     let mut prompt = TuiPrompt::new(&prompt_str);
                     prompt.get_key(backend, context)
                 };

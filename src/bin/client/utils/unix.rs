@@ -1,9 +1,7 @@
-pub fn is_executable(mode: u32) -> bool {
-    const LIBC_PERMISSION_VALS: [u32; 3] = [
-        libc::S_IXUSR as u32,
-        libc::S_IXGRP as u32,
-        libc::S_IXOTH as u32,
-    ];
+use nix::sys::stat::Mode;
 
-    LIBC_PERMISSION_VALS.iter().any(|val| mode & *val != 0)
+const LIBC_EXECUTE_VALS: [Mode; 3] = [Mode::S_IXUSR, Mode::S_IXGRP, Mode::S_IXOTH];
+
+pub fn is_executable(mode: Mode) -> bool {
+    LIBC_EXECUTE_VALS.iter().any(|val| mode.intersects(*val))
 }

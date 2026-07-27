@@ -138,7 +138,7 @@ pub fn render_widget(
                 .collect();
 
             let layout_rect = Layout::default()
-                .direction(direction.clone())
+                .direction(*direction)
                 .constraints(constraints)
                 .split(area);
             for (widget, rect) in widgets.iter().zip(layout_rect.iter()) {

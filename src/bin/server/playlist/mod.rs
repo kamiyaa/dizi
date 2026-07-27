@@ -66,7 +66,7 @@ impl DiziPlaylist {
     }
 
     pub fn to_file_playlist(&self) -> FilePlaylist {
-        let playing_index = self.order_index.and_then(|i| self.order.get(i)).map(|i| *i);
+        let playing_index = self.order_index.and_then(|i| self.order.get(i)).copied();
         FilePlaylist {
             list: self.contents.clone(),
             cursor_index: None,
@@ -96,7 +96,7 @@ impl DiziPlaylist {
             .order
             .iter()
             .filter(|i| **i < new_len)
-            .map(|i| *i)
+            .copied()
             .collect();
         self.order = new_order;
     }

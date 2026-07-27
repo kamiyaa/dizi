@@ -100,6 +100,17 @@ impl<'a> Widget for TuiDirListDetailed<'a> {
     }
 }
 
+fn get_entry_size_string(entry: &JoshutoDirEntry) -> String {
+    match entry.metadata.file_type() {
+        FileType::Directory => entry
+            .metadata
+            .directory_size()
+            .map(|n| n.to_string())
+            .unwrap_or_default(),
+        _ => format::file_size_to_string(entry.metadata.len()),
+    }
+}
+
 fn print_entry(
     buf: &mut Buffer,
     entry: &JoshutoDirEntry,
@@ -108,17 +119,10 @@ fn print_entry(
     drawing_width: usize,
     index: String,
 ) {
-    let size_string = match entry.metadata.file_type() {
-        FileType::Directory => entry
-            .metadata
-            .directory_size()
-            .map(|n| n.to_string())
-            .unwrap_or_else(|| "".to_string()),
-        FileType::File => format::file_size_to_string(entry.metadata.len()),
-    };
+    let size_string = get_entry_size_string(entry);
     let symlink_string = match entry.metadata.link_type() {
-        LinkType::Normal => String::new(),
-        LinkType::Symlink(path, _) => format!("-> {}", path.as_str()),
+        LinkType::Normal => "",
+        LinkType::Symlink { .. } => "-> ",
     };
     let left_label_original = entry.file_name();
     let right_label_original = format!(" {}{} ", symlink_string, size_string);
@@ -133,7 +137,7 @@ fn print_entry(
     // draw_index
     buf.set_stringn(x, y, index, index_width, Style::default());
 
-    let drawing_width = drawing_width - index_width as usize;
+    let drawing_width = drawing_width - index_width;
     let x = x + index_width as u16;
     // Drawing labels
     buf.set_stringn(x, y, left_label, drawing_width, style);
@@ -155,7 +159,7 @@ fn factor_labels_for_entry<'a>(
     let right_label_original_width = right_label_original.width();
 
     let left_width_remainder = drawing_width as i32 - right_label_original_width as i32;
-    let width_remainder = left_width_remainder as i32 - left_label_original_width as i32;
+    let width_remainder = left_width_remainder - left_label_original_width as i32;
 
     if drawing_width == 0 {
         ("".to_string(), "")

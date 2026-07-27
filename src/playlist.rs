@@ -19,7 +19,7 @@ impl ToString for PlaylistType {
     }
 }
 
-#[derive(Clone, Debug, Deserialize, Serialize)]
+#[derive(Clone, Debug, Default, Deserialize, Serialize)]
 pub struct FilePlaylist {
     pub list: Vec<DiziSongEntry>,
     pub cursor_index: Option<usize>,
@@ -33,7 +33,7 @@ impl FilePlaylist {
 
     pub fn first_index_for_viewport(&self, viewport_height: usize) -> usize {
         match self.get_cursor_index() {
-            Some(index) => index / viewport_height as usize * viewport_height as usize,
+            Some(index) => index / viewport_height * viewport_height,
             None => 0,
         }
     }
@@ -109,17 +109,7 @@ impl FilePlaylist {
     }
 }
 
-impl std::default::Default for FilePlaylist {
-    fn default() -> Self {
-        Self {
-            list: Vec::new(),
-            cursor_index: None,
-            playing_index: None,
-        }
-    }
-}
-
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Default)]
 pub struct DirectoryPlaylist {
     _list: Vec<PathBuf>,
     pub index: usize,
@@ -140,20 +130,14 @@ impl DirectoryPlaylist {
     pub fn len(&self) -> usize {
         self._list.len()
     }
+    pub fn is_empty(&self) -> bool {
+        self._list.is_empty()
+    }
 
     pub fn list_ref(&self) -> &Vec<PathBuf> {
         &self._list
     }
     pub fn list_mut(&mut self) -> &mut Vec<PathBuf> {
         &mut self._list
-    }
-}
-
-impl std::default::Default for DirectoryPlaylist {
-    fn default() -> Self {
-        Self {
-            _list: Vec::new(),
-            index: 0,
-        }
     }
 }

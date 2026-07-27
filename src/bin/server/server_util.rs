@@ -262,7 +262,6 @@ pub fn process_done_song(context: &mut AppContext) -> DiziResult {
     } else if repeat_enabled {
         player_play_again(context)?;
         send_latest_song_info(context)?;
-    } else {
     }
 
     Ok(())

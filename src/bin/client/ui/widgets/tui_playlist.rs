@@ -176,7 +176,7 @@ fn factor_labels_for_entry<'a>(
     let right_label_original_width = right_label_original.width();
 
     let left_width_remainder = drawing_width as i32 - right_label_original_width as i32;
-    let width_remainder = left_width_remainder as i32 - left_label_original_width as i32;
+    let width_remainder = left_width_remainder - left_label_original_width as i32;
 
     if drawing_width == 0 {
         ("".to_string(), "")

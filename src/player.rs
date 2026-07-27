@@ -17,12 +17,12 @@ pub enum PlayerStatus {
     Stopped,
 }
 
-impl ToString for PlayerStatus {
-    fn to_string(&self) -> String {
+impl std::fmt::Display for PlayerStatus {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match *self {
-            Self::Playing => "playing".to_string(),
-            Self::Paused => "paused".to_string(),
-            Self::Stopped => "stopped".to_string(),
+            Self::Playing => f.write_str("playing"),
+            Self::Paused => f.write_str("paused"),
+            Self::Stopped => f.write_str("Stopped"),
         }
     }
 }
@@ -54,15 +54,11 @@ impl PlayerState {
     pub fn query(&self, query: &str) -> DiziResult<String> {
         let vars = self.query_all();
 
-        match strfmt(&query, &vars) {
+        match strfmt(query, &vars) {
             Ok(s) => Ok(s),
             Err(e) => Err(DiziError::new(
                 DiziErrorKind::InvalidParameters,
-                format!(
-                    "Failed to process query '{}', Reason: '{}'",
-                    query,
-                    e.to_string()
-                ),
+                format!("Failed to process query '{}', Reason: '{}'", query, e,),
             )),
         }
     }

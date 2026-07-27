@@ -17,7 +17,7 @@ pub fn run_query_all(context: &mut AppContext) -> DiziResult {
 
         let _ = thread::spawn(move || {
             let cursor = BufReader::new(stream);
-            for line in cursor.lines().flatten() {
+            for line in cursor.lines().map_while(Result::ok) {
                 let _ = event_tx.send(AppEvent::Server(line));
             }
         });

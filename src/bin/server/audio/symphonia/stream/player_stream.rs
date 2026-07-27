@@ -105,7 +105,7 @@ impl PlayerStream {
     fn process_player_req(&mut self, req: PlayerRequest) -> DiziResult {
         match req {
             PlayerRequest::Play { song, volume } => {
-                let stream_state = self.build_player_stream_state(song, volume);
+                let stream_state = self.build_player_stream_state(song.clone(), volume);
                 match stream_state {
                     Ok(stream_state) => {
                         stream_state.stream.play()?;
@@ -157,7 +157,7 @@ impl PlayerStream {
 
     pub fn build_player_stream_state(
         &self,
-        audio_file: DiziAudioFile,
+        audio_file: Box<DiziAudioFile>,
         volume: f32,
     ) -> DiziResult<PlayerStreamState> {
         let track_id = audio_file.audio_metadata.track_id;
@@ -166,7 +166,7 @@ impl PlayerStream {
 
         let codec_params = format_reader
             .tracks()
-            .get(0)
+            .first()
             .ok_or_else(|| {
                 let error_msg = "No tracks found";
                 tracing::error!(?audio_file.file, "{error_msg}");
@@ -195,7 +195,7 @@ impl PlayerStream {
 
         // Create a decoder for the track.
         let decoder =
-            symphonia::default::get_codecs().make_audio_decoder(&audio_codec_params, &dec_opts)?;
+            symphonia::default::get_codecs().make_audio_decoder(audio_codec_params, &dec_opts)?;
 
         let audio_config = cpal::StreamConfig {
             channels: audio_file
@@ -342,7 +342,7 @@ impl PlayerStream {
                     &audio_config,
                     samples,
                     volume,
-                    |packet, volume| (packet * volume as f64) as f64,
+                    |packet, volume| packet * volume as f64,
                 )?;
                 Ok(res)
             }

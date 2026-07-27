@@ -4,10 +4,6 @@ use crate::config::option::WidgetType;
 use crate::context::AppContext;
 use crate::ui::AppBackend;
 
-pub fn safe_subtract(a: usize, b: usize) -> usize {
-    if a > b { a - b } else { 0 }
-}
-
 pub fn cursor_move(context: &mut AppContext, new_index: usize) {
     let widget = context.get_view_widget();
     cursor_move_for_widget(context, widget, new_index);
@@ -55,7 +51,7 @@ fn set_curr_dirlist_index(context: &mut AppContext, new_index: usize) {
         let dir_len = curr_list.len();
         if dir_len <= new_index {
             curr_list.set_index(
-                Some(safe_subtract(dir_len, 1)),
+                Some(dir_len.saturating_sub(1)),
                 &ui_context,
                 &display_options,
             );
@@ -82,7 +78,7 @@ pub fn set_playlist_index(context: &mut AppContext, new_index: usize) {
             .server_state_mut()
             .player
             .playlist
-            .set_cursor_index(Some(safe_subtract(playlist_len, 1)));
+            .set_cursor_index(Some(playlist_len.saturating_sub(1)));
     } else {
         context
             .server_state_mut()
@@ -97,7 +93,7 @@ pub fn up(context: &mut AppContext, u: usize) -> DiziResult {
     let index = cursor_index(context, widget);
 
     if let Some(index) = index {
-        let new_index = safe_subtract(index, u);
+        let new_index = index.saturating_sub(u);
         cursor_move_for_widget(context, widget, new_index);
     }
     Ok(())
@@ -161,7 +157,7 @@ pub fn page_up(context: &mut AppContext, backend: &mut AppBackend) -> DiziResult
     let page_size = get_page_size(context, backend).unwrap_or(10);
 
     if let Some(index) = index {
-        let new_index = safe_subtract(index, page_size);
+        let new_index = index.saturating_sub(page_size);
         cursor_move_for_widget(context, widget, new_index);
     }
     Ok(())

@@ -90,7 +90,7 @@ impl SymphoniaPlayer {
         tracing::debug!(?song, "Playing song");
 
         self.player_stream_req().send(PlayerRequest::Play {
-            song: song.clone(),
+            song: Box::new(song.clone()),
             volume: self.get_volume() as f32 / 100.0,
         })?;
 

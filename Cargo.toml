@@ -25,7 +25,6 @@ clap = { version = "^4", features = ["derive"] }
 dirs-next = "^2"
 globset = "^0"
 lazy_static = "^1"
-libc = "^0"
 memmap = "^0"
 m3u = "^1"
 phf = { version = "^0", features = ["macros"], optional = true }
@@ -49,6 +48,11 @@ unicode-segmentation = "^1"
 xdg = "^2"
 cpal = "^0"
 # pipewire = { optional = true, version = "^0" }
+
+[dependencies.nix]
+version = "^0.31"
+default-features = false
+features = [ "fs" ]
 
 [features]
 default = []

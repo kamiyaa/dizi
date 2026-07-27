@@ -79,7 +79,7 @@ impl JoshutoDirList {
             let viewport_end = self.viewport_index + height;
             if (viewport_end as i16 - ix as i16 - 1) < scroll_offset as i16 {
                 // cursor too low
-                self.viewport_index = (ix + scroll_offset - height + 1) as usize;
+                self.viewport_index = ix + scroll_offset - height + 1;
             } else if (ix as i16 - self.viewport_index as i16) < scroll_offset as i16 {
                 // cursor too high
                 self.viewport_index = cmp::max(ix as i16 - scroll_offset as i16, 0) as usize;

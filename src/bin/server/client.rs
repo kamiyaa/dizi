@@ -45,7 +45,7 @@ pub fn handle_client(
     let _ = thread::spawn(move || {
         let cursor = BufReader::new(stream_clone);
         // keep listening for client requests
-        for line in cursor.lines().flatten() {
+        for line in cursor.lines().map_while(Result::ok) {
             if event_tx_clone.send(ClientMessage::Client(line)).is_err() {
                 return;
             }
