@@ -2,7 +2,7 @@ use serde::Deserialize;
 use std::convert::From;
 
 use crate::config::option::LayoutComposition;
-use crate::config::{parse_json_to_config, JsonConfigFile};
+use crate::config::{JsonConfigFile, parse_json_to_config};
 
 #[derive(Clone, Debug, Deserialize)]
 #[serde(tag = "type")]

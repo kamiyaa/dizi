@@ -2,7 +2,8 @@ use std::sync::mpsc;
 use std::time::Duration;
 
 use cpal::traits::{DeviceTrait, StreamTrait};
-use symphonia::core::codecs::DecoderOptions;
+use symphonia::core::codecs::CodecParameters;
+use symphonia::core::codecs::audio::AudioDecoderOptions;
 
 use dizi::error::{DiziError, DiziErrorKind, DiziResult};
 use dizi::song::DiziAudioFile;
@@ -161,23 +162,40 @@ impl PlayerStream {
     ) -> DiziResult<PlayerStreamState> {
         let track_id = audio_file.audio_metadata.track_id;
 
-        let probe_result = audio_file.file.get_probe_result()?;
+        let format_reader = audio_file.file.get_probe_result()?;
 
-        let codec_params = probe_result
-            .format
-            .default_track()
-            .map(|t| &t.codec_params)
+        let codec_params = format_reader
+            .tracks()
+            .get(0)
+            .ok_or_else(|| {
+                let error_msg = "No tracks found";
+                tracing::error!(?audio_file.file, "{error_msg}");
+                DiziError::new(DiziErrorKind::Symphonia, error_msg.to_string())
+            })?
+            .codec_params
+            .as_ref()
             .ok_or_else(|| {
                 let error_msg = "Failed to get default track codec_params";
                 tracing::error!("{error_msg}");
                 DiziError::new(DiziErrorKind::Symphonia, error_msg.to_string())
             })?;
 
+        let audio_codec_params = match codec_params {
+            CodecParameters::Audio(params) => params,
+            _ => {
+                let error_msg = "Codec not audio";
+                tracing::error!("{error_msg}");
+                let err = DiziError::new(DiziErrorKind::ParseError, error_msg.to_string());
+                return Err(err);
+            }
+        };
+
         // Use the default options for the decoder.
-        let dec_opts: DecoderOptions = Default::default();
+        let dec_opts: AudioDecoderOptions = Default::default();
 
         // Create a decoder for the track.
-        let decoder = symphonia::default::get_codecs().make(&codec_params, &dec_opts)?;
+        let decoder =
+            symphonia::default::get_codecs().make_audio_decoder(&audio_codec_params, &dec_opts)?;
 
         let audio_config = cpal::StreamConfig {
             channels: audio_file
@@ -196,7 +214,7 @@ impl PlayerStream {
 
         let stream_tx = self.event_poller.stream_tx.clone();
 
-        let packet_reader = PacketReader::new(probe_result.format, track_id);
+        let packet_reader = PacketReader::new(format_reader, track_id);
         let mut packet_decoder = PacketDecoder::new(decoder);
 
         match self.stream_config.sample_format() {

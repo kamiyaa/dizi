@@ -103,7 +103,7 @@ fn search_playlist_skim(
                     return Err(DiziError::new(
                         DiziErrorKind::IoError(io::ErrorKind::InvalidData),
                         "Error casting".to_string(),
-                    ))
+                    ));
                 }
             }
         }
@@ -183,7 +183,7 @@ fn search_directory_skim(
                     return Err(DiziError::new(
                         DiziErrorKind::IoError(io::ErrorKind::InvalidData),
                         "Error casting".to_string(),
-                    ))
+                    ));
                 }
             }
         }

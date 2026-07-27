@@ -10,8 +10,8 @@ use dizi::player::PlayerStatus;
 use dizi::playlist::PlaylistType;
 use dizi::response::server::ServerBroadcastEvent;
 
-use crate::config::option::WidgetType;
 use crate::config::KeyMapping;
+use crate::config::option::WidgetType;
 use crate::context::{AppContext, QuitType};
 use crate::event::AppEvent;
 use crate::fs::JoshutoDirList;

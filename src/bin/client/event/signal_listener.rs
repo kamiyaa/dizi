@@ -1,6 +1,6 @@
 use signal_hook::consts::signal;
-use signal_hook::iterator::exfiltrator::SignalOnly;
 use signal_hook::iterator::SignalsInfo;
+use signal_hook::iterator::exfiltrator::SignalOnly;
 
 use crate::event::{AppEvent, AppEventSender};
 

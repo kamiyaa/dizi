@@ -1,6 +1,6 @@
 use serde::Deserialize;
 
-use crate::config::{parse_toml_to_config, TomlConfigFile};
+use crate::config::{TomlConfigFile, parse_toml_to_config};
 
 use super::{ServerConfig, ServerConfigRaw};
 

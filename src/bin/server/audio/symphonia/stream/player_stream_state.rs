@@ -1,12 +1,18 @@
+use std::num::NonZero;
 use std::sync::mpsc;
 use std::time::Duration;
 
-use cpal::traits::DeviceTrait;
 use cpal::Stream;
 use cpal::StreamConfig;
+use cpal::traits::DeviceTrait;
+use dizi::error::DiziError;
+use dizi::error::DiziErrorKind;
+use symphonia::core::audio::conv::FromSample;
+use symphonia::core::audio::sample;
 use symphonia::core::units::TimeBase;
 
 use dizi::error::DiziResult;
+use symphonia::core::units::Timestamp;
 
 use crate::audio::request::PlayerRequest;
 
@@ -28,21 +34,21 @@ impl PlayerStreamState {
         volume_change: fn(T, f32) -> T,
     ) -> DiziResult<PlayerStreamState>
     where
-        T: symphonia::core::sample::Sample
+        T: sample::Sample
             + cpal::Sample
             + cpal::SizedSample
             + std::marker::Send
             + 'static
-            + symphonia::core::conv::FromSample<i8>
-            + symphonia::core::conv::FromSample<i16>
-            + symphonia::core::conv::FromSample<i32>
-            + symphonia::core::conv::FromSample<u8>
-            + symphonia::core::conv::FromSample<u16>
-            + symphonia::core::conv::FromSample<u32>
-            + symphonia::core::conv::FromSample<f32>
-            + symphonia::core::conv::FromSample<f64>
-            + symphonia::core::conv::FromSample<symphonia::core::sample::i24>
-            + symphonia::core::conv::FromSample<symphonia::core::sample::u24>,
+            + FromSample<i8>
+            + FromSample<i16>
+            + FromSample<i32>
+            + FromSample<u8>
+            + FromSample<u16>
+            + FromSample<u32>
+            + FromSample<f32>
+            + FromSample<f64>
+            + FromSample<sample::i24>
+            + FromSample<sample::u24>,
     {
         build_stream_state(stream_tx, device, config, samples, volume, volume_change)
     }
@@ -57,30 +63,36 @@ fn build_stream_state<T>(
     volume_change: fn(T, f32) -> T,
 ) -> DiziResult<PlayerStreamState>
 where
-    T: symphonia::core::sample::Sample
+    T: symphonia::core::audio::sample::Sample
         + cpal::Sample
         + cpal::SizedSample
         + std::marker::Send
         + 'static
-        + symphonia::core::conv::FromSample<i8>
-        + symphonia::core::conv::FromSample<i16>
-        + symphonia::core::conv::FromSample<i32>
-        + symphonia::core::conv::FromSample<u8>
-        + symphonia::core::conv::FromSample<u16>
-        + symphonia::core::conv::FromSample<u32>
-        + symphonia::core::conv::FromSample<f32>
-        + symphonia::core::conv::FromSample<f64>
-        + symphonia::core::conv::FromSample<symphonia::core::sample::i24>
-        + symphonia::core::conv::FromSample<symphonia::core::sample::u24>,
+        + FromSample<i8>
+        + FromSample<i16>
+        + FromSample<i32>
+        + FromSample<u8>
+        + FromSample<u16>
+        + FromSample<u32>
+        + FromSample<f32>
+        + FromSample<f64>
+        + FromSample<sample::i24>
+        + FromSample<sample::u24>,
 {
     let err_fn = |err| {
         tracing::error!(?err, "A playback error has occured!");
     };
 
-    let time_base = TimeBase {
-        numer: 1,
-        denom: config.sample_rate * config.channels as u32,
-    };
+    let numer = NonZero::new(1).ok_or_else(|| {
+        let error_msg = "Failed to create non zero value";
+        DiziError::new(DiziErrorKind::InvalidParameters, error_msg.to_string())
+    })?;
+
+    let denom = NonZero::new(config.sample_rate * config.channels as u32).ok_or_else(|| {
+        let error_msg = "Failed to create non zero value";
+        DiziError::new(DiziErrorKind::InvalidParameters, error_msg.to_string())
+    })?;
+    let time_base = TimeBase { numer, denom };
 
     let samples_count = samples.len();
 
@@ -100,7 +112,7 @@ where
     let (playback_loop_tx, playback_loop_rx) = mpsc::channel();
 
     let stream = device.build_output_stream(
-        config,
+        config.clone(),
         move |data: &mut [T], _: &cpal::OutputCallbackInfo| {
             // Process any user requests
             if let Ok(msg) = playback_loop_rx.try_recv() {
@@ -109,16 +121,26 @@ where
                         volume = new_volume;
                     }
                     PlayerRequest::FastForward { offset } => {
-                        frame_index += time_base.denom as usize * offset.as_secs() as usize;
+                        let denom = time_base.denom.get() as usize;
+                        let offset_secs = offset.as_secs() as usize;
+                        let denom_mul = denom * offset_secs;
+
+                        frame_index += denom_mul;
+
                         if frame_index >= samples_count {
-                            frame_index = samples_count - time_base.denom as usize;
+                            // set to samples_count - denom so the song doesn't immediately finish
+                            frame_index = samples_count - denom;
                         }
                     }
                     PlayerRequest::Rewind { offset } => {
-                        if frame_index < time_base.denom as usize * offset.as_secs() as usize {
+                        let denom = time_base.denom.get() as usize;
+                        let offset_secs = offset.as_secs() as usize;
+                        let denom_mul = denom * offset_secs;
+
+                        if frame_index < denom_mul {
                             frame_index = 0;
                         } else {
-                            frame_index -= time_base.denom as usize * offset.as_secs() as usize;
+                            frame_index -= denom_mul;
                         }
                     }
                     _ => {}
@@ -149,7 +171,14 @@ where
                 frame_index
             };
             // new duration
-            let next_duration = time_base.calc_time(new_sample_offset as u64).seconds;
+            let next_duration = time_base
+                .calc_time(Timestamp::new(new_sample_offset as i64))
+                .ok_or_else(|| {
+                    let error_msg = "Failed to calculate time";
+                    DiziError::new(DiziErrorKind::InvalidParameters, error_msg.to_string())
+                })
+                .unwrap_or_default()
+                .as_secs() as u64;
             let prev_duration = playback_duration;
 
             // only update duration if seconds changed

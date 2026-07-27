@@ -9,14 +9,14 @@ use dizi::request::client::ClientRequest;
 
 use crate::config::AppKeyMapping;
 use crate::context::{AppContext, QuitType};
-use crate::event::process_event;
 use crate::event::AppEvent;
+use crate::event::process_event;
 use crate::key_command::{AppExecute, Command, CommandKeybind};
 use crate::preview::preview_default;
 use crate::traits::ToString;
+use crate::ui::AppBackend;
 use crate::ui::views;
 use crate::ui::views::TuiView;
-use crate::ui::AppBackend;
 use crate::utils::request::send_client_request;
 
 pub fn run_ui(

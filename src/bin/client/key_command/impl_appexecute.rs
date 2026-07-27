@@ -2,8 +2,8 @@ use dizi::error::DiziResult;
 use dizi::request::client::ClientRequest;
 use ratatui::termion::event::Key;
 
-use crate::config::option::WidgetType;
 use crate::config::AppKeyMapping;
+use crate::config::option::WidgetType;
 use crate::context::AppContext;
 use crate::ui::AppBackend;
 use crate::utils::request::send_client_request;

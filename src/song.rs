@@ -2,14 +2,15 @@ use std::collections::HashMap;
 use std::path::{Path, PathBuf};
 use std::time;
 
-use symphonia::core::formats::{FormatOptions, Track};
+use symphonia::core::codecs::CodecParameters;
+use symphonia::core::formats::probe::Hint;
+use symphonia::core::formats::{FormatOptions, FormatReader};
 use symphonia::core::io::MediaSourceStream;
-use symphonia::core::meta::{MetadataOptions, MetadataRevision};
-use symphonia::core::probe::{Hint, ProbeResult};
+use symphonia::core::meta::{MetadataOptions, MetadataRevision, RawValue};
 
 use serde::{Deserialize, Serialize};
 
-use crate::error::{DiziError, DiziResult};
+use crate::error::{DiziError, DiziErrorKind, DiziResult};
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
 pub enum DiziSongEntry {
@@ -65,7 +66,7 @@ impl DiziFile {
         }
     }
 
-    pub fn get_probe_result(&self) -> DiziResult<ProbeResult> {
+    pub fn get_probe_result(&self) -> DiziResult<Box<dyn FormatReader>> {
         let mut hint = Hint::new();
         if let Some(ext) = self.file_ext.as_ref() {
             hint.with_extension(ext);
@@ -79,7 +80,7 @@ impl DiziFile {
         // Create the media source stream.
         let mss = MediaSourceStream::new(Box::new(src), Default::default());
         // get probe
-        let probed = symphonia::default::get_probe().format(&hint, mss, &fmt_opts, &meta_opts)?;
+        let probed = symphonia::default::get_probe().probe(&hint, mss, fmt_opts, meta_opts)?;
         Ok(probed)
     }
 }
@@ -108,17 +109,11 @@ impl TryFrom<DiziFile> for DiziAudioFile {
         // Create the media source stream.
         let mss = MediaSourceStream::new(Box::new(src), Default::default());
         // get probe
-        let probed = symphonia::default::get_probe().format(&hint, mss, &fmt_opts, &meta_opts)?;
+        let mut probed = symphonia::default::get_probe().probe(&hint, mss, fmt_opts, meta_opts)?;
 
-        // Get the instantiated format reader.
-        let mut format = probed.format;
+        let audio_metadata = AudioMetadata::from_format_reader(probed.as_ref())?;
 
-        let audio_metadata = format
-            .default_track()
-            .map(|track| AudioMetadata::from(track))
-            .unwrap_or_else(|| AudioMetadata::default());
-
-        let music_metadata = format
+        let music_metadata = probed
             .metadata()
             .skip_to_latest()
             .map(|metadata| MusicMetadata::from(metadata))
@@ -163,6 +158,63 @@ pub struct AudioMetadata {
     pub total_duration: Option<time::Duration>,
 }
 
+impl AudioMetadata {
+    pub fn from_format_reader(reader: &dyn FormatReader) -> DiziResult<Self> {
+        let media_info = reader.media_info();
+
+        let start_timestamp = media_info.start_ts;
+
+        let total_duration = match (media_info.time_base, media_info.duration) {
+            (Some(time_base), Some(duration)) => {
+                let end_timestamp = start_timestamp.saturating_add(duration);
+                let unit_time = time_base.calc_time(end_timestamp).ok_or_else(|| {
+                    let error_msg = "Failed to calculate time";
+                    tracing::error!(?time_base, ?start_timestamp, ?duration, "{error_msg}");
+                    DiziError::new(DiziErrorKind::ParseError, error_msg.to_string())
+                })?;
+                let duration = time::Duration::from_secs(unit_time.as_secs() as u64);
+                Some(duration)
+            }
+            _ => None,
+        };
+
+        let track = reader.tracks().get(0).ok_or_else(|| {
+            let error_msg = "No tracks found";
+            tracing::error!("{error_msg}");
+            DiziError::new(DiziErrorKind::ParseError, error_msg.to_string())
+        })?;
+
+        let track_id = track.id;
+        let codec_parameters = track.codec_params.as_ref().ok_or_else(|| {
+            let error_msg = "No codec parameters found";
+            tracing::error!("{error_msg}");
+            DiziError::new(DiziErrorKind::ParseError, error_msg.to_string())
+        })?;
+
+        let audio_codec_params = match codec_parameters {
+            CodecParameters::Audio(params) => params,
+            _ => {
+                let error_msg = "Codec not audio";
+                tracing::error!("{error_msg}");
+                let err = DiziError::new(DiziErrorKind::ParseError, error_msg.to_string());
+                return Err(err);
+            }
+        };
+
+        let channels = audio_codec_params.channels.as_ref().map(|c| c.count());
+        let sample_rate = audio_codec_params.sample_rate;
+
+        let bit_depth = audio_codec_params.bits_per_sample.unwrap_or(16);
+        Ok(Self {
+            track_id,
+            bit_depth,
+            channels,
+            sample_rate,
+            total_duration,
+        })
+    }
+}
+
 impl std::default::Default for AudioMetadata {
     fn default() -> Self {
         Self {
@@ -171,35 +223,6 @@ impl std::default::Default for AudioMetadata {
             channels: None,
             sample_rate: None,
             total_duration: None,
-        }
-    }
-}
-
-impl std::convert::From<&Track> for AudioMetadata {
-    fn from(value: &Track) -> Self {
-        tracing::debug!(?value, "track");
-
-        let track_id = value.id;
-        let channels = value.codec_params.channels.map(|c| c.count());
-        let sample_rate = value.codec_params.sample_rate;
-
-        let bit_depth = value.codec_params.bits_per_sample.unwrap_or(16);
-
-        let total_duration = match (value.codec_params.time_base, value.codec_params.n_frames) {
-            (Some(time_base), Some(n_frames)) => {
-                let unit_time = time_base.calc_time(n_frames);
-                let duration = time::Duration::from_secs(unit_time.seconds);
-                Some(duration)
-            }
-            _ => None,
-        };
-
-        Self {
-            track_id,
-            bit_depth,
-            channels,
-            sample_rate,
-            total_duration,
         }
     }
 }
@@ -213,18 +236,31 @@ pub struct MusicMetadata {
 impl std::convert::From<&MetadataRevision> for MusicMetadata {
     fn from(metadata: &MetadataRevision) -> Self {
         let standard_tags: HashMap<String, String> = metadata
-            .tags()
+            .media
+            .tags
             .iter()
             .filter_map(|tag| {
-                tag.std_key
-                    .map(|std_key| (format!("{:?}", std_key), tag.value.to_string()))
+                let std_key = tag.std.clone()?;
+                let tag_value = match &tag.raw.value {
+                    RawValue::String(s) => Some(s.to_string()),
+                    _ => None,
+                }?;
+                Some((format!("{:?}", std_key), tag_value))
             })
             .collect();
         let tags: HashMap<String, String> = metadata
-            .tags()
+            .media
+            .tags
             .iter()
-            .filter(|tag| tag.std_key.is_none())
-            .map(|tag| (tag.key.to_owned(), tag.value.to_string()))
+            .filter(|tag| !tag.has_std_tag())
+            .map(|tag| {
+                let tag_key = tag.raw.key.clone();
+                let tag_value = match &tag.raw.value {
+                    RawValue::String(s) => s.to_string(),
+                    _ => String::new(),
+                };
+                (tag_key, tag_value)
+            })
             .collect();
         Self {
             standard_tags,

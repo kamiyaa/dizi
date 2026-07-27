@@ -5,11 +5,7 @@ use crate::context::AppContext;
 use crate::ui::AppBackend;
 
 pub fn safe_subtract(a: usize, b: usize) -> usize {
-    if a > b {
-        a - b
-    } else {
-        0
-    }
+    if a > b { a - b } else { 0 }
 }
 
 pub fn cursor_move(context: &mut AppContext, new_index: usize) {

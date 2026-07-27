@@ -6,8 +6,8 @@ use std::thread;
 
 use ratatui::termion::event::Event;
 
-use crate::event::input_listener::TerminalInputListener;
 use crate::event::SignalListener;
+use crate::event::input_listener::TerminalInputListener;
 use crate::fs::JoshutoDirList;
 
 pub type AppEventSender = Sender<AppEvent>;

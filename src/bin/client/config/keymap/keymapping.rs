@@ -1,7 +1,7 @@
 use ratatui::termion::event::Event;
 use serde::Deserialize;
 
-use std::collections::{hash_map::Entry, HashMap};
+use std::collections::{HashMap, hash_map::Entry};
 use std::convert::{AsMut, AsRef, From};
 
 #[cfg(feature = "mouse")]
@@ -10,7 +10,7 @@ use ratatui::termion::event::MouseEvent;
 use dizi::error::DiziResult;
 use dizi::request::client::ClientRequest;
 
-use crate::config::{parse_toml_to_config, TomlConfigFile};
+use crate::config::{TomlConfigFile, parse_toml_to_config};
 use crate::key_command::{AppCommand, Command, CommandKeybind};
 use crate::traits::ToString;
 use crate::utils::keyparse::str_to_event;
@@ -119,7 +119,10 @@ fn vec_to_map(vec: &[CommandKeymap]) -> HashMap<Event, CommandKeybind> {
                         KeymapError::Conflict => {
                             let events_str: Vec<String> =
                                 events.iter().map(|event| event.to_key_string()).collect();
-                            eprintln!("Error: Ambiguous Keymapping: Multiple commands mapped to key sequence {:?} {}", events_str, command_str);
+                            eprintln!(
+                                "Error: Ambiguous Keymapping: Multiple commands mapped to key sequence {:?} {}",
+                                events_str, command_str
+                            );
                         }
                     },
                 }
@@ -151,9 +154,7 @@ fn insert_keycommand(
 
     match keymap.entry(event) {
         Entry::Occupied(mut entry) => match entry.get_mut() {
-            CommandKeybind::CompositeKeybind(m) => {
-                insert_keycommand(m, keycommand, &events[1..])
-            }
+            CommandKeybind::CompositeKeybind(m) => insert_keycommand(m, keycommand, &events[1..]),
             _ => Err(KeymapError::Conflict),
         },
         Entry::Vacant(entry) => {

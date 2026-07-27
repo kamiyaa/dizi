@@ -5,7 +5,7 @@ use dizi::error::DiziResult;
 
 use super::DEFAULT_CONFIG_FILE_PATH;
 use super::{AppStyle, AppStyleRaw};
-use crate::config::{parse_toml_to_config, TomlConfigFile};
+use crate::config::{TomlConfigFile, parse_toml_to_config};
 
 #[derive(Clone, Debug, Default, Deserialize)]
 pub struct AppThemeRaw {

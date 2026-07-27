@@ -233,7 +233,7 @@ pub fn trim_file_label(name: &str, drawing_width: usize) -> String {
 
 #[cfg(test)]
 mod test_factor_labels {
-    use super::{factor_labels_for_entry, MIN_LEFT_LABEL_WIDTH};
+    use super::{MIN_LEFT_LABEL_WIDTH, factor_labels_for_entry};
 
     #[test]
     fn both_labels_empty_if_drawing_width_zero() {

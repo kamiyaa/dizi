@@ -1,4 +1,4 @@
-use std::io::{self, stdout, Write};
+use std::io::{self, Write, stdout};
 
 use ratatui::backend::TermionBackend;
 use ratatui::termion::input::MouseTerminal;

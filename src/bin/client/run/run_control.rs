@@ -1,9 +1,9 @@
 use dizi::error::DiziResult;
 use dizi::request::client::ClientRequest;
 
+use crate::CommandArgs;
 use crate::context::AppContext;
 use crate::utils::request::send_client_request;
-use crate::CommandArgs;
 
 pub fn run_control(context: &mut AppContext, args: &CommandArgs) -> DiziResult {
     let request = if args.exit {

@@ -1,7 +1,7 @@
 use serde::Deserialize;
 
 use crate::config::option::{DisplayOption, SortOption};
-use crate::config::{parse_toml_to_config, TomlConfigFile};
+use crate::config::{TomlConfigFile, parse_toml_to_config};
 
 use super::client::{ClientConfig, ClientConfigRaw};
 

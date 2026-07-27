@@ -16,7 +16,7 @@ use clap::Parser;
 
 use dizi::error::DiziResult;
 use lazy_static::lazy_static;
-use tracing_subscriber::{prelude::*, EnvFilter};
+use tracing_subscriber::{EnvFilter, prelude::*};
 
 use crate::config::{AppConfig, TomlConfigFile};
 

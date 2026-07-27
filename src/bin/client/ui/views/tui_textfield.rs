@@ -1,7 +1,7 @@
 use rustyline::completion::{Candidate, Completer, FilenameCompleter, Pair};
 use rustyline::{
-    line_buffer::{self, LineBuffer},
     At, Word,
+    line_buffer::{self, LineBuffer},
 };
 
 use ratatui::layout::Rect;
@@ -10,12 +10,12 @@ use ratatui::widgets::Clear;
 use unicode_width::UnicodeWidthStr;
 
 use crate::context::AppContext;
-use crate::event::process_event;
 use crate::event::AppEvent;
+use crate::event::process_event;
 use crate::key_command::complete_command;
+use crate::ui::AppBackend;
 use crate::ui::views::TuiView;
 use crate::ui::widgets::{TuiMenu, TuiMultilineText};
-use crate::ui::AppBackend;
 
 struct CompletionTracker {
     pub index: usize,

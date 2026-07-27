@@ -95,38 +95,18 @@ impl From<toml::de::Error> for DiziError {
     }
 }
 
+impl From<cpal::Error> for DiziError {
+    fn from(err: cpal::Error) -> Self {
+        let _cause = err.to_string();
+        Self {
+            _kind: DiziErrorKind::CpalError,
+            _cause,
+        }
+    }
+}
+
 impl From<symphonia::core::errors::Error> for DiziError {
     fn from(err: symphonia::core::errors::Error) -> Self {
-        let _cause = err.to_string();
-        Self {
-            _kind: DiziErrorKind::from(err),
-            _cause,
-        }
-    }
-}
-
-impl From<cpal::BuildStreamError> for DiziError {
-    fn from(err: cpal::BuildStreamError) -> Self {
-        let _cause = err.to_string();
-        Self {
-            _kind: DiziErrorKind::from(err),
-            _cause,
-        }
-    }
-}
-
-impl From<cpal::PlayStreamError> for DiziError {
-    fn from(err: cpal::PlayStreamError) -> Self {
-        let _cause = err.to_string();
-        Self {
-            _kind: DiziErrorKind::from(err),
-            _cause,
-        }
-    }
-}
-
-impl From<cpal::PauseStreamError> for DiziError {
-    fn from(err: cpal::PauseStreamError) -> Self {
         let _cause = err.to_string();
         Self {
             _kind: DiziErrorKind::from(err),

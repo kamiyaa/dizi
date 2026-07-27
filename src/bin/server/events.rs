@@ -69,9 +69,11 @@ impl Events {
         // listen to client requests
         {
             let event_tx = app_event_tx.clone();
-            let _ = thread::spawn(move || loop {
-                if let Ok((uuid, request)) = client_request_rx.recv() {
-                    let _ = event_tx.send(AppEvent::Client { uuid, request });
+            let _ = thread::spawn(move || {
+                loop {
+                    if let Ok((uuid, request)) = client_request_rx.recv() {
+                        let _ = event_tx.send(AppEvent::Client { uuid, request });
+                    }
                 }
             });
         }
@@ -79,9 +81,11 @@ impl Events {
         // listen to server requests
         {
             let event_tx = app_event_tx.clone();
-            let _ = thread::spawn(move || loop {
-                if let Ok(event) = server_event_rx.recv() {
-                    let _ = event_tx.send(AppEvent::Server { event });
+            let _ = thread::spawn(move || {
+                loop {
+                    if let Ok(event) = server_event_rx.recv() {
+                        let _ = event_tx.send(AppEvent::Server { event });
+                    }
                 }
             });
         }

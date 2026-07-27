@@ -10,8 +10,8 @@ use crate::config::option::SortType;
 
 use crate::HOME_DIR;
 
-use super::constants::*;
 use super::Command;
+use super::constants::*;
 
 macro_rules! simple_command_conversion_case {
     ($command: ident, $command_match: ident, $enum_name: expr) => {
