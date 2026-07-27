@@ -14,7 +14,7 @@ use crate::audio::symphonia::stream::{
 };
 use crate::events::{ServerEvent, ServerEventSender};
 
-use super::super::decode::{PacketDecoder, PacketReader};
+use super::super::decode::{PacketDecoder, PacketReader, decode_all};
 
 /// Stream
 pub struct PlayerStream {
@@ -215,136 +215,96 @@ impl PlayerStream {
         let stream_tx = self.event_poller.stream_tx.clone();
 
         let packet_reader = PacketReader::new(format_reader, track_id);
-        let mut packet_decoder = PacketDecoder::new(decoder);
+        let packet_decoder = PacketDecoder::new(decoder);
 
         match self.stream_config.sample_format() {
             cpal::SampleFormat::U8 => {
-                let mut samples = Vec::new();
-                for packet in packet_reader {
-                    let packet_sample = packet_decoder.decode::<u8>(packet)?;
-                    samples.extend(packet_sample);
-                }
-                let res = PlayerStreamState::build::<u8>(
+                let samples = decode_all::<u8>(packet_reader, packet_decoder)?;
+                PlayerStreamState::build::<u8>(
                     stream_tx,
                     &self.device,
                     &audio_config,
                     samples,
                     volume,
                     |packet, volume| ((packet as f32) * volume) as u8,
-                )?;
-                Ok(res)
+                )
             }
             cpal::SampleFormat::U16 => {
-                let mut samples = Vec::new();
-                for packet in packet_reader {
-                    let packet_sample = packet_decoder.decode::<u16>(packet)?;
-                    samples.extend(packet_sample);
-                }
-                let res = PlayerStreamState::build::<u16>(
+                let samples = decode_all::<u16>(packet_reader, packet_decoder)?;
+                PlayerStreamState::build::<u16>(
                     stream_tx,
                     &self.device,
                     &audio_config,
                     samples,
                     volume,
                     |packet, volume| ((packet as f32) * volume) as u16,
-                )?;
-                Ok(res)
+                )
             }
             cpal::SampleFormat::U32 => {
-                let mut samples = Vec::new();
-                for packet in packet_reader {
-                    let packet_sample = packet_decoder.decode::<u32>(packet)?;
-                    samples.extend(packet_sample);
-                }
-                let res = PlayerStreamState::build::<u32>(
+                let samples = decode_all::<u32>(packet_reader, packet_decoder)?;
+                PlayerStreamState::build::<u32>(
                     stream_tx,
                     &self.device,
                     &audio_config,
                     samples,
                     volume,
                     |packet, volume| ((packet as f32) * volume) as u32,
-                )?;
-                Ok(res)
+                )
             }
             cpal::SampleFormat::I8 => {
-                let mut samples = Vec::new();
-                for packet in packet_reader {
-                    let packet_sample = packet_decoder.decode::<i8>(packet)?;
-                    samples.extend(packet_sample);
-                }
-                let res = PlayerStreamState::build::<i8>(
+                let samples = decode_all::<i8>(packet_reader, packet_decoder)?;
+                PlayerStreamState::build::<i8>(
                     stream_tx,
                     &self.device,
                     &audio_config,
                     samples,
                     volume,
                     |packet, volume| ((packet as f32) * volume) as i8,
-                )?;
-                Ok(res)
+                )
             }
             cpal::SampleFormat::I16 => {
-                let mut samples = Vec::new();
-                for packet in packet_reader {
-                    let packet_sample = packet_decoder.decode::<i16>(packet)?;
-                    samples.extend(packet_sample);
-                }
-                let res = PlayerStreamState::build::<i16>(
+                let samples = decode_all::<i16>(packet_reader, packet_decoder)?;
+                PlayerStreamState::build::<i16>(
                     stream_tx,
                     &self.device,
                     &audio_config,
                     samples,
                     volume,
                     |packet, volume| ((packet as f32) * volume) as i16,
-                )?;
-                Ok(res)
+                )
             }
             cpal::SampleFormat::I32 => {
-                let mut samples = Vec::new();
-                for packet in packet_reader {
-                    let packet_sample = packet_decoder.decode::<i32>(packet)?;
-                    samples.extend(packet_sample);
-                }
-                let res = PlayerStreamState::build::<i32>(
+                let samples = decode_all::<i32>(packet_reader, packet_decoder)?;
+                PlayerStreamState::build::<i32>(
                     stream_tx,
                     &self.device,
                     &audio_config,
                     samples,
                     volume,
                     |packet, volume| ((packet as f32) * volume) as i32,
-                )?;
-                Ok(res)
+                )
             }
             cpal::SampleFormat::F32 => {
-                let mut samples = Vec::new();
-                for packet in packet_reader {
-                    let packet_sample = packet_decoder.decode::<f32>(packet)?;
-                    samples.extend(packet_sample);
-                }
-                let res = PlayerStreamState::build::<f32>(
+                let samples = decode_all::<f32>(packet_reader, packet_decoder)?;
+                PlayerStreamState::build::<f32>(
                     stream_tx,
                     &self.device,
                     &audio_config,
                     samples,
                     volume,
                     |packet, volume| packet * volume,
-                )?;
-                Ok(res)
+                )
             }
             _ => {
-                let mut samples = Vec::new();
-                for packet in packet_reader {
-                    let packet_sample = packet_decoder.decode::<f64>(packet)?;
-                    samples.extend(packet_sample);
-                }
-                let res = PlayerStreamState::build::<f64>(
+                let samples = decode_all::<f64>(packet_reader, packet_decoder)?;
+                PlayerStreamState::build::<f64>(
                     stream_tx,
                     &self.device,
                     &audio_config,
                     samples,
                     volume,
                     |packet, volume| packet * volume as f64,
-                )?;
-                Ok(res)
+                )
             }
         }
     }

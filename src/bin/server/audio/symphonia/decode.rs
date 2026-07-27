@@ -68,3 +68,15 @@ impl PacketDecoder {
         }
     }
 }
+
+/// Decodes every packet from `reader`, concatenating the resulting samples.
+pub fn decode_all<T>(reader: PacketReader, mut decoder: PacketDecoder) -> DiziResult<Vec<T>>
+where
+    T: ConvertibleSample + cpal::Sample + Send + 'static,
+{
+    let mut samples = Vec::new();
+    for packet in reader {
+        samples.extend(decoder.decode::<T>(packet)?);
+    }
+    Ok(samples)
+}

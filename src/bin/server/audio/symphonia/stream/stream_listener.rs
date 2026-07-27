@@ -27,13 +27,6 @@ impl PlayerStreamEventListener {
         player_res_tx: mpsc::Sender<DiziResult>,
         player_req_rx: mpsc::Receiver<PlayerRequest>,
     ) -> Self {
-        Self::init(player_res_tx, player_req_rx)
-    }
-
-    fn init(
-        player_res_tx: mpsc::Sender<DiziResult>,
-        player_req_rx: mpsc::Receiver<PlayerRequest>,
-    ) -> Self {
         let (stream_tx, stream_rx) = mpsc::channel();
         let (event_tx, event_rx) = mpsc::channel();
 

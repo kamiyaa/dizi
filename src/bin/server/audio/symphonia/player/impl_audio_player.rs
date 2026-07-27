@@ -10,10 +10,24 @@ use dizi::song::DiziSongEntry;
 use crate::audio::request::PlayerRequest;
 use crate::context::PlaylistContext;
 use crate::playlist::DiziPlaylist;
-use crate::traits::{AudioPlayer, DiziPlaylistTrait};
+use crate::traits::{AudioPlayer, DiziPlaylistEntry, DiziPlaylistTrait};
 use crate::util::mimetype::{get_mimetype, is_mimetype_audio, is_mimetype_video};
 
 use super::SymphoniaPlayer;
+
+impl SymphoniaPlayer {
+    /// Plays `entry` if it is loaded. `entry` is taken by value (rather than
+    /// borrowing the playlist) so callers can drop their playlist borrow
+    /// before calling this, which itself needs `&mut self`.
+    fn play_entry(&mut self, entry: Option<DiziPlaylistEntry>) -> DiziResult {
+        if let Some(entry) = entry
+            && let DiziSongEntry::Loaded(audio_file) = entry.entry
+        {
+            self.play(&audio_file)?;
+        }
+        Ok(())
+    }
+}
 
 impl AudioPlayer for SymphoniaPlayer {
     fn player_state(&self) -> PlayerState {
@@ -53,11 +67,8 @@ impl AudioPlayer for SymphoniaPlayer {
             }
 
             playlist.load_current_entry_metadata()?;
-            if let Some(entry) = playlist.current_entry() {
-                if let DiziSongEntry::Loaded(audio_file) = entry.entry {
-                    self.play(&audio_file)?;
-                }
-            }
+            let entry = playlist.current_entry();
+            self.play_entry(entry)?;
 
             self.playlist_context.directory_playlist = playlist;
             self.set_playlist_type(PlaylistType::DirectoryListing);
@@ -80,11 +91,8 @@ impl AudioPlayer for SymphoniaPlayer {
         }
 
         playlist.load_current_entry_metadata()?;
-        if let Some(entry) = playlist.current_entry() {
-            if let DiziSongEntry::Loaded(audio_file) = entry.entry {
-                self.play(&audio_file)?;
-            }
-        }
+        let entry = playlist.current_entry();
+        self.play_entry(entry)?;
         self.set_playlist_type(PlaylistType::PlaylistFile);
 
         Ok(())
@@ -92,13 +100,8 @@ impl AudioPlayer for SymphoniaPlayer {
 
     fn play_again(&mut self) -> DiziResult {
         let playlist = self.playlist_context.current_playlist_ref();
-
-        if let Some(entry) = playlist.current_entry() {
-            if let DiziSongEntry::Loaded(audio_file) = entry.entry {
-                self.play(&audio_file)?;
-            }
-        }
-        Ok(())
+        let entry = playlist.current_entry();
+        self.play_entry(entry)
     }
 
     fn play_next(&mut self) -> DiziResult {
@@ -115,13 +118,13 @@ impl AudioPlayer for SymphoniaPlayer {
             if playlist.load_current_entry_metadata().is_ok() {
                 break;
             };
+            tracing::debug!(
+                file_name = song_entry.entry.file_name(),
+                "Failed to parse file, skipping",
+            );
         }
-        if let Some(entry) = playlist.current_entry() {
-            if let DiziSongEntry::Loaded(audio_file) = entry.entry {
-                self.play(&audio_file)?;
-            }
-        }
-        Ok(())
+        let entry = playlist.current_entry();
+        self.play_entry(entry)
     }
 
     fn play_previous(&mut self) -> DiziResult {
@@ -143,12 +146,8 @@ impl AudioPlayer for SymphoniaPlayer {
                 "Failed to parse file, skipping",
             );
         }
-        if let Some(entry) = playlist.current_entry() {
-            if let DiziSongEntry::Loaded(audio_file) = entry.entry {
-                self.play(&audio_file)?;
-            }
-        }
-        Ok(())
+        let entry = playlist.current_entry();
+        self.play_entry(entry)
     }
 
     fn pause(&mut self) -> DiziResult {

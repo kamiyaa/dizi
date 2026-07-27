@@ -21,6 +21,4 @@ pub enum PlayerRequest {
     Rewind {
         offset: Duration,
     },
-    //    AddListener(ServerEventSender),
-    //    ClearListeners,
 }

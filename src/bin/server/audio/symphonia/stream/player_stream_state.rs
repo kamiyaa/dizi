@@ -8,7 +8,6 @@ use cpal::traits::DeviceTrait;
 use dizi::error::DiziError;
 use dizi::error::DiziErrorKind;
 use symphonia::core::audio::conv::ConvertibleSample;
-use symphonia::core::audio::sample;
 use symphonia::core::units::TimeBase;
 
 use dizi::error::DiziResult;
@@ -55,10 +54,7 @@ where
         tracing::error!(?err, "A playback error has occured!");
     };
 
-    let numer = NonZero::new(1).ok_or_else(|| {
-        let error_msg = "Failed to create non zero value";
-        DiziError::new(DiziErrorKind::InvalidParameters, error_msg.to_string())
-    })?;
+    let numer = NonZero::<u32>::MIN;
 
     let denom = NonZero::new(config.sample_rate * config.channels as u32).ok_or_else(|| {
         let error_msg = "Failed to create non zero value";
