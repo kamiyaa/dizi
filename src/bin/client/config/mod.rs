@@ -7,7 +7,7 @@ pub use self::general::*;
 pub use self::keymap::*;
 pub use self::theme::*;
 
-use dizi::error::{DiziError, DiziErrorKind, DiziResult};
+use dizi::error::{AppResult, DiziError, DiziErrorKind};
 use serde::de::DeserializeOwned;
 use std::fs;
 use std::io;
@@ -38,7 +38,7 @@ where
 }
 
 // parses a config file into its appropriate format
-fn parse_toml_to_config<T, S>(filename: &str) -> DiziResult<S>
+fn parse_toml_to_config<T, S>(filename: &str) -> AppResult<S>
 where
     T: DeserializeOwned,
     S: From<T>,
@@ -61,7 +61,7 @@ where
 }
 
 // parses a config file into its appropriate format
-fn parse_json_to_config<T, S>(filename: &str) -> DiziResult<S>
+fn parse_json_to_config<T, S>(filename: &str) -> AppResult<S>
 where
     T: DeserializeOwned,
     S: From<T>,

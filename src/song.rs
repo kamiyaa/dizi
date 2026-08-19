@@ -10,7 +10,7 @@ use symphonia::core::meta::{MetadataOptions, MetadataRevision, RawValue};
 
 use serde::{Deserialize, Serialize};
 
-use crate::error::{DiziError, DiziErrorKind, DiziResult};
+use crate::error::{AppResult, DiziError, DiziErrorKind};
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
 pub enum DiziSongEntry {
@@ -19,7 +19,7 @@ pub enum DiziSongEntry {
 }
 
 impl DiziSongEntry {
-    pub fn load_metadata(self) -> DiziResult<DiziAudioFile> {
+    pub fn load_metadata(self) -> AppResult<DiziAudioFile> {
         match self {
             Self::Unloaded(s) => DiziAudioFile::try_from(s),
             Self::Loaded(s) => Ok(s),
@@ -66,7 +66,7 @@ impl DiziFile {
         }
     }
 
-    pub fn get_probe_result(&self) -> DiziResult<Box<dyn FormatReader>> {
+    pub fn get_probe_result(&self) -> AppResult<Box<dyn FormatReader>> {
         let mut hint = Hint::new();
         if let Some(ext) = self.file_ext.as_ref() {
             hint.with_extension(ext);
@@ -159,7 +159,7 @@ pub struct AudioMetadata {
 }
 
 impl AudioMetadata {
-    pub fn from_format_reader(reader: &dyn FormatReader) -> DiziResult<Self> {
+    pub fn from_format_reader(reader: &dyn FormatReader) -> AppResult<Self> {
         let media_info = reader.media_info();
 
         let start_timestamp = media_info.start_ts;

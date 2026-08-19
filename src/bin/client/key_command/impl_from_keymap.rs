@@ -2,7 +2,7 @@ use std::path;
 
 use shellexpand::tilde_with_context;
 
-use dizi::error::{DiziError, DiziErrorKind, DiziResult};
+use dizi::error::{AppResult, DiziError, DiziErrorKind};
 
 use crate::config::keymap::CommandKeymap;
 use crate::config::option::SelectOption;
@@ -22,7 +22,7 @@ macro_rules! simple_command_conversion_case {
 }
 
 impl Command {
-    pub fn from_keymap(keymap: &CommandKeymap) -> DiziResult<Self> {
+    pub fn from_keymap(keymap: &CommandKeymap) -> AppResult<Self> {
         // command line keys
         if let Some(stripped) = keymap.command.strip_prefix(':') {
             return Ok(Self::CommandLine(stripped.to_owned(), "".to_owned()));
@@ -60,6 +60,7 @@ impl Command {
 
         simple_command_conversion_case!(command, CMD_OPEN_FILE, Self::OpenFile);
 
+        simple_command_conversion_case!(command, CMD_SEARCH_FZF, Self::SearchFzf);
         simple_command_conversion_case!(command, CMD_SEARCH_SKIM, Self::SearchSkim);
         simple_command_conversion_case!(command, CMD_SEARCH_NEXT, Self::SearchNext);
         simple_command_conversion_case!(command, CMD_SEARCH_PREV, Self::SearchPrev);
@@ -77,7 +78,8 @@ impl Command {
                 },
                 ".." => Ok(Self::ParentDirectory),
                 arg => Ok({
-                    let path_accepts_tilde = tilde_with_context(arg, dirs::home_dir);
+                    let home_dir_func = || HOME_DIR.as_ref().map(|s| s.to_string_lossy());
+                    let path_accepts_tilde = tilde_with_context(arg, home_dir_func);
                     Self::ChangeDirectory(path::PathBuf::from(path_accepts_tilde.as_ref()))
                 }),
             }

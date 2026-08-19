@@ -2,7 +2,7 @@ use std::cmp::Ordering;
 use std::fs;
 use std::path::{Path, PathBuf};
 
-use dizi::error::{DiziError, DiziErrorKind, DiziResult};
+use dizi::error::{AppResult, DiziError, DiziErrorKind};
 use dizi::song::{DiziAudioFile, DiziFile, DiziSongEntry};
 
 use crate::context::AppContext;
@@ -11,13 +11,13 @@ use crate::server_util::run_on_song_change;
 use crate::traits::{AudioPlayer, DiziPlaylistTrait};
 use crate::util::mimetype::is_playable;
 
-pub fn playlist_play(context: &mut AppContext, index: usize) -> DiziResult {
+pub fn playlist_play(context: &mut AppContext, index: usize) -> AppResult {
     context.player.play_from_playlist(index)?;
     run_on_song_change(context);
     Ok(())
 }
 
-pub fn playlist_load(context: &mut AppContext, cwd: &Path, path: &Path) -> DiziResult {
+pub fn playlist_load(context: &mut AppContext, cwd: &Path, path: &Path) -> AppResult {
     if !context.player.playlist_context.file_playlist.is_empty() {
         return Err(DiziError::new(
             DiziErrorKind::InvalidParameters,
@@ -34,12 +34,12 @@ pub fn playlist_load(context: &mut AppContext, cwd: &Path, path: &Path) -> DiziR
     Ok(())
 }
 
-pub fn playlist_clear(context: &mut AppContext) -> DiziResult {
+pub fn playlist_clear(context: &mut AppContext) -> AppResult {
     context.player.playlist_context_mut().file_playlist.clear();
     Ok(())
 }
 
-pub fn playlist_append(context: &mut AppContext, path: &Path) -> DiziResult<Vec<DiziAudioFile>> {
+pub fn playlist_append(context: &mut AppContext, path: &Path) -> AppResult<Vec<DiziAudioFile>> {
     let playlist = &mut context.player.playlist_context_mut().file_playlist;
     if path.is_dir() {
         let audio_files = recursively_find_songs(path);
@@ -62,7 +62,7 @@ pub fn playlist_append(context: &mut AppContext, path: &Path) -> DiziResult<Vec<
     }
 }
 
-pub fn playlist_remove(context: &mut AppContext, index: usize) -> DiziResult {
+pub fn playlist_remove(context: &mut AppContext, index: usize) -> AppResult {
     let playlist = &mut context.player.playlist_context_mut().file_playlist;
     if index >= playlist.len() {
         return Err(DiziError::new(
@@ -74,7 +74,7 @@ pub fn playlist_remove(context: &mut AppContext, index: usize) -> DiziResult {
     Ok(())
 }
 
-pub fn playlist_move_up(context: &mut AppContext, index: usize) -> DiziResult {
+pub fn playlist_move_up(context: &mut AppContext, index: usize) -> AppResult {
     if index == 0 {
         return Err(DiziError::new(
             DiziErrorKind::InvalidParameters,
@@ -95,7 +95,7 @@ pub fn playlist_move_up(context: &mut AppContext, index: usize) -> DiziResult {
     Ok(())
 }
 
-pub fn playlist_move_down(context: &mut AppContext, index: usize) -> DiziResult {
+pub fn playlist_move_down(context: &mut AppContext, index: usize) -> AppResult {
     let playlist = &mut context.player.playlist_context_mut().file_playlist;
 
     if index + 1 >= playlist.len() {

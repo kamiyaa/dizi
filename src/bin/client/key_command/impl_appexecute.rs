@@ -1,10 +1,10 @@
-use dizi::error::DiziResult;
+use dizi::error::AppResult;
 use dizi::request::client::ClientRequest;
 use ratatui::termion::event::Key;
 
 use crate::config::AppKeyMapping;
 use crate::config::option::WidgetType;
-use crate::context::AppContext;
+use crate::context::AppState;
 use crate::ui::AppBackend;
 use crate::utils::request::send_client_request;
 use crate::{commands::*, ui::widgets::TuiPrompt};
@@ -14,10 +14,10 @@ use super::{AppExecute, Command};
 impl AppExecute for Command {
     fn execute(
         &self,
-        context: &mut AppContext,
+        context: &mut AppState,
         backend: &mut AppBackend,
         keymap_t: &AppKeyMapping,
-    ) -> DiziResult {
+    ) -> AppResult {
         match self {
             Self::ChangeDirectory(p) => {
                 change_directory::change_directory(context, p.as_path())?;
@@ -43,6 +43,7 @@ impl AppExecute for Command {
 
             Self::SearchGlob(pattern) => search_glob::search_glob(context, pattern.as_str())?,
             Self::SearchString(pattern) => search_string::search_string(context, pattern.as_str())?,
+            Self::SearchFzf => search_fzf::search_fzf(context, backend)?,
             Self::SearchSkim => search_skim::search_skim(context, backend)?,
             Self::SearchNext => search::search_next(context)?,
             Self::SearchPrev => search::search_prev(context)?,
@@ -73,16 +74,16 @@ impl AppExecute for Command {
 
 pub fn execute_request(
     backend: &mut AppBackend,
-    context: &mut AppContext,
+    context: &mut AppState,
     request: &ClientRequest,
-) -> DiziResult {
+) -> AppResult {
     match request {
         ClientRequest::ServerQuit => {
             quit::server_quit(context)?;
         }
         ClientRequest::PlaylistAppend { path: None } => {
             let entry_file_path = context
-                .tab_context_ref()
+                .tab_state_ref()
                 .curr_tab_ref()
                 .curr_list_ref()
                 .and_then(|s| s.curr_entry_ref())
@@ -120,12 +121,12 @@ pub fn execute_request(
             path: None,
         } => {
             if let Some(entry) = context
-                .tab_context_ref()
+                .tab_state_ref()
                 .curr_tab_ref()
                 .curr_list_ref()
                 .and_then(|s| s.curr_entry_ref())
             {
-                let cwd = context.tab_context_ref().curr_tab_ref().cwd().to_path_buf();
+                let cwd = context.tab_state_ref().curr_tab_ref().cwd().to_path_buf();
                 let request = ClientRequest::PlaylistOpen {
                     cwd: Some(cwd),
                     path: Some(entry.file_path().to_path_buf()),

@@ -1,20 +1,20 @@
-use dizi::error::DiziResult;
+use dizi::error::AppResult;
 
-use crate::context::AppContext;
+use crate::context::AppState;
 use crate::utils::search::SearchPattern;
 
 use super::cursor_move;
 use super::search_glob;
 use super::search_string;
 
-pub fn search_next(context: &mut AppContext) -> DiziResult {
+pub fn search_next(context: &mut AppState) -> AppResult {
     if let Some(search_context) = context.get_search_context() {
         let index = match search_context {
             SearchPattern::Glob(s) => {
-                search_glob::search_glob_fwd(context.tab_context_ref().curr_tab_ref(), s)
+                search_glob::search_glob_fwd(context.tab_state_ref().curr_tab_ref(), s)
             }
             SearchPattern::String(s) => {
-                search_string::search_string_fwd(context.tab_context_ref().curr_tab_ref(), s)
+                search_string::search_string_fwd(context.tab_state_ref().curr_tab_ref(), s)
             }
         };
         if let Some(index) = index {
@@ -24,14 +24,14 @@ pub fn search_next(context: &mut AppContext) -> DiziResult {
     Ok(())
 }
 
-pub fn search_prev(context: &mut AppContext) -> DiziResult {
+pub fn search_prev(context: &mut AppState) -> AppResult {
     if let Some(search_context) = context.get_search_context() {
         let index = match search_context {
             SearchPattern::Glob(s) => {
-                search_glob::search_glob_rev(context.tab_context_ref().curr_tab_ref(), s)
+                search_glob::search_glob_rev(context.tab_state_ref().curr_tab_ref(), s)
             }
             SearchPattern::String(s) => {
-                search_string::search_string_rev(context.tab_context_ref().curr_tab_ref(), s)
+                search_string::search_string_rev(context.tab_state_ref().curr_tab_ref(), s)
             }
         };
         if let Some(index) = index {

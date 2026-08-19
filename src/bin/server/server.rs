@@ -3,7 +3,7 @@ use std::os::unix::net::UnixListener;
 use std::path::Path;
 use std::thread;
 
-use dizi::error::DiziResult;
+use dizi::error::AppResult;
 use dizi::response::server::ServerBroadcastEvent;
 
 use crate::audio::symphonia::player::SymphoniaPlayer;
@@ -13,7 +13,7 @@ use crate::events::{AppEvent, Events, ServerEvent, ServerEventSender};
 use crate::server_util;
 
 /// Setup a unix socket
-pub fn setup_socket(config: &AppConfig) -> DiziResult<UnixListener> {
+pub fn setup_socket(config: &AppConfig) -> AppResult<UnixListener> {
     let socket = Path::new(config.server_ref().socket_ref());
     if socket.exists() {
         fs::remove_file(socket)?;
@@ -23,7 +23,7 @@ pub fn setup_socket(config: &AppConfig) -> DiziResult<UnixListener> {
 }
 
 /// run server
-pub fn run(config: AppConfig) -> DiziResult {
+pub fn run(config: AppConfig) -> AppResult {
     let events = Events::new();
 
     let player = {
@@ -94,7 +94,7 @@ pub fn run(config: AppConfig) -> DiziResult {
     Ok(())
 }
 
-pub fn listen_for_clients(listener: UnixListener, event_tx: ServerEventSender) -> DiziResult {
+pub fn listen_for_clients(listener: UnixListener, event_tx: ServerEventSender) -> AppResult {
     for stream in listener.incoming().flatten() {
         let _ = event_tx.send(ServerEvent::NewClient(stream));
     }

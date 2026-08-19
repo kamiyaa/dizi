@@ -4,7 +4,7 @@ use std::fs;
 use std::io;
 use std::path::Path;
 
-use dizi::error::DiziResult;
+use dizi::error::AppResult;
 use dizi::playlist::FilePlaylist;
 use dizi::song::{DiziFile, DiziSongEntry};
 
@@ -74,7 +74,7 @@ impl DiziPlaylist {
         }
     }
 
-    pub fn load_current_entry_metadata(&mut self) -> DiziResult<()> {
+    pub fn load_current_entry_metadata(&mut self) -> AppResult<()> {
         if let Some(order_index) = self.order_index {
             let entry_index = self.order[order_index];
             let entry = self.contents[entry_index].clone();

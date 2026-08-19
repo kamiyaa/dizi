@@ -3,27 +3,23 @@ use ratatui::layout::Rect;
 
 use ratatui::widgets::Widget;
 
-use crate::context::AppContext;
+use crate::context::AppState;
 use crate::ui::widgets::TuiDirListDetailed;
 
 pub struct TuiFolderView<'a> {
-    pub context: &'a AppContext,
+    pub context: &'a AppState,
     pub focused: bool,
 }
 
 impl<'a> TuiFolderView<'a> {
-    pub fn new(context: &'a AppContext, focused: bool) -> Self {
+    pub fn new(context: &'a AppState, focused: bool) -> Self {
         Self { context, focused }
     }
 }
 
 impl<'a> Widget for TuiFolderView<'a> {
     fn render(self, area: Rect, buf: &mut Buffer) {
-        let curr_list = self
-            .context
-            .tab_context_ref()
-            .curr_tab_ref()
-            .curr_list_ref();
+        let curr_list = self.context.tab_state_ref().curr_tab_ref().curr_list_ref();
         let _curr_entry = curr_list.and_then(|c| c.curr_entry_ref());
 
         let config = self.context.config_ref();

@@ -10,7 +10,7 @@ use dizi::error::DiziErrorKind;
 use symphonia::core::audio::conv::ConvertibleSample;
 use symphonia::core::units::TimeBase;
 
-use dizi::error::DiziResult;
+use dizi::error::AppResult;
 use symphonia::core::units::Timestamp;
 
 use crate::audio::request::PlayerRequest;
@@ -31,7 +31,7 @@ impl PlayerStreamState {
         samples: Vec<T>,
         volume: f32,
         volume_change: fn(T, f32) -> T,
-    ) -> DiziResult<PlayerStreamState>
+    ) -> AppResult<PlayerStreamState>
     where
         T: ConvertibleSample + cpal::Sample + cpal::SizedSample + std::marker::Send + 'static,
     {
@@ -46,7 +46,7 @@ fn build_stream_state<T>(
     samples: Vec<T>,
     volume: f32,
     volume_change: fn(T, f32) -> T,
-) -> DiziResult<PlayerStreamState>
+) -> AppResult<PlayerStreamState>
 where
     T: ConvertibleSample + cpal::Sample + cpal::SizedSample + std::marker::Send + 'static,
 {

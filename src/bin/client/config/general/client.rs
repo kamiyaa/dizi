@@ -4,6 +4,7 @@ use std::path::{Path, PathBuf};
 use serde::Deserialize;
 use shellexpand::tilde_with_context;
 
+use crate::HOME_DIR;
 use crate::config::option::DisplayOption;
 
 use super::display_raw::DisplayOptionRaw;
@@ -31,10 +32,12 @@ impl std::default::Default for ClientConfigRaw {
 
 impl From<ClientConfigRaw> for ClientConfig {
     fn from(raw: ClientConfigRaw) -> Self {
-        let socket = PathBuf::from(tilde_with_context(&raw.socket, dirs::home_dir).as_ref());
-        let home_dir = raw.home_dir.map(|home_dir| {
-            PathBuf::from(tilde_with_context(&home_dir, dirs::home_dir).as_ref())
-        });
+        let home_dir_func = || HOME_DIR.as_ref().map(|s| s.to_string_lossy());
+
+        let socket = PathBuf::from(tilde_with_context(&raw.socket, home_dir_func).as_ref());
+        let home_dir = raw
+            .home_dir
+            .map(|home_dir| PathBuf::from(tilde_with_context(&home_dir, home_dir_func).as_ref()));
 
         Self {
             socket,
@@ -62,8 +65,9 @@ impl ClientConfig {
 
 impl std::default::Default for ClientConfig {
     fn default() -> Self {
+        let home_dir_func = || HOME_DIR.as_ref().map(|s| s.to_string_lossy());
         let socket =
-            PathBuf::from(tilde_with_context("~/dizi-server-socket", dirs::home_dir).as_ref());
+            PathBuf::from(tilde_with_context("~/dizi-server-socket", home_dir_func).as_ref());
 
         Self {
             socket,

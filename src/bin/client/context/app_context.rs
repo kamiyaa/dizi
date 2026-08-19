@@ -8,8 +8,9 @@ use dizi::utils;
 
 use crate::config;
 use crate::config::option::WidgetType;
-use crate::context::{CommandLineContext, MessageQueue, ServerState, TabContext};
+use crate::context::{MessageQueue, ServerState, TabState};
 use crate::event::{AppEvent, AppEventListener};
+use crate::state::CommandLineState;
 use crate::utils::search::SearchPattern;
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -24,7 +25,7 @@ pub struct UiContext {
     pub layout: Vec<Rect>,
 }
 
-pub struct AppContext {
+pub struct AppState {
     pub quit: QuitType,
     // event loop querying
     pub event_listener: AppEventListener,
@@ -35,9 +36,9 @@ pub struct AppContext {
     config: config::AppConfig,
 
     // context related to tabs
-    tab_context: TabContext,
+    tab_state: TabState,
 
-    commandline_context: CommandLineContext,
+    commandline_state: CommandLineState,
     // user interface context; data which is input to both, the UI rendering and the app state
     ui_context: UiContext,
     // context related to searching
@@ -48,22 +49,20 @@ pub struct AppContext {
     server_state: ServerState,
 }
 
-impl AppContext {
+impl AppState {
     pub fn new(config: config::AppConfig, _cwd: PathBuf, stream: UnixStream) -> Self {
         let events = AppEventListener::new();
 
-        let mut commandline_context = CommandLineContext::new();
-        commandline_context.history_mut().set_max_len(20);
-
+        let commandline_state = CommandLineState::new();
         Self {
             quit: QuitType::DoNot,
             config,
             stream,
             view_widget: WidgetType::FileBrowser,
             event_listener: events,
-            commandline_context,
+            commandline_state,
             search_context: None,
-            tab_context: TabContext::new(),
+            tab_state: TabState::new(),
             ui_context: UiContext { layout: vec![] },
             message_queue: MessageQueue::new(),
             server_state: ServerState::new(),
@@ -110,11 +109,11 @@ impl AppContext {
         &mut self.server_state
     }
 
-    pub fn tab_context_ref(&self) -> &TabContext {
-        &self.tab_context
+    pub fn tab_state_ref(&self) -> &TabState {
+        &self.tab_state
     }
-    pub fn tab_context_mut(&mut self) -> &mut TabContext {
-        &mut self.tab_context
+    pub fn tab_state_mut(&mut self) -> &mut TabState {
+        &mut self.tab_state
     }
 
     pub fn get_search_context(&self) -> Option<&SearchPattern> {
@@ -131,11 +130,11 @@ impl AppContext {
         &mut self.ui_context
     }
 
-    pub fn commandline_context_ref(&self) -> &CommandLineContext {
-        &self.commandline_context
+    pub fn commandline_state_ref(&self) -> &CommandLineState {
+        &self.commandline_state
     }
-    pub fn commandline_context_mut(&mut self) -> &mut CommandLineContext {
-        &mut self.commandline_context
+    pub fn commandline_state_mut(&mut self) -> &mut CommandLineState {
+        &mut self.commandline_state
     }
 
     pub fn get_view_widget(&self) -> WidgetType {

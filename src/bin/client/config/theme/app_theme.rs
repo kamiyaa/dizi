@@ -1,7 +1,7 @@
 use serde::Deserialize;
 use std::collections::HashMap;
 
-use dizi::error::DiziResult;
+use dizi::error::AppResult;
 
 use super::DEFAULT_CONFIG_FILE_PATH;
 use super::{AppStyle, AppStyleRaw};
@@ -80,7 +80,7 @@ impl From<AppThemeRaw> for AppTheme {
 }
 
 impl AppTheme {
-    pub fn default_res() -> DiziResult<Self> {
+    pub fn default_res() -> AppResult<Self> {
         let raw: AppThemeRaw = toml::from_str(DEFAULT_CONFIG_FILE_PATH)?;
         Ok(Self::from(raw))
     }

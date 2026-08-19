@@ -1,11 +1,13 @@
 pub mod change_directory;
 pub mod command_line;
 pub mod cursor_move;
+pub mod fzf;
 pub mod goto;
 pub mod open_file;
 pub mod quit;
 pub mod reload;
 pub mod search;
+pub mod search_fzf;
 pub mod search_glob;
 pub mod search_skim;
 pub mod search_string;

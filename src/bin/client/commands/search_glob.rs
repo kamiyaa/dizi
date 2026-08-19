@@ -1,8 +1,8 @@
 use globset::{GlobBuilder, GlobMatcher};
 
-use dizi::error::DiziResult;
+use dizi::error::AppResult;
 
-use crate::context::AppContext;
+use crate::context::AppState;
 use crate::tab::JoshutoTab;
 use crate::utils::search::SearchPattern;
 
@@ -35,13 +35,13 @@ pub fn search_glob_rev(curr_tab: &JoshutoTab, glob: &GlobMatcher) -> Option<usiz
     None
 }
 
-pub fn search_glob(context: &mut AppContext, pattern: &str) -> DiziResult {
+pub fn search_glob(context: &mut AppState, pattern: &str) -> AppResult {
     let glob = GlobBuilder::new(pattern)
         .case_insensitive(true)
         .build()?
         .compile_matcher();
 
-    let index = search_glob_fwd(context.tab_context_ref().curr_tab_ref(), &glob);
+    let index = search_glob_fwd(context.tab_state_ref().curr_tab_ref(), &glob);
     if let Some(index) = index {
         cursor_move::cursor_move(context, index);
     }

@@ -5,7 +5,7 @@ use std::time::Duration;
 
 use uuid::Uuid;
 
-use dizi::error::DiziResult;
+use dizi::error::AppResult;
 use dizi::player::PlayerStatus;
 use dizi::playlist::PlaylistType;
 use dizi::request::client::ClientRequest;
@@ -17,7 +17,7 @@ use crate::events::ServerEvent;
 use crate::server_commands::*;
 use crate::traits::AudioPlayer;
 
-pub fn process_server_event(context: &mut AppContext, event: ServerEvent) -> DiziResult {
+pub fn process_server_event(context: &mut AppContext, event: ServerEvent) -> AppResult {
     match event {
         ServerEvent::NewClient(stream) => {
             let client_tx = context.events.client_request_sender().clone();
@@ -50,7 +50,7 @@ pub fn process_client_request(
     context: &mut AppContext,
     uuid: &str,
     event: &ClientRequest,
-) -> DiziResult {
+) -> AppResult {
     tracing::debug!(uuid, request=?event, "Processing client request");
     match event {
         ClientRequest::ServerQuit => {
@@ -221,7 +221,7 @@ pub fn process_client_request(
     Ok(())
 }
 
-pub fn send_latest_song_info(context: &mut AppContext) -> DiziResult {
+pub fn send_latest_song_info(context: &mut AppContext) -> AppResult {
     match context.player.playlist_context.current_playlist_type {
         PlaylistType::DirectoryListing => {
             if let Some(file) = context.player.current_song_ref() {
@@ -243,7 +243,7 @@ pub fn send_latest_song_info(context: &mut AppContext) -> DiziResult {
     Ok(())
 }
 
-pub fn process_done_song(context: &mut AppContext) -> DiziResult {
+pub fn process_done_song(context: &mut AppContext) -> AppResult {
     tracing::debug!("Processing done song trigger");
 
     let next_enabled = context.player.next_enabled();

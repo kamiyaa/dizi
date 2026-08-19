@@ -6,7 +6,7 @@ use symphonia::core::errors::Error as SymphoniaError;
 use symphonia::core::formats::FormatReader;
 use symphonia::core::packet::Packet;
 
-use dizi::error::{DiziError, DiziResult};
+use dizi::error::{AppResult, DiziError};
 
 pub struct PacketReader {
     format: Box<dyn FormatReader>,
@@ -53,7 +53,7 @@ impl PacketDecoder {
         Self { decoder }
     }
 
-    pub fn decode<T>(&mut self, packet: Packet) -> DiziResult<(Vec<T>, Option<DecodedAudioSpec>)>
+    pub fn decode<T>(&mut self, packet: Packet) -> AppResult<(Vec<T>, Option<DecodedAudioSpec>)>
     where
         T: ConvertibleSample + cpal::Sample + Send + 'static,
     {
@@ -94,7 +94,7 @@ impl PacketDecoder {
 pub fn decode_all<T>(
     reader: PacketReader,
     mut decoder: PacketDecoder,
-) -> DiziResult<(Vec<T>, Option<DecodedAudioSpec>)>
+) -> AppResult<(Vec<T>, Option<DecodedAudioSpec>)>
 where
     T: ConvertibleSample + cpal::Sample + Send + 'static,
 {

@@ -6,7 +6,7 @@ use std::thread::{self, JoinHandle};
 
 use cpal::traits::HostTrait;
 
-use dizi::error::{DiziError, DiziErrorKind, DiziResult};
+use dizi::error::{AppResult, DiziError, DiziErrorKind};
 use dizi::player::{PlayerState, PlayerStatus};
 use dizi::playlist::PlaylistType;
 use dizi::song::DiziAudioFile;
@@ -26,13 +26,13 @@ pub struct SymphoniaPlayer {
     pub playlist_context: PlaylistContext,
 
     pub player_req_tx: mpsc::Sender<PlayerRequest>,
-    pub player_res_rx: mpsc::Receiver<DiziResult>,
+    pub player_res_rx: mpsc::Receiver<AppResult>,
 
-    pub _stream_handle: JoinHandle<DiziResult>,
+    pub _stream_handle: JoinHandle<AppResult>,
 }
 
 impl SymphoniaPlayer {
-    pub fn new(config_t: &config::AppConfig, event_tx: ServerEventSender) -> DiziResult<Self> {
+    pub fn new(config_t: &config::AppConfig, event_tx: ServerEventSender) -> AppResult<Self> {
         let audio_host = get_default_host(config_t.server_ref().audio_system);
         let audio_device = audio_host.default_output_device().ok_or_else(|| {
             let error_msg = "Failed to get default output device";
@@ -43,7 +43,7 @@ impl SymphoniaPlayer {
         let (player_req_tx, player_req_rx) = mpsc::channel();
         let (player_res_tx, player_res_rx) = mpsc::channel();
 
-        let stream_handle: JoinHandle<DiziResult> = thread::spawn(move || {
+        let stream_handle: JoinHandle<AppResult> = thread::spawn(move || {
             let mut stream =
                 PlayerStream::new(event_tx, player_res_tx, player_req_rx, audio_device)?;
             stream.listen_for_events()?;
@@ -82,11 +82,11 @@ impl SymphoniaPlayer {
     fn player_stream_req(&self) -> &mpsc::Sender<PlayerRequest> {
         &self.player_req_tx
     }
-    fn player_stream_res(&self) -> &mpsc::Receiver<DiziResult> {
+    fn player_stream_res(&self) -> &mpsc::Receiver<AppResult> {
         &self.player_res_rx
     }
 
-    fn play(&mut self, song: &DiziAudioFile) -> DiziResult {
+    fn play(&mut self, song: &DiziAudioFile) -> AppResult {
         tracing::debug!(?song, "Playing song");
 
         self.player_stream_req().send(PlayerRequest::Play {

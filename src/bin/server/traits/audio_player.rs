@@ -1,7 +1,7 @@
 use std::path::Path;
 use std::time;
 
-use dizi::error::DiziResult;
+use dizi::error::AppResult;
 use dizi::player::{PlayerState, PlayerStatus};
 use dizi::song::DiziAudioFile;
 
@@ -10,23 +10,23 @@ use crate::context::PlaylistContext;
 pub trait AudioPlayer {
     fn player_state(&self) -> PlayerState;
 
-    fn play_directory(&mut self, path: &Path) -> DiziResult;
-    fn play_from_playlist(&mut self, index: usize) -> DiziResult;
+    fn play_directory(&mut self, path: &Path) -> AppResult;
+    fn play_from_playlist(&mut self, index: usize) -> AppResult;
 
-    fn play_again(&mut self) -> DiziResult;
-    fn play_next(&mut self) -> DiziResult;
-    fn play_previous(&mut self) -> DiziResult;
+    fn play_again(&mut self) -> AppResult;
+    fn play_next(&mut self) -> AppResult;
+    fn play_previous(&mut self) -> AppResult;
 
-    fn pause(&mut self) -> DiziResult;
-    fn resume(&mut self) -> DiziResult;
-    fn stop(&mut self) -> DiziResult;
-    fn toggle_play(&mut self) -> DiziResult<PlayerStatus>;
+    fn pause(&mut self) -> AppResult;
+    fn resume(&mut self) -> AppResult;
+    fn stop(&mut self) -> AppResult;
+    fn toggle_play(&mut self) -> AppResult<PlayerStatus>;
 
-    fn fast_forward(&mut self, duration: time::Duration) -> DiziResult;
-    fn rewind(&mut self, duration: time::Duration) -> DiziResult;
+    fn fast_forward(&mut self, duration: time::Duration) -> AppResult;
+    fn rewind(&mut self, duration: time::Duration) -> AppResult;
 
     fn get_volume(&self) -> usize;
-    fn set_volume(&mut self, volume: usize) -> DiziResult;
+    fn set_volume(&mut self, volume: usize) -> AppResult;
 
     fn next_enabled(&self) -> bool;
     fn repeat_enabled(&self) -> bool;

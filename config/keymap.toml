@@ -80,7 +80,7 @@ command = ":search_glob "
 
 [[keymap]]
 keys = [ "/" ]
-command = "search_skim"
+command = "search_fzf"
 
 [[keymap]]
 keys = [ "[" ]

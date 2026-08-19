@@ -6,7 +6,7 @@ use serde::{Deserialize, Serialize};
 
 use strfmt::strfmt;
 
-use crate::error::{DiziError, DiziErrorKind, DiziResult};
+use crate::error::{AppResult, DiziError, DiziErrorKind};
 use crate::playlist::{FilePlaylist, PlaylistType};
 use crate::song::DiziAudioFile;
 
@@ -51,7 +51,7 @@ impl PlayerState {
         Self::default()
     }
 
-    pub fn query(&self, query: &str) -> DiziResult<String> {
+    pub fn query(&self, query: &str) -> AppResult<String> {
         let vars = self.query_all();
 
         match strfmt(query, &vars) {

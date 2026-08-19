@@ -14,7 +14,7 @@ use std::path::PathBuf;
 
 use clap::Parser;
 
-use dizi::error::DiziResult;
+use dizi::error::AppResult;
 use lazy_static::lazy_static;
 use tracing_subscriber::{EnvFilter, prelude::*};
 
@@ -65,7 +65,7 @@ pub struct CommandArgs {
     version: bool,
 }
 
-fn run_server(args: CommandArgs) -> DiziResult {
+fn run_server(args: CommandArgs) -> AppResult {
     if args.version {
         let version = env!("CARGO_PKG_VERSION");
         println!("{}", version);

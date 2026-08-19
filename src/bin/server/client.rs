@@ -3,7 +3,7 @@ use std::os::unix::net::UnixStream;
 use std::sync::mpsc;
 use std::thread;
 
-use dizi::error::DiziResult;
+use dizi::error::AppResult;
 use dizi::request::client::ClientRequest;
 use dizi::response::server::ServerBroadcastEvent;
 use dizi::utils;
@@ -21,7 +21,7 @@ pub fn handle_client(
     mut stream: UnixStream,
     client_request_tx: ClientRequestSender,
     server_event_rx: ServerBroadcastEventReceiver,
-) -> DiziResult {
+) -> AppResult {
     let (event_tx, event_rx) = mpsc::channel();
 
     // listen for events broadcasted by the server
@@ -80,13 +80,13 @@ pub fn forward_client_request(
     client_request_tx: &ClientRequestSender,
     uuid: &str,
     line: &str,
-) -> DiziResult {
+) -> AppResult {
     let request: ClientRequest = serde_json::from_str(line)?;
     client_request_tx.send((uuid.to_string(), request))?;
     Ok(())
 }
 
-pub fn process_server_event(stream: &mut UnixStream, event: &ServerBroadcastEvent) -> DiziResult {
+pub fn process_server_event(stream: &mut UnixStream, event: &ServerBroadcastEvent) -> AppResult {
     let json = serde_json::to_string(&event)?;
     stream.write_all(json.as_bytes())?;
     utils::flush(stream)?;

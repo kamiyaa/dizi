@@ -1,15 +1,15 @@
-use dizi::error::DiziResult;
+use dizi::error::AppResult;
 
 use crate::config::option::WidgetType;
-use crate::context::AppContext;
+use crate::context::AppState;
 use crate::ui::AppBackend;
 
-pub fn cursor_move(context: &mut AppContext, new_index: usize) {
+pub fn cursor_move(context: &mut AppState, new_index: usize) {
     let widget = context.get_view_widget();
     cursor_move_for_widget(context, widget, new_index);
 }
 
-pub fn cursor_move_for_widget(context: &mut AppContext, widget: WidgetType, new_index: usize) {
+pub fn cursor_move_for_widget(context: &mut AppState, widget: WidgetType, new_index: usize) {
     match widget {
         WidgetType::FileBrowser => set_curr_dirlist_index(context, new_index),
         WidgetType::Playlist => set_playlist_index(context, new_index),
@@ -17,7 +17,7 @@ pub fn cursor_move_for_widget(context: &mut AppContext, widget: WidgetType, new_
     }
 }
 
-pub fn cursor_index(context: &mut AppContext, widget: WidgetType) -> Option<usize> {
+pub fn cursor_index(context: &mut AppState, widget: WidgetType) -> Option<usize> {
     match widget {
         WidgetType::FileBrowser => get_curr_dirlist_index(context),
         WidgetType::Playlist => get_playlist_index(context),
@@ -25,26 +25,26 @@ pub fn cursor_index(context: &mut AppContext, widget: WidgetType) -> Option<usiz
     }
 }
 
-fn get_curr_dirlist_index(context: &AppContext) -> Option<usize> {
+fn get_curr_dirlist_index(context: &AppState) -> Option<usize> {
     context
-        .tab_context_ref()
+        .tab_state_ref()
         .curr_tab_ref()
         .curr_list_ref()
         .and_then(|list| list.get_index())
 }
-fn get_curr_dirlist_len(context: &AppContext) -> Option<usize> {
+fn get_curr_dirlist_len(context: &AppState) -> Option<usize> {
     context
-        .tab_context_ref()
+        .tab_state_ref()
         .curr_tab_ref()
         .curr_list_ref()
         .map(|list| list.len())
 }
-fn set_curr_dirlist_index(context: &mut AppContext, new_index: usize) {
+fn set_curr_dirlist_index(context: &mut AppState, new_index: usize) {
     let ui_context = context.ui_context_ref().clone();
     let display_options = context.config_ref().display_options_ref().clone();
 
     let new_index = new_index;
-    if let Some(curr_list) = context.tab_context_mut().curr_tab_mut().curr_list_mut() {
+    if let Some(curr_list) = context.tab_state_mut().curr_tab_mut().curr_list_mut() {
         if curr_list.is_empty() {
             return;
         }
@@ -61,17 +61,17 @@ fn set_curr_dirlist_index(context: &mut AppContext, new_index: usize) {
     }
 }
 
-pub fn get_playlist_index(context: &AppContext) -> Option<usize> {
+pub fn get_playlist_index(context: &AppState) -> Option<usize> {
     context
         .server_state_ref()
         .player
         .playlist
         .get_cursor_index()
 }
-fn get_playlist_len(context: &AppContext) -> usize {
+fn get_playlist_len(context: &AppState) -> usize {
     context.server_state_ref().player.playlist.len()
 }
-pub fn set_playlist_index(context: &mut AppContext, new_index: usize) {
+pub fn set_playlist_index(context: &mut AppState, new_index: usize) {
     let playlist_len = context.server_state_ref().player.playlist.len();
     if playlist_len <= new_index {
         context
@@ -88,7 +88,7 @@ pub fn set_playlist_index(context: &mut AppContext, new_index: usize) {
     }
 }
 
-pub fn up(context: &mut AppContext, u: usize) -> DiziResult {
+pub fn up(context: &mut AppState, u: usize) -> AppResult {
     let widget = context.get_view_widget();
     let index = cursor_index(context, widget);
 
@@ -99,7 +99,7 @@ pub fn up(context: &mut AppContext, u: usize) -> DiziResult {
     Ok(())
 }
 
-pub fn down(context: &mut AppContext, u: usize) -> DiziResult {
+pub fn down(context: &mut AppState, u: usize) -> AppResult {
     let widget = context.get_view_widget();
     let index = cursor_index(context, widget);
 
@@ -110,7 +110,7 @@ pub fn down(context: &mut AppContext, u: usize) -> DiziResult {
     Ok(())
 }
 
-pub fn home(context: &mut AppContext) -> DiziResult {
+pub fn home(context: &mut AppState) -> AppResult {
     let widget = context.get_view_widget();
     let index = cursor_index(context, widget);
 
@@ -123,7 +123,7 @@ pub fn home(context: &mut AppContext) -> DiziResult {
     Ok(())
 }
 
-pub fn end(context: &mut AppContext) -> DiziResult {
+pub fn end(context: &mut AppState) -> AppResult {
     let widget = context.get_view_widget();
     let index = match widget {
         WidgetType::FileBrowser => get_curr_dirlist_index(context),
@@ -146,11 +146,11 @@ pub fn end(context: &mut AppContext) -> DiziResult {
     Ok(())
 }
 
-fn get_page_size(_context: &AppContext, _backend: &AppBackend) -> Option<usize> {
+fn get_page_size(_context: &AppState, _backend: &AppBackend) -> Option<usize> {
     Some(10)
 }
 
-pub fn page_up(context: &mut AppContext, backend: &mut AppBackend) -> DiziResult {
+pub fn page_up(context: &mut AppState, backend: &mut AppBackend) -> AppResult {
     let widget = context.get_view_widget();
     let index = cursor_index(context, widget);
 
@@ -163,7 +163,7 @@ pub fn page_up(context: &mut AppContext, backend: &mut AppBackend) -> DiziResult
     Ok(())
 }
 
-pub fn page_down(context: &mut AppContext, backend: &mut AppBackend) -> DiziResult {
+pub fn page_down(context: &mut AppState, backend: &mut AppBackend) -> AppResult {
     let widget = context.get_view_widget();
     let index = cursor_index(context, widget);
 

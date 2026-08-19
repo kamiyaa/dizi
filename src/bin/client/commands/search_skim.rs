@@ -3,13 +3,14 @@ use std::io;
 use std::sync;
 use std::thread;
 
+use ratatui::crossterm::event::KeyCode;
 use skim::prelude::*;
 
-use dizi::error::{DiziError, DiziErrorKind, DiziResult};
+use dizi::error::{AppResult, DiziError, DiziErrorKind};
 
 use crate::commands::cursor_move;
 use crate::config::option::WidgetType;
-use crate::context::AppContext;
+use crate::context::AppState;
 use crate::ui::AppBackend;
 use crate::utils::search::SearchPattern;
 
@@ -25,22 +26,22 @@ impl SkimItem for DiziSkimItem {
     }
 }
 
-pub fn search_skim(context: &mut AppContext, backend: &mut AppBackend) -> DiziResult {
+pub fn search_skim(context: &mut AppState, backend: &mut AppBackend) -> AppResult {
     let widget = context.get_view_widget();
 
     match widget {
-        WidgetType::FileBrowser => search_directory_skim(context, backend, widget)?,
-        WidgetType::Playlist => search_playlist_skim(context, backend, widget)?,
+        WidgetType::FileBrowser => skim_search_directory(context, backend, widget)?,
+        WidgetType::Playlist => skim_search_playlist(context, backend, widget)?,
         _ => {}
     }
     Ok(())
 }
 
-fn search_playlist_skim(
-    context: &mut AppContext,
+fn skim_search_playlist(
+    context: &mut AppState,
     backend: &mut AppBackend,
     widget: WidgetType,
-) -> DiziResult {
+) -> AppResult {
     let options = SkimOptionsBuilder::default()
         .height("100%".to_string())
         .multi(true)
@@ -70,20 +71,20 @@ fn search_playlist_skim(
     let (s, r): (SkimItemSender, SkimItemReceiver) = unbounded();
     let thread = thread::spawn(move || {
         for item in items {
-            let _ = s.send(sync::Arc::new(item));
+            let _ = s.send(vec![sync::Arc::new(item)]);
         }
     });
 
     backend.terminal_drop();
 
-    let skim_output = Skim::run_with(&options, Some(r));
+    let skim_output = Skim::run_with(options, Some(r));
 
     backend.terminal_restore()?;
 
     let _ = thread.join();
 
-    if let Some(skim_output) = skim_output {
-        if skim_output.final_key == Key::ESC {
+    if let Ok(skim_output) = skim_output {
+        if skim_output.final_key.code == KeyCode::Esc {
             return Ok(());
         }
 
@@ -112,11 +113,11 @@ fn search_playlist_skim(
     Ok(())
 }
 
-fn search_directory_skim(
-    context: &mut AppContext,
+fn skim_search_directory(
+    context: &mut AppState,
     backend: &mut AppBackend,
     widget: WidgetType,
-) -> DiziResult {
+) -> AppResult {
     let options = SkimOptionsBuilder::default()
         .height("100%".to_string())
         .multi(true)
@@ -124,7 +125,7 @@ fn search_directory_skim(
         .unwrap();
 
     let items = context
-        .tab_context_ref()
+        .tab_state_ref()
         .curr_tab_ref()
         .curr_list_ref()
         .map(|list| {
@@ -150,20 +151,20 @@ fn search_directory_skim(
     let (s, r): (SkimItemSender, SkimItemReceiver) = unbounded();
     let thread = thread::spawn(move || {
         for item in items {
-            let _ = s.send(sync::Arc::new(item));
+            let _ = s.send(vec![sync::Arc::new(item)]);
         }
     });
 
     backend.terminal_drop();
 
-    let skim_output = Skim::run_with(&options, Some(r));
+    let skim_output = Skim::run_with(options, Some(r));
 
     backend.terminal_restore()?;
 
     let _ = thread.join();
 
-    if let Some(skim_output) = skim_output {
-        if skim_output.final_key == Key::ESC {
+    if let Ok(skim_output) = skim_output {
+        if skim_output.final_key.code == KeyCode::Esc {
             return Ok(());
         }
 

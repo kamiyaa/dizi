@@ -1,14 +1,14 @@
 use std::path;
 use std::thread;
 
-use crate::context::AppContext;
+use crate::context::AppState;
 use crate::event::AppEvent;
 use crate::fs::JoshutoDirList;
 
 pub struct Background {}
 
 impl Background {
-    pub fn load_preview(context: &mut AppContext, p: path::PathBuf) -> thread::JoinHandle<()> {
+    pub fn load_preview(context: &mut AppState, p: path::PathBuf) -> thread::JoinHandle<()> {
         let event_tx = context.clone_event_tx();
         let options = context.config_ref().display_options_ref().clone();
 

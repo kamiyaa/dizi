@@ -1,13 +1,13 @@
-use dizi::error::DiziResult;
+use dizi::error::AppResult;
 use dizi::request::client::ClientRequest;
 
 use crate::config::option::WidgetType;
-use crate::context::AppContext;
+use crate::context::AppState;
 use crate::utils::request::send_client_request;
 
 use super::change_directory;
 
-pub fn open(context: &mut AppContext) -> DiziResult {
+pub fn open(context: &mut AppState) -> AppResult {
     let widget = context.get_view_widget();
 
     match widget {
@@ -18,9 +18,9 @@ pub fn open(context: &mut AppContext) -> DiziResult {
     Ok(())
 }
 
-pub fn file_browser_open(context: &mut AppContext) -> DiziResult {
+pub fn file_browser_open(context: &mut AppState) -> AppResult {
     if let Some(entry) = context
-        .tab_context_ref()
+        .tab_state_ref()
         .curr_tab_ref()
         .curr_list_ref()
         .and_then(|s| s.curr_entry_ref())
@@ -33,7 +33,7 @@ pub fn file_browser_open(context: &mut AppContext) -> DiziResult {
                 Some(s) => {
                     let s = s.to_string_lossy();
                     if s.as_ref().starts_with("m3u") {
-                        let cwd = context.tab_context_ref().curr_tab_ref().cwd().to_path_buf();
+                        let cwd = context.tab_state_ref().curr_tab_ref().cwd().to_path_buf();
                         let request = ClientRequest::PlaylistOpen {
                             cwd: Some(cwd),
                             path: Some(entry.file_path().to_path_buf()),
@@ -58,7 +58,7 @@ pub fn file_browser_open(context: &mut AppContext) -> DiziResult {
     Ok(())
 }
 
-pub fn playlist_open(context: &mut AppContext) -> DiziResult {
+pub fn playlist_open(context: &mut AppState) -> AppResult {
     if let Some(index) = context
         .server_state_ref()
         .player

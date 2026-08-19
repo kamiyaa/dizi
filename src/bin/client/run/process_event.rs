@@ -5,14 +5,14 @@ use dizi::song::DiziSongEntry;
 use ratatui::termion::event::{Event, Key};
 use signal_hook::consts::signal;
 
-use dizi::error::DiziResult;
+use dizi::error::AppResult;
 use dizi::player::PlayerStatus;
 use dizi::playlist::PlaylistType;
 use dizi::response::server::ServerBroadcastEvent;
 
 use crate::config::KeyMapping;
 use crate::config::option::WidgetType;
-use crate::context::{AppContext, QuitType};
+use crate::context::{AppState, QuitType};
 use crate::event::AppEvent;
 use crate::fs::JoshutoDirList;
 use crate::key_command::{Command, CommandKeybind};
@@ -21,7 +21,7 @@ use crate::ui::views::TuiCommandMenu;
 
 pub fn get_input_while_composite<'a>(
     backend: &mut ui::AppBackend,
-    context: &mut AppContext,
+    context: &mut AppState,
     keymap: &'a KeyMapping,
 ) -> Option<&'a Command> {
     let mut keymap = keymap;
@@ -54,7 +54,7 @@ pub fn get_input_while_composite<'a>(
     }
 }
 
-pub fn process_server_event(context: &mut AppContext, s: &str) -> DiziResult {
+pub fn process_server_event(context: &mut AppState, s: &str) -> AppResult {
     let server_broadcast_event: ServerBroadcastEvent = serde_json::from_str(s)?;
 
     match server_broadcast_event {
@@ -231,7 +231,7 @@ pub fn process_server_event(context: &mut AppContext, s: &str) -> DiziResult {
     Ok(())
 }
 
-pub fn process_noninteractive(event: AppEvent, context: &mut AppContext) {
+pub fn process_noninteractive(event: AppEvent, context: &mut AppState) {
     match event {
         AppEvent::PreviewDir { path, res } => process_dir_preview(context, path, *res),
         AppEvent::Signal(signal::SIGWINCH) => {}
@@ -240,12 +240,12 @@ pub fn process_noninteractive(event: AppEvent, context: &mut AppContext) {
 }
 
 pub fn process_dir_preview(
-    context: &mut AppContext,
+    context: &mut AppState,
     _path: path::PathBuf,
     res: io::Result<JoshutoDirList>,
 ) {
     if let Ok(dirlist) = res {
-        let history = context.tab_context_mut().curr_tab_mut().history_mut();
+        let history = context.tab_state_mut().curr_tab_mut().history_mut();
 
         let dir_path = dirlist.file_path().to_path_buf();
         history.insert(dir_path, dirlist);

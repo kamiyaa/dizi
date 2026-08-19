@@ -64,7 +64,8 @@ impl std::str::FromStr for Command {
                 },
                 ".." => Ok(Self::ParentDirectory),
                 arg => Ok({
-                    let path_accepts_tilde = tilde_with_context(arg, dirs::home_dir);
+                    let home_dir_func = || HOME_DIR.as_ref().map(|s| s.to_string_lossy());
+                    let path_accepts_tilde = tilde_with_context(arg, home_dir_func);
                     Self::ChangeDirectory(path::PathBuf::from(path_accepts_tilde.as_ref()))
                 }),
             }

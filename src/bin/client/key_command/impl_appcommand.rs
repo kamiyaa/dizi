@@ -24,6 +24,7 @@ impl AppCommand for Command {
             Self::ReloadDirList => CMD_RELOAD_DIRECTORY_LIST,
 
             Self::SearchString(_) => CMD_SEARCH_STRING,
+            Self::SearchFzf => CMD_SEARCH_FZF,
             Self::SearchGlob(_) => CMD_SEARCH_GLOB,
             Self::SearchSkim => CMD_SEARCH_SKIM,
             Self::SearchNext => CMD_SEARCH_NEXT,

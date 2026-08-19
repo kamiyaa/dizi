@@ -1,15 +1,15 @@
 use std::io::{BufRead, BufReader};
 use std::thread;
 
-use dizi::error::DiziResult;
+use dizi::error::AppResult;
 use dizi::request::client::ClientRequest;
 use dizi::response::server::ServerBroadcastEvent;
 
-use crate::context::AppContext;
+use crate::context::AppState;
 use crate::event::AppEvent;
 use crate::utils::request::send_client_request;
 
-pub fn run_query(context: &mut AppContext, query: String) -> DiziResult {
+pub fn run_query(context: &mut AppState, query: String) -> AppResult {
     // server listener
     {
         let stream = context.clone_stream()?;

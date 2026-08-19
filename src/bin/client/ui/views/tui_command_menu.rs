@@ -5,7 +5,7 @@ use ratatui::layout::Rect;
 use ratatui::widgets::{Clear, Widget};
 
 use crate::config::KeyMapping;
-use crate::context::AppContext;
+use crate::context::AppState;
 use crate::traits::ToString;
 use crate::ui::views::TuiView;
 use crate::ui::widgets::TuiMenu;
@@ -14,12 +14,12 @@ const BORDER_HEIGHT: usize = 1;
 const BOTTOM_MARGIN: usize = 1;
 
 pub struct TuiCommandMenu<'a> {
-    context: &'a AppContext,
+    context: &'a AppState,
     keymap: &'a KeyMapping,
 }
 
 impl<'a> TuiCommandMenu<'a> {
-    pub fn new(context: &'a AppContext, keymap: &'a KeyMapping) -> Self {
+    pub fn new(context: &'a AppState, keymap: &'a KeyMapping) -> Self {
         Self { context, keymap }
     }
 }

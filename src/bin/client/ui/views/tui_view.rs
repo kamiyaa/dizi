@@ -5,7 +5,7 @@ use ratatui::text::Span;
 use ratatui::widgets::{Block, Borders, Paragraph, Widget, Wrap};
 
 use crate::config::option::{LayoutComposition, WidgetType};
-use crate::context::AppContext;
+use crate::context::AppState;
 use crate::ui::widgets::{TuiFooter, TuiPlayer, TuiPlaylist, TuiTopBar};
 
 use crate::LAYOUT_T;
@@ -13,12 +13,12 @@ use crate::LAYOUT_T;
 use super::TuiFolderView;
 
 pub struct TuiView<'a> {
-    pub context: &'a AppContext,
+    pub context: &'a AppState,
     pub show_bottom_status: bool,
 }
 
 impl<'a> TuiView<'a> {
-    pub fn new(context: &'a AppContext) -> Self {
+    pub fn new(context: &'a AppState) -> Self {
         Self {
             context,
             show_bottom_status: true,
@@ -70,17 +70,12 @@ impl<'a> Widget for TuiView<'a> {
             width: topbar_width,
             height: 1,
         };
-        let cwd = self.context.tab_context_ref().curr_tab_ref().cwd();
+        let cwd = self.context.tab_state_ref().curr_tab_ref().cwd();
         TuiTopBar::new(cwd).render(rect, buf);
     }
 }
 
-pub fn render_widget(
-    context: &AppContext,
-    layout: &LayoutComposition,
-    area: Rect,
-    buf: &mut Buffer,
-) {
+pub fn render_widget(context: &AppState, layout: &LayoutComposition, area: Rect, buf: &mut Buffer) {
     if area.height < 2 || area.width < 2 {
         return;
     }

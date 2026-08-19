@@ -1,7 +1,7 @@
 use std::sync::mpsc;
 use std::thread;
 
-use dizi::error::DiziResult;
+use dizi::error::AppResult;
 
 use crate::audio::request::PlayerRequest;
 use crate::audio::symphonia::stream::StreamEvent;
@@ -17,14 +17,14 @@ pub enum PlayerStreamEvent {
 #[derive(Debug)]
 pub struct PlayerStreamEventListener {
     pub stream_tx: mpsc::Sender<StreamEvent>,
-    pub player_res_tx: mpsc::Sender<DiziResult>,
+    pub player_res_tx: mpsc::Sender<AppResult>,
     pub _event_tx: mpsc::Sender<PlayerStreamEvent>,
     pub event_rx: mpsc::Receiver<PlayerStreamEvent>,
 }
 
 impl PlayerStreamEventListener {
     pub fn new(
-        player_res_tx: mpsc::Sender<DiziResult>,
+        player_res_tx: mpsc::Sender<AppResult>,
         player_req_rx: mpsc::Receiver<PlayerRequest>,
     ) -> Self {
         let (stream_tx, stream_rx) = mpsc::channel();
@@ -54,11 +54,11 @@ impl PlayerStreamEventListener {
         }
     }
 
-    pub fn next(&mut self) -> DiziResult<PlayerStreamEvent> {
+    pub fn next(&mut self) -> AppResult<PlayerStreamEvent> {
         Ok(self.event_rx.recv()?)
     }
 
-    pub fn player_res(&self) -> &mpsc::Sender<DiziResult> {
+    pub fn player_res(&self) -> &mpsc::Sender<AppResult> {
         &self.player_res_tx
     }
 }

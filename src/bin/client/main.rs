@@ -7,6 +7,7 @@ mod history;
 mod key_command;
 mod preview;
 mod run;
+mod state;
 mod tab;
 mod traits;
 mod ui;
@@ -21,12 +22,12 @@ use std::time;
 use clap::Parser;
 use lazy_static::lazy_static;
 
-use dizi::error::DiziResult;
+use dizi::error::AppResult;
 
 use crate::config::{
     AppConfig, AppKeyMapping, AppLayout, AppTheme, JsonConfigFile, TomlConfigFile,
 };
-use crate::context::AppContext;
+use crate::context::AppState;
 use crate::tab::JoshutoTab;
 
 const PROGRAM_NAME: &str = "dizi";
@@ -101,7 +102,7 @@ pub struct CommandArgs {
     toggle_play: bool,
 }
 
-fn start_server() -> DiziResult {
+fn start_server() -> AppResult {
     println!("Server is not running");
     println!("Starting server...");
     process::Command::new("dizi-server")
@@ -111,11 +112,11 @@ fn start_server() -> DiziResult {
     Ok(())
 }
 
-fn create_context(config: AppConfig, cwd: &Path, stream: UnixStream) -> AppContext {
-    AppContext::new(config, cwd.to_path_buf(), stream)
+fn create_context(config: AppConfig, cwd: &Path, stream: UnixStream) -> AppState {
+    AppState::new(config, cwd.to_path_buf(), stream)
 }
 
-fn run_app(args: CommandArgs) -> DiziResult {
+fn run_app(args: CommandArgs) -> AppResult {
     // print version
     if args.version {
         let version = env!("CARGO_PKG_VERSION");
@@ -186,7 +187,7 @@ fn run_app(args: CommandArgs) -> DiziResult {
                     context.ui_context_ref(),
                     context.config_ref().display_options_ref(),
                 )?;
-                context.tab_context_mut().push_tab(tab);
+                context.tab_state_mut().push_tab(tab);
 
                 let mut backend: ui::AppBackend = ui::AppBackend::new(false)?;
                 run::run_ui(&mut backend, &mut context, keymap)?;

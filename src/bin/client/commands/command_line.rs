@@ -1,31 +1,35 @@
 use std::str::FromStr;
 
-use dizi::error::DiziResult;
+use dizi::error::AppResult;
 
 use crate::config::AppKeyMapping;
-use crate::context::AppContext;
+use crate::context::AppState;
 use crate::key_command::{AppExecute, Command};
 use crate::ui::AppBackend;
-use crate::ui::views::TuiTextField;
+use crate::ui::views::{DummyListener, TuiTextField};
 
 pub fn read_and_execute(
-    context: &mut AppContext,
+    app_state: &mut AppState,
     backend: &mut AppBackend,
     keymap_t: &AppKeyMapping,
     prefix: &str,
     suffix: &str,
-) -> DiziResult {
-    context.flush_event();
+) -> AppResult {
+    app_state.flush_event();
+
+    let mut listener = DummyListener {};
     let user_input: Option<String> = TuiTextField::default()
         .prompt(":")
         .prefix(prefix)
         .suffix(suffix)
-        .get_input(backend, context);
+        .get_input(app_state, backend, &mut listener);
 
     if let Some(s) = user_input {
         let trimmed = s.trim_start();
+        let _ = app_state.commandline_state_mut().history_mut().add(trimmed);
+
         let command = Command::from_str(trimmed)?;
-        command.execute(context, backend, keymap_t)
+        command.execute(app_state, backend, keymap_t)
     } else {
         Ok(())
     }

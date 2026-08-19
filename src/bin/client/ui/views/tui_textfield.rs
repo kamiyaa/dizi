@@ -1,21 +1,78 @@
-use rustyline::completion::{Candidate, Completer, FilenameCompleter, Pair};
-use rustyline::{
-    At, Word,
-    line_buffer::{self, LineBuffer},
-};
+use std::os::unix::fs::MetadataExt;
+use std::path::PathBuf;
+use std::str::FromStr;
+use std::{env, fs};
 
-use ratatui::layout::Rect;
+use rustyline::completion::{Candidate, FilenameCompleter, Pair};
+use rustyline::history::SearchDirection;
+use rustyline::line_buffer::{self, ChangeListener, DeleteListener, Direction, LineBuffer};
+use rustyline::{At, Word};
+
+use lazy_static::lazy_static;
+use ratatui::layout::{Position, Rect};
 use ratatui::termion::event::{Event, Key};
 use ratatui::widgets::Clear;
 use unicode_width::UnicodeWidthStr;
 
-use crate::context::AppContext;
+use crate::context::AppState;
 use crate::event::AppEvent;
-use crate::event::process_event;
-use crate::key_command::complete_command;
+use crate::run::process_event;
 use crate::ui::AppBackend;
 use crate::ui::views::TuiView;
 use crate::ui::widgets::{TuiMenu, TuiMultilineText};
+
+lazy_static! {
+    static ref EXECUTABLES: Vec<&'static str> = {
+        let mut vec = vec![];
+
+        if let Some(path) = env::var_os("PATH") {
+            for path in env::split_paths(&path) {
+                let Ok(files) = fs::read_dir(path) else {
+                    continue;
+                };
+
+                for file in files {
+                    let Ok(file) = file else {
+                        continue;
+                    };
+
+                    let Ok(metadata) = file.metadata() else {
+                        continue;
+                    };
+
+                    #[cfg(unix)]
+                    if metadata.mode() & 0o100 == 0 {
+                        // if file is not executable
+                        continue;
+                    }
+
+                    if let Some(basename) = file.path().file_name() {
+                        let boxed = Box::new(basename.to_string_lossy().to_string());
+                        vec.push(Box::leak(boxed).as_str());
+                    }
+                }
+            }
+        }
+
+        vec
+    };
+}
+
+// Might need to be implemented in the future
+#[derive(Clone, Debug)]
+pub struct DummyListener {}
+
+impl DeleteListener for DummyListener {
+    fn delete(&mut self, _idx: usize, _string: &str, _dir: Direction) {}
+}
+
+impl ChangeListener for DummyListener {
+    fn insert_char(&mut self, _idx: usize, _c: char) {}
+
+    fn insert_str(&mut self, _idx: usize, _string: &str) {}
+
+    fn replace(&mut self, _idx: usize, _old: &str, _new: &str) {}
+}
 
 struct CompletionTracker {
     pub index: usize,
@@ -25,9 +82,9 @@ struct CompletionTracker {
 }
 
 impl CompletionTracker {
-    pub fn new(pos: usize, candidates: Vec<Pair>, _original: String) -> Self {
+    pub fn new(index: usize, pos: usize, candidates: Vec<Pair>, _original: String) -> Self {
         CompletionTracker {
-            index: 0,
+            index,
             pos,
             _original,
             candidates,
@@ -49,6 +106,14 @@ pub struct TuiTextField<'a> {
 }
 
 impl<'a> TuiTextField<'a> {
+    pub fn menu_items<I>(&mut self, items: I) -> &mut Self
+    where
+        I: Iterator<Item = &'a str>,
+    {
+        self._menu_items = items.collect();
+        self
+    }
+
     pub fn prompt(&mut self, prompt: &'a str) -> &mut Self {
         self._prompt = prompt;
         self
@@ -66,8 +131,9 @@ impl<'a> TuiTextField<'a> {
 
     pub fn get_input(
         &mut self,
+        app_state: &mut AppState,
         backend: &mut AppBackend,
-        context: &mut AppContext,
+        listener: &mut DummyListener,
     ) -> Option<String> {
         let mut line_buffer = line_buffer::LineBuffer::with_capacity(255);
         let completer = FilenameCompleter::new();
@@ -76,14 +142,14 @@ impl<'a> TuiTextField<'a> {
 
         let char_idx = self._prefix.chars().map(|c| c.len_utf8()).sum();
 
-        line_buffer.insert_str(0, self._prefix);
-        line_buffer.insert_str(line_buffer.len(), self._suffix);
+        line_buffer.insert_str(0, self._prefix, listener);
+        line_buffer.insert_str(line_buffer.len(), self._suffix, listener);
         line_buffer.set_pos(char_idx);
 
         let terminal = backend.terminal_mut();
         let _ = terminal.show_cursor();
 
-        let mut curr_history_index = context.commandline_context_ref().history_ref().len();
+        let mut curr_history_index = app_state.commandline_state_ref().history_ref().len();
 
         loop {
             terminal
@@ -94,7 +160,7 @@ impl<'a> TuiTextField<'a> {
                     }
                     // redraw view
                     {
-                        let mut view = TuiView::new(context);
+                        let mut view = TuiView::new(app_state);
                         view.show_bottom_status = false;
                         frame.render_widget(view, area);
                     }
@@ -150,120 +216,145 @@ impl<'a> TuiTextField<'a> {
                     frame.render_widget(multiline, multiline_rect);
 
                     // render cursor
-                    frame.set_cursor_position((cursor_info.x as u16, cursor_info.y as u16));
+                    frame.set_cursor_position(Position::new(
+                        cursor_info.x as u16,
+                        cursor_info.y as u16,
+                    ));
                 })
-                .unwrap();
+                .expect("Failed to draw");
 
-            if let Ok(event) = context.poll_event() {
-                match event {
-                    AppEvent::TerminalEvent(Event::Key(key)) => {
-                        let dirty = match key {
-                            Key::Backspace => line_buffer.backspace(1),
-                            Key::Delete => line_buffer.delete(1).is_some(),
-                            Key::Home => line_buffer.move_home(),
-                            Key::End => line_buffer.move_end(),
-                            Key::Up => {
-                                curr_history_index = curr_history_index.saturating_sub(1);
-                                line_buffer.move_home();
-                                line_buffer.kill_line();
-                                if let Some(s) = context
-                                    .commandline_context_ref()
-                                    .history_ref()
-                                    .get(curr_history_index)
-                                {
-                                    line_buffer.insert_str(0, s);
-                                }
-                                true
-                            }
-                            Key::Down => {
-                                curr_history_index = if curr_history_index
-                                    < context.commandline_context_ref().history_ref().len()
-                                {
-                                    curr_history_index + 1
-                                } else {
-                                    curr_history_index
-                                };
-                                line_buffer.move_home();
-                                line_buffer.kill_line();
-                                if let Some(s) = context
-                                    .commandline_context_ref()
-                                    .history_ref()
-                                    .get(curr_history_index)
-                                {
-                                    line_buffer.insert_str(0, s);
-                                }
-                                true
-                            }
-                            Key::Esc => {
+            let event = match app_state.poll_event() {
+                Ok(event) => event,
+                Err(_) => continue,
+            };
+            match event {
+                AppEvent::TerminalEvent(Event::Key(key)) => {
+                    let dirty = match key {
+                        Key::Backspace => {
+                            if line_buffer.is_empty() {
                                 let _ = terminal.hide_cursor();
                                 return None;
                             }
-                            Key::Char('\t') => autocomplete(
-                                &mut line_buffer,
-                                &mut completion_tracker,
-                                &completer,
-                                false,
-                            ),
-                            Key::BackTab => autocomplete(
-                                &mut line_buffer,
-                                &mut completion_tracker,
-                                &completer,
-                                true,
-                            ),
 
-                            // Current `completion_tracker` should be droped
-                            // only if we moved to another word
-                            Key::Ctrl('a') => {
-                                moved_to_another_word(&mut line_buffer, |line_buffer| {
-                                    line_buffer.move_home()
-                                })
-                            }
-                            Key::Ctrl('e') => {
-                                moved_to_another_word(&mut line_buffer, |line_buffer| {
-                                    line_buffer.move_end()
-                                })
-                            }
-                            Key::Ctrl('f') | Key::Right => {
-                                moved_to_another_word(&mut line_buffer, |line_buffer| {
-                                    line_buffer.move_forward(1)
-                                })
-                            }
-                            Key::Ctrl('b') | Key::Left => {
-                                moved_to_another_word(&mut line_buffer, |line_buffer| {
-                                    line_buffer.move_backward(1)
-                                })
-                            }
-                            Key::Alt('f') => {
-                                moved_to_another_word(&mut line_buffer, |line_buffer| {
-                                    line_buffer.move_to_next_word(At::Start, Word::Vi, 1)
-                                })
-                            }
-                            Key::Alt('b') => {
-                                moved_to_another_word(&mut line_buffer, |line_buffer| {
-                                    line_buffer.move_to_prev_word(Word::Vi, 1)
-                                })
-                            }
-
-                            Key::Ctrl('w') => line_buffer.delete_prev_word(Word::Vi, 1),
-                            Key::Ctrl('u') => line_buffer.discard_line(),
-                            Key::Ctrl('d') => line_buffer.delete(1).is_some(),
-                            Key::Char('\n') => {
-                                break;
-                            }
-                            Key::Char(c) => line_buffer.insert(c, 1).is_some(),
-                            _ => false,
-                        };
-                        if dirty {
-                            completion_tracker.take();
+                            let res = line_buffer.backspace(1, listener);
+                            res
                         }
-                        context.flush_event();
+                        Key::Delete => {
+                            if line_buffer.is_empty() {
+                                let _ = terminal.hide_cursor();
+                                return None;
+                            }
+                            line_buffer.delete(1, listener).is_some()
+                        }
+                        Key::Home => line_buffer.move_home(),
+                        Key::End => line_buffer.move_end(),
+                        Key::Up => {
+                            curr_history_index = curr_history_index.saturating_sub(1);
+                            line_buffer.move_home();
+                            line_buffer.kill_line(listener);
+                            if let Ok(Some(s)) = app_state
+                                .commandline_state_ref()
+                                .history_ref()
+                                .get(curr_history_index, SearchDirection::Forward)
+                            {
+                                line_buffer.insert_str(0, &s.entry, listener);
+                                line_buffer.move_end();
+                            }
+                            true
+                        }
+                        Key::Down => {
+                            curr_history_index = if curr_history_index
+                                < app_state.commandline_state_ref().history_ref().len()
+                            {
+                                curr_history_index + 1
+                            } else {
+                                curr_history_index
+                            };
+                            line_buffer.move_home();
+                            line_buffer.kill_line(listener);
+                            if let Ok(Some(s)) = app_state
+                                .commandline_state_ref()
+                                .history_ref()
+                                .get(curr_history_index, SearchDirection::Reverse)
+                            {
+                                line_buffer.insert_str(0, &s.entry, listener);
+                                line_buffer.move_end();
+                            }
+                            true
+                        }
+                        Key::Esc => {
+                            let _ = terminal.hide_cursor();
+                            return None;
+                        }
+                        Key::Char('\t') => {
+                            autocomplete(
+                                &mut line_buffer,
+                                &mut completion_tracker,
+                                &completer,
+                                listener,
+                                false,
+                            );
+                            false
+                        }
+                        Key::BackTab => {
+                            autocomplete(
+                                &mut line_buffer,
+                                &mut completion_tracker,
+                                &completer,
+                                listener,
+                                true,
+                            );
+                            false
+                        }
+
+                        // Current `completion_tracker` should be dropped
+                        // only if we moved to another word
+                        Key::Ctrl('a') => moved_to_another_word(&mut line_buffer, |line_buffer| {
+                            line_buffer.move_home()
+                        }),
+                        Key::Ctrl('e') => moved_to_another_word(&mut line_buffer, |line_buffer| {
+                            line_buffer.move_end()
+                        }),
+                        Key::Ctrl('f') | Key::Right => {
+                            moved_to_another_word(&mut line_buffer, |line_buffer| {
+                                line_buffer.move_forward(1)
+                            })
+                        }
+                        Key::Ctrl('b') | Key::Left => {
+                            moved_to_another_word(&mut line_buffer, |line_buffer| {
+                                line_buffer.move_backward(1)
+                            })
+                        }
+                        Key::Alt('f') => moved_to_another_word(&mut line_buffer, |line_buffer| {
+                            line_buffer.move_to_next_word(At::Start, Word::Vi, 1)
+                        }),
+                        Key::Alt('b') => moved_to_another_word(&mut line_buffer, |line_buffer| {
+                            line_buffer.move_to_prev_word(Word::Vi, 1)
+                        }),
+
+                        Key::Ctrl('w') => line_buffer.delete_prev_word(Word::Vi, 1, listener),
+                        Key::Ctrl('u') => line_buffer.discard_line(listener),
+                        Key::Ctrl('h') => line_buffer.backspace(1, listener),
+                        Key::Ctrl('d') => line_buffer.delete(1, listener).is_some(),
+                        Key::Char('\n') => {
+                            break;
+                        }
+                        Key::Char(c) => {
+                            let dirty = line_buffer.insert(c, 1, listener).is_some();
+                            dirty
+                        }
+                        _ => false,
+                    };
+                    if dirty {
+                        completion_tracker.take();
                     }
-                    AppEvent::TerminalEvent(_) => {
-                        context.flush_event();
-                    }
-                    event => process_event::process_noninteractive(event, context),
-                };
-            }
+                    app_state.flush_event();
+                }
+                AppEvent::TerminalEvent(_) => {
+                    app_state.flush_event();
+                }
+                event => process_event::process_noninteractive(event, app_state),
+            };
         }
         let _ = terminal.hide_cursor();
 
@@ -280,42 +371,62 @@ fn autocomplete(
     line_buffer: &mut LineBuffer,
     completion_tracker: &mut Option<CompletionTracker>,
     completer: &FilenameCompleter,
-    reversed: bool,
-) -> bool {
+    listener: &mut DummyListener,
+    backwards: bool,
+) {
     // If we are in the middle of a word, move to the end of it,
     // so we don't split it with autocompletion.
     move_to_the_end(line_buffer);
 
-    if let Some(ct) = completion_tracker {
-        ct.index = if reversed {
-            ct.index.checked_sub(1).unwrap_or(ct.candidates.len() - 1)
-        } else {
-            (ct.index + 1) % ct.candidates.len()
-        };
+    match completion_tracker {
+        Some(ct) => {
+            if backwards && ct.index == 0 {
+                return;
+            }
+            if !backwards && ct.index + 1 >= ct.candidates.len() {
+                return;
+            }
 
-        let candidate = &ct.candidates[ct.index];
-        completer.update(line_buffer, ct.pos, candidate.display());
-    } else if let Some((pos, mut candidates)) = get_candidates(completer, line_buffer) {
-        if !candidates.is_empty() {
-            candidates.sort_by(|x, y| {
-                x.display()
-                    .partial_cmp(y.display())
-                    .unwrap_or(std::cmp::Ordering::Less)
-            });
+            ct.index = if backwards {
+                ct.index.checked_sub(1).unwrap_or(ct.candidates.len() - 1)
+            } else {
+                ct.index + 1
+            };
 
-            let first_idx = if reversed { candidates.len() - 1 } else { 0 };
-            let first = candidates[first_idx].display().to_string();
+            let pos = ct.pos;
+            let first = ct.candidates[ct.index].display();
 
-            let mut ct =
-                CompletionTracker::new(pos, candidates, String::from(line_buffer.as_str()));
-            ct.index = first_idx;
+            line_buffer.set_pos(pos);
+            line_buffer.kill_buffer(listener);
+            line_buffer.insert_str(pos, first, listener);
+            line_buffer.move_end();
+        }
+        None => {
+            if let Some((pos, mut candidates)) = get_autocomplete_candidates(completer, line_buffer)
+            {
+                if !candidates.is_empty() {
+                    candidates.sort_by(|x, y| {
+                        x.display()
+                            .partial_cmp(y.display())
+                            .unwrap_or(std::cmp::Ordering::Less)
+                    });
 
-            *completion_tracker = Some(ct);
-            completer.update(line_buffer, pos, &first);
+                    let index = if backwards { candidates.len() - 1 } else { 0 };
+                    let pos = line_buffer.rfind('/').map(|p| p + 1).unwrap_or(pos);
+                    let ct =
+                        CompletionTracker::new(index, pos, candidates, line_buffer.to_string());
+                    let first = ct.candidates[index].display();
+
+                    line_buffer.set_pos(pos);
+                    line_buffer.kill_buffer(listener);
+                    line_buffer.insert_str(pos, first, listener);
+                    line_buffer.move_end();
+
+                    *completion_tracker = Some(ct);
+                }
+            }
         }
     }
-
-    false
 }
 
 fn moved_to_another_word<F, Any>(line_buffer: &mut LineBuffer, action: F) -> bool
@@ -355,22 +466,34 @@ fn move_to_the_end(line_buffer: &mut LineBuffer) {
     }
 }
 
-fn get_candidates(
+fn pair_from_str(s: &str) -> Pair {
+    Pair {
+        display: s.to_string(),
+        replacement: s.to_string(),
+    }
+}
+
+fn start_of_word(line_buffer: &LineBuffer) -> usize {
+    line_buffer
+        .as_str()
+        .split_at(line_buffer.pos())
+        .0
+        .rfind(' ')
+        .map(|x| x + 1)
+        .unwrap_or(0)
+}
+
+fn complete_word(candidates: &[&str], partial: &str) -> Vec<Pair> {
+    candidates
+        .iter()
+        .filter(|entry| entry.starts_with(partial))
+        .map(|entry| pair_from_str(entry))
+        .collect()
+}
+
+fn get_autocomplete_candidates(
     completer: &FilenameCompleter,
     line_buffer: &mut LineBuffer,
 ) -> Option<(usize, Vec<Pair>)> {
-    let line = line_buffer.as_str().split_once(' ');
-    let res = match line {
-        None => Ok((0, complete_command(line_buffer.as_str()))),
-
-        Some((command, _files)) => {
-            // We want to autocomplete a command if we are inside it.
-            if line_buffer.pos() <= command.len() {
-                Ok((0, complete_command(command)))
-            } else {
-                completer.complete_path(line_buffer.as_str(), line_buffer.pos())
-            }
-        }
-    };
-    res.ok()
+    None
 }

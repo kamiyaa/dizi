@@ -2,7 +2,7 @@ use std::str::FromStr;
 
 use ratatui::layout::Direction;
 
-use dizi::error::{DiziError, DiziErrorKind, DiziResult};
+use dizi::error::{AppResult, DiziError, DiziErrorKind};
 
 use crate::config::general::LayoutCompositionRaw;
 
@@ -50,7 +50,7 @@ impl LayoutComposition {
             LayoutComposition::Composite { ratio, .. } => *ratio,
         }
     }
-    pub fn from(raw: &LayoutCompositionRaw) -> DiziResult<Self> {
+    pub fn from(raw: &LayoutCompositionRaw) -> AppResult<Self> {
         match raw {
             LayoutCompositionRaw::Simple {
                 widget,
@@ -124,7 +124,7 @@ impl std::default::Default for LayoutComposition {
     }
 }
 
-pub fn str_to_direction(s: &str) -> DiziResult<Direction> {
+pub fn str_to_direction(s: &str) -> AppResult<Direction> {
     match s {
         "horizontal" => Ok(Direction::Horizontal),
         "vertical" => Ok(Direction::Vertical),

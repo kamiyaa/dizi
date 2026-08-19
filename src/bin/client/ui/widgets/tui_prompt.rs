@@ -4,9 +4,9 @@ use ratatui::termion::event::{Event, Key};
 use ratatui::text::Span;
 use ratatui::widgets::{Clear, Paragraph, Wrap};
 
-use crate::context::AppContext;
+use crate::context::AppState;
 use crate::event::AppEvent;
-use crate::event::process_event;
+use crate::run::process_event;
 use crate::ui::AppBackend;
 use crate::ui::views::TuiView;
 
@@ -19,7 +19,7 @@ impl<'a> TuiPrompt<'a> {
         Self { prompt }
     }
 
-    pub fn get_key(&mut self, backend: &mut AppBackend, context: &mut AppContext) -> Key {
+    pub fn get_key(&mut self, backend: &mut AppBackend, context: &mut AppState) -> Key {
         let terminal = backend.terminal_mut();
 
         context.flush_event();

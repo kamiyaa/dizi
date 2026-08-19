@@ -4,15 +4,15 @@ use std::thread;
 use ratatui::layout::{Constraint, Rect};
 use ratatui::termion::event::Event;
 
-use dizi::error::DiziResult;
+use dizi::error::AppResult;
 use dizi::request::client::ClientRequest;
 
 use crate::config::AppKeyMapping;
-use crate::context::{AppContext, QuitType};
+use crate::context::{AppState, QuitType};
 use crate::event::AppEvent;
-use crate::event::process_event;
 use crate::key_command::{AppExecute, Command, CommandKeybind};
 use crate::preview::preview_default;
+use crate::run::process_event;
 use crate::traits::ToString;
 use crate::ui::AppBackend;
 use crate::ui::views;
@@ -21,9 +21,9 @@ use crate::utils::request::send_client_request;
 
 pub fn run_ui(
     backend: &mut AppBackend,
-    context: &mut AppContext,
+    context: &mut AppState,
     keymap_t: AppKeyMapping,
-) -> DiziResult {
+) -> AppResult {
     let _ = context.flush_stream();
 
     // server listener
@@ -123,7 +123,7 @@ pub fn run_ui(
     Ok(())
 }
 
-fn calculate_ui_context(context: &mut AppContext, area: Rect) {
+fn calculate_ui_context(context: &mut AppState, area: Rect) {
     let area = Rect {
         y: area.top() + 1,
         height: area.height - 2,

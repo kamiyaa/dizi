@@ -1,13 +1,13 @@
-use dizi::error::DiziResult;
+use dizi::error::AppResult;
 use dizi::playlist::PlaylistType;
 
 use crate::commands::change_directory;
 use crate::commands::cursor_move::set_playlist_index;
 use crate::commands::search_string;
 use crate::config::option::WidgetType;
-use crate::context::AppContext;
+use crate::context::AppState;
 
-fn _directory_goto_playing(context: &mut AppContext) -> DiziResult {
+fn _directory_goto_playing(context: &mut AppState) -> AppResult {
     let player_state = &context.server_state_ref().player;
 
     if let Some(song) = player_state.song.clone() {
@@ -21,7 +21,7 @@ fn _directory_goto_playing(context: &mut AppContext) -> DiziResult {
     Ok(())
 }
 
-fn _playlist_goto_playing(context: &mut AppContext) -> DiziResult {
+fn _playlist_goto_playing(context: &mut AppState) -> AppResult {
     let player_state = &context.server_state_ref().player;
 
     match player_state.playlist_status {
@@ -48,7 +48,7 @@ fn _playlist_goto_playing(context: &mut AppContext) -> DiziResult {
     Ok(())
 }
 
-pub fn goto_playing(context: &mut AppContext) -> DiziResult {
+pub fn goto_playing(context: &mut AppState) -> AppResult {
     let widget = context.get_view_widget();
     match widget {
         WidgetType::FileBrowser => _directory_goto_playing(context)?,

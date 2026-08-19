@@ -1,16 +1,16 @@
-use dizi::error::DiziResult;
+use dizi::error::AppResult;
 
 use crate::config::AppKeyMapping;
-use crate::context::AppContext;
+use crate::context::AppState;
 use crate::ui::AppBackend;
 
 pub trait AppExecute {
     fn execute(
         &self,
-        context: &mut AppContext,
+        context: &mut AppState,
         backend: &mut AppBackend,
         keymap_t: &AppKeyMapping,
-    ) -> DiziResult;
+    ) -> AppResult;
 }
 
 pub trait AppCommand: AppExecute + std::fmt::Display + std::fmt::Debug {

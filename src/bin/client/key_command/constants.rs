@@ -28,6 +28,7 @@ cmd_constants![
     (CMD_PARENT_DIRECTORY, "cd .."),
     (CMD_RELOAD_DIRECTORY_LIST, "reload_dirlist"),
     (CMD_SEARCH_STRING, "search"),
+    (CMD_SEARCH_FZF, "search_fzf"),
     (CMD_SEARCH_GLOB, "search_glob"),
     (CMD_SEARCH_SKIM, "search_skim"),
     (CMD_SEARCH_NEXT, "search_next"),

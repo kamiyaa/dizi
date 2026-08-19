@@ -7,7 +7,7 @@ use std::convert::{AsMut, AsRef, From};
 #[cfg(feature = "mouse")]
 use ratatui::termion::event::MouseEvent;
 
-use dizi::error::DiziResult;
+use dizi::error::AppResult;
 use dizi::request::client::ClientRequest;
 
 use crate::config::{TomlConfigFile, parse_toml_to_config};
@@ -49,7 +49,7 @@ impl AppKeyMapping {
         }
     }
 
-    pub fn default_res() -> DiziResult<Self> {
+    pub fn default_res() -> AppResult<Self> {
         let raw: AppKeyMappingRaw = toml::from_str(DEFAULT_KEYMAP)?;
         let keymapping: Self = Self::from(raw);
         Ok(keymapping)

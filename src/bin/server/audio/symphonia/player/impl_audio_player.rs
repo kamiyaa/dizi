@@ -1,7 +1,7 @@
 use std::path;
 use std::time;
 
-use dizi::error::{DiziError, DiziErrorKind, DiziResult};
+use dizi::error::{AppResult, DiziError, DiziErrorKind};
 use dizi::player::{PlayerState, PlayerStatus};
 use dizi::playlist::PlaylistType;
 use dizi::song::DiziAudioFile;
@@ -19,7 +19,7 @@ impl SymphoniaPlayer {
     /// Plays `entry` if it is loaded. `entry` is taken by value (rather than
     /// borrowing the playlist) so callers can drop their playlist borrow
     /// before calling this, which itself needs `&mut self`.
-    fn play_entry(&mut self, entry: Option<DiziPlaylistEntry>) -> DiziResult {
+    fn play_entry(&mut self, entry: Option<DiziPlaylistEntry>) -> AppResult {
         if let Some(entry) = entry
             && let DiziSongEntry::Loaded(audio_file) = entry.entry
         {
@@ -37,7 +37,7 @@ impl AudioPlayer for SymphoniaPlayer {
         state
     }
 
-    fn play_directory(&mut self, path: &path::Path) -> DiziResult {
+    fn play_directory(&mut self, path: &path::Path) -> AppResult {
         let mimetype = get_mimetype(path)?;
         if !is_mimetype_audio(&mimetype) && !is_mimetype_video(&mimetype) {
             return Err(DiziError::new(
@@ -76,7 +76,7 @@ impl AudioPlayer for SymphoniaPlayer {
         Ok(())
     }
 
-    fn play_from_playlist(&mut self, index: usize) -> DiziResult {
+    fn play_from_playlist(&mut self, index: usize) -> AppResult {
         let shuffle_enabled = self.shuffle_enabled();
         let playlist = &mut self.playlist_context.file_playlist;
 
@@ -98,13 +98,13 @@ impl AudioPlayer for SymphoniaPlayer {
         Ok(())
     }
 
-    fn play_again(&mut self) -> DiziResult {
+    fn play_again(&mut self) -> AppResult {
         let playlist = self.playlist_context.current_playlist_ref();
         let entry = playlist.current_entry();
         self.play_entry(entry)
     }
 
-    fn play_next(&mut self) -> DiziResult {
+    fn play_next(&mut self) -> AppResult {
         let playlist = self.playlist_context.current_playlist_mut();
 
         // keep going through playlist until we find a song that can
@@ -127,7 +127,7 @@ impl AudioPlayer for SymphoniaPlayer {
         self.play_entry(entry)
     }
 
-    fn play_previous(&mut self) -> DiziResult {
+    fn play_previous(&mut self) -> AppResult {
         let playlist = self.playlist_context.current_playlist_mut();
 
         // keep going through playlist until we find a song that can
@@ -150,7 +150,7 @@ impl AudioPlayer for SymphoniaPlayer {
         self.play_entry(entry)
     }
 
-    fn pause(&mut self) -> DiziResult {
+    fn pause(&mut self) -> AppResult {
         self.player_stream_req().send(PlayerRequest::Pause)?;
 
         self.player_stream_res().recv()??;
@@ -158,7 +158,7 @@ impl AudioPlayer for SymphoniaPlayer {
         Ok(())
     }
 
-    fn resume(&mut self) -> DiziResult {
+    fn resume(&mut self) -> AppResult {
         self.player_stream_req().send(PlayerRequest::Resume)?;
 
         self.player_stream_res().recv()??;
@@ -166,7 +166,7 @@ impl AudioPlayer for SymphoniaPlayer {
         Ok(())
     }
 
-    fn stop(&mut self) -> DiziResult {
+    fn stop(&mut self) -> AppResult {
         self.player_stream_req().send(PlayerRequest::Stop)?;
 
         self.player_stream_res().recv()??;
@@ -174,7 +174,7 @@ impl AudioPlayer for SymphoniaPlayer {
         Ok(())
     }
 
-    fn toggle_play(&mut self) -> DiziResult<PlayerStatus> {
+    fn toggle_play(&mut self) -> AppResult<PlayerStatus> {
         match self.state.status {
             PlayerStatus::Playing => {
                 self.pause()?;
@@ -187,12 +187,12 @@ impl AudioPlayer for SymphoniaPlayer {
             s => Ok(s),
         }
     }
-    fn fast_forward(&mut self, offset: time::Duration) -> DiziResult {
+    fn fast_forward(&mut self, offset: time::Duration) -> AppResult {
         self.player_stream_req()
             .send(PlayerRequest::FastForward { offset })?;
         Ok(())
     }
-    fn rewind(&mut self, offset: time::Duration) -> DiziResult {
+    fn rewind(&mut self, offset: time::Duration) -> AppResult {
         self.player_stream_req()
             .send(PlayerRequest::Rewind { offset })?;
         Ok(())
@@ -201,7 +201,7 @@ impl AudioPlayer for SymphoniaPlayer {
     fn get_volume(&self) -> usize {
         self.state.volume
     }
-    fn set_volume(&mut self, volume: usize) -> DiziResult {
+    fn set_volume(&mut self, volume: usize) -> AppResult {
         self.player_stream_req().send(PlayerRequest::SetVolume {
             volume: volume as f32 / 100.0,
         })?;

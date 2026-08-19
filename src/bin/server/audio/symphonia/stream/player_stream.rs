@@ -5,7 +5,7 @@ use cpal::traits::{DeviceTrait, StreamTrait};
 use symphonia::core::codecs::CodecParameters;
 use symphonia::core::codecs::audio::AudioDecoderOptions;
 
-use dizi::error::{DiziError, DiziErrorKind, DiziResult};
+use dizi::error::{AppResult, DiziError, DiziErrorKind};
 use dizi::song::DiziAudioFile;
 
 use crate::audio::request::PlayerRequest;
@@ -28,10 +28,10 @@ pub struct PlayerStream {
 impl PlayerStream {
     pub fn new(
         event_tx: ServerEventSender,
-        player_res_tx: mpsc::Sender<DiziResult>,
+        player_res_tx: mpsc::Sender<AppResult>,
         player_req_rx: mpsc::Receiver<PlayerRequest>,
         device: cpal::Device,
-    ) -> DiziResult<Self> {
+    ) -> AppResult<Self> {
         let event_poller = PlayerStreamEventListener::new(player_res_tx, player_req_rx);
 
         let stream_config = device.default_output_config().map_err(|err| {
@@ -51,23 +51,23 @@ impl PlayerStream {
         })
     }
 
-    pub fn pause(&mut self) -> DiziResult {
+    pub fn pause(&mut self) -> AppResult {
         if let Some(state) = self.state.as_ref() {
             state.stream.pause()?;
         }
         Ok(())
     }
-    pub fn resume(&mut self) -> DiziResult {
+    pub fn resume(&mut self) -> AppResult {
         if let Some(state) = self.state.as_ref() {
             state.stream.play()?;
         }
         Ok(())
     }
-    pub fn stop(&mut self) -> DiziResult {
+    pub fn stop(&mut self) -> AppResult {
         self.state.take();
         Ok(())
     }
-    pub fn fast_forward(&mut self, offset: Duration) -> DiziResult {
+    pub fn fast_forward(&mut self, offset: Duration) -> AppResult {
         if let Some(state) = self.state.as_ref() {
             state
                 .playback_loop_tx
@@ -75,7 +75,7 @@ impl PlayerStream {
         }
         Ok(())
     }
-    pub fn rewind(&mut self, offset: Duration) -> DiziResult {
+    pub fn rewind(&mut self, offset: Duration) -> AppResult {
         if let Some(state) = self.state.as_ref() {
             state
                 .playback_loop_tx
@@ -92,7 +92,7 @@ impl PlayerStream {
         }
     }
 
-    pub fn listen_for_events(&mut self) -> DiziResult {
+    pub fn listen_for_events(&mut self) -> AppResult {
         while let Ok(msg) = self.event_poller.next() {
             match msg {
                 PlayerStreamEvent::Player(req) => self.process_player_req(req)?,
@@ -102,7 +102,7 @@ impl PlayerStream {
         Ok(())
     }
 
-    fn process_player_req(&mut self, req: PlayerRequest) -> DiziResult {
+    fn process_player_req(&mut self, req: PlayerRequest) -> AppResult {
         match req {
             PlayerRequest::Play { song, volume } => {
                 let stream_state = self.build_player_stream_state(song.clone(), volume);
@@ -141,7 +141,7 @@ impl PlayerStream {
         Ok(())
     }
 
-    fn process_stream_event(&mut self, event: StreamEvent) -> DiziResult {
+    fn process_stream_event(&mut self, event: StreamEvent) -> AppResult {
         match event {
             StreamEvent::StreamEnded => {
                 self.stop()?;
@@ -159,7 +159,7 @@ impl PlayerStream {
         &self,
         audio_file: Box<DiziAudioFile>,
         volume: f32,
-    ) -> DiziResult<PlayerStreamState> {
+    ) -> AppResult<PlayerStreamState> {
         let track_id = audio_file.audio_metadata.track_id;
 
         let format_reader = audio_file.file.get_probe_result()?;

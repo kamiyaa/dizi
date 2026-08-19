@@ -4,6 +4,8 @@ use std::path::{Path, PathBuf};
 use serde::Deserialize;
 use shellexpand::tilde_with_context;
 
+use crate::HOME_DIR;
+
 use super::{PlayerOption, PlayerOptionRaw};
 
 fn default_socket_string() -> String {
@@ -16,12 +18,16 @@ fn default_playlist_string() -> String {
 
 fn default_socket_path() -> PathBuf {
     let s = default_socket_string();
-    PathBuf::from(tilde_with_context(&s, dirs::home_dir).as_ref())
+
+    let home_dir_func = || HOME_DIR.as_ref().map(|s| s.to_string_lossy());
+    PathBuf::from(tilde_with_context(&s, home_dir_func).as_ref())
 }
 
 fn default_playlist_path() -> PathBuf {
     let s = default_playlist_string();
-    PathBuf::from(tilde_with_context(&s, dirs::home_dir).as_ref())
+
+    let home_dir_func = || HOME_DIR.as_ref().map(|s| s.to_string_lossy());
+    PathBuf::from(tilde_with_context(&s, home_dir_func).as_ref())
 }
 
 fn default_audio_system() -> cpal::HostId {
@@ -127,11 +133,13 @@ impl From<ServerConfigRaw> for ServerConfig {
         let audio_system = str_to_cpal_hostid(&raw.audio_system.to_lowercase())
             .unwrap_or_else(default_audio_system);
 
-        let socket = tilde_with_context(&raw.socket, dirs::home_dir);
-        let playlist = tilde_with_context(&raw.playlist, dirs::home_dir);
+        let home_dir_func = || HOME_DIR.as_ref().map(|s| s.to_string_lossy());
+
+        let socket = tilde_with_context(&raw.socket, home_dir_func);
+        let playlist = tilde_with_context(&raw.playlist, home_dir_func);
         let on_song_change = raw
             .on_song_change
-            .map(|path| PathBuf::from(tilde_with_context(&path, dirs::home_dir).as_ref()));
+            .map(|path| PathBuf::from(tilde_with_context(&path, home_dir_func).as_ref()));
 
         Self {
             socket: PathBuf::from(socket.as_ref()),

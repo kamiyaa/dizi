@@ -1,9 +1,9 @@
-use dizi::error::DiziResult;
+use dizi::error::AppResult;
 
 use crate::config::option::SelectOption;
-use crate::context::AppContext;
+use crate::context::AppState;
 
-pub fn select_files(context: &mut AppContext, pattern: &str, options: &SelectOption) -> DiziResult {
+pub fn select_files(context: &mut AppState, pattern: &str, options: &SelectOption) -> AppResult {
     if pattern.is_empty() {
         select_without_pattern(context, options)
     } else {
@@ -11,14 +11,14 @@ pub fn select_files(context: &mut AppContext, pattern: &str, options: &SelectOpt
     }
 }
 
-fn select_without_pattern(_context: &mut AppContext, _options: &SelectOption) -> DiziResult {
+fn select_without_pattern(_context: &mut AppState, _options: &SelectOption) -> AppResult {
     Ok(())
 }
 
 fn select_with_pattern(
-    _context: &mut AppContext,
+    _context: &mut AppState,
     _pattern: &str,
     _options: &SelectOption,
-) -> DiziResult {
+) -> AppResult {
     Ok(())
 }

@@ -1,11 +1,11 @@
-use dizi::error::DiziResult;
+use dizi::error::AppResult;
 use dizi::request::client::ClientRequest;
 
 use crate::CommandArgs;
-use crate::context::AppContext;
+use crate::context::AppState;
 use crate::utils::request::send_client_request;
 
-pub fn run_control(context: &mut AppContext, args: &CommandArgs) -> DiziResult {
+pub fn run_control(context: &mut AppState, args: &CommandArgs) -> AppResult {
     let request = if args.exit {
         Some(ClientRequest::ServerQuit)
     } else if args.next {

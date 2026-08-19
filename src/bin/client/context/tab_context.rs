@@ -3,12 +3,12 @@ use std::slice::IterMut;
 use crate::tab::JoshutoTab;
 
 #[derive(Debug, Default)]
-pub struct TabContext {
+pub struct TabState {
     pub index: usize,
     tabs: Vec<JoshutoTab>,
 }
 
-impl TabContext {
+impl TabState {
     pub fn new() -> Self {
         Self::default()
     }
