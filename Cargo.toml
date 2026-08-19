@@ -22,7 +22,7 @@ path = "src/bin/client/main.rs"
 alphanumeric-sort = "^1"
 chrono = "^0"
 clap = { version = "^4", features = ["derive"] }
-dirs-next = "^2"
+dirs = "^6"
 globset = "^0"
 lazy_static = "^1"
 memmap = "^0"
@@ -45,7 +45,6 @@ tracing-subscriber = { version = "^0", features = [ "std", "env-filter" ] }
 uuid = { version = "^0", features = ["v4"] }
 unicode-width = "^0"
 unicode-segmentation = "^1"
-xdg = "^2"
 cpal = "^0"
 # pipewire = { optional = true, version = "^0" }
 

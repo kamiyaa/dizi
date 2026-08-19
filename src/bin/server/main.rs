@@ -36,8 +36,9 @@ lazy_static! {
             }
         }
 
-        if let Ok(dirs) = xdg::BaseDirectories::with_prefix(PROGRAM_NAME) {
-            config_dirs.push(dirs.get_config_home());
+        if let Some(mut config_home) = dirs::config_dir() {
+            config_home.push(PROGRAM_NAME);
+            config_dirs.push(config_home);
         }
 
         if let Ok(p) = std::env::var("HOME") {
@@ -55,7 +56,7 @@ lazy_static! {
         config_dirs
     };
 
-    static ref HOME_DIR: Option<PathBuf> = dirs_next::home_dir();
+    static ref HOME_DIR: Option<PathBuf> = dirs::home_dir();
 }
 
 #[derive(Clone, Debug, Parser)]

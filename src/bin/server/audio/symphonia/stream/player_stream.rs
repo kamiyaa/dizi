@@ -197,7 +197,14 @@ impl PlayerStream {
         let decoder =
             symphonia::default::get_codecs().make_audio_decoder(audio_codec_params, &dec_opts)?;
 
-        let audio_config = cpal::StreamConfig {
+        let stream_tx = self.event_poller.stream_tx.clone();
+
+        let packet_reader = PacketReader::new(format_reader, track_id);
+        let packet_decoder = PacketDecoder::new(decoder);
+
+        // Fallback used only if decoding produced no packets at all (e.g. an
+        // empty file), in which case there's no audio to misconfigure anyway.
+        let fallback_audio_config = cpal::StreamConfig {
             channels: audio_file
                 .audio_metadata
                 .channels
@@ -210,16 +217,17 @@ impl PlayerStream {
             buffer_size: cpal::BufferSize::Default,
         };
 
-        tracing::debug!(?audio_config, "Audio config");
-
-        let stream_tx = self.event_poller.stream_tx.clone();
-
-        let packet_reader = PacketReader::new(format_reader, track_id);
-        let packet_decoder = PacketDecoder::new(decoder);
-
         match self.stream_config.sample_format() {
             cpal::SampleFormat::U8 => {
-                let samples = decode_all::<u8>(packet_reader, packet_decoder)?;
+                let (samples, spec) = decode_all::<u8>(packet_reader, packet_decoder)?;
+                let audio_config = match spec {
+                    Some(spec) => cpal::StreamConfig {
+                        channels: spec.channels as u16,
+                        sample_rate: spec.sample_rate,
+                        buffer_size: cpal::BufferSize::Default,
+                    },
+                    None => fallback_audio_config,
+                };
                 PlayerStreamState::build::<u8>(
                     stream_tx,
                     &self.device,
@@ -230,7 +238,15 @@ impl PlayerStream {
                 )
             }
             cpal::SampleFormat::U16 => {
-                let samples = decode_all::<u16>(packet_reader, packet_decoder)?;
+                let (samples, spec) = decode_all::<u16>(packet_reader, packet_decoder)?;
+                let audio_config = match spec {
+                    Some(spec) => cpal::StreamConfig {
+                        channels: spec.channels as u16,
+                        sample_rate: spec.sample_rate,
+                        buffer_size: cpal::BufferSize::Default,
+                    },
+                    None => fallback_audio_config,
+                };
                 PlayerStreamState::build::<u16>(
                     stream_tx,
                     &self.device,
@@ -241,7 +257,15 @@ impl PlayerStream {
                 )
             }
             cpal::SampleFormat::U32 => {
-                let samples = decode_all::<u32>(packet_reader, packet_decoder)?;
+                let (samples, spec) = decode_all::<u32>(packet_reader, packet_decoder)?;
+                let audio_config = match spec {
+                    Some(spec) => cpal::StreamConfig {
+                        channels: spec.channels as u16,
+                        sample_rate: spec.sample_rate,
+                        buffer_size: cpal::BufferSize::Default,
+                    },
+                    None => fallback_audio_config,
+                };
                 PlayerStreamState::build::<u32>(
                     stream_tx,
                     &self.device,
@@ -252,7 +276,15 @@ impl PlayerStream {
                 )
             }
             cpal::SampleFormat::I8 => {
-                let samples = decode_all::<i8>(packet_reader, packet_decoder)?;
+                let (samples, spec) = decode_all::<i8>(packet_reader, packet_decoder)?;
+                let audio_config = match spec {
+                    Some(spec) => cpal::StreamConfig {
+                        channels: spec.channels as u16,
+                        sample_rate: spec.sample_rate,
+                        buffer_size: cpal::BufferSize::Default,
+                    },
+                    None => fallback_audio_config,
+                };
                 PlayerStreamState::build::<i8>(
                     stream_tx,
                     &self.device,
@@ -263,7 +295,15 @@ impl PlayerStream {
                 )
             }
             cpal::SampleFormat::I16 => {
-                let samples = decode_all::<i16>(packet_reader, packet_decoder)?;
+                let (samples, spec) = decode_all::<i16>(packet_reader, packet_decoder)?;
+                let audio_config = match spec {
+                    Some(spec) => cpal::StreamConfig {
+                        channels: spec.channels as u16,
+                        sample_rate: spec.sample_rate,
+                        buffer_size: cpal::BufferSize::Default,
+                    },
+                    None => fallback_audio_config,
+                };
                 PlayerStreamState::build::<i16>(
                     stream_tx,
                     &self.device,
@@ -274,7 +314,15 @@ impl PlayerStream {
                 )
             }
             cpal::SampleFormat::I32 => {
-                let samples = decode_all::<i32>(packet_reader, packet_decoder)?;
+                let (samples, spec) = decode_all::<i32>(packet_reader, packet_decoder)?;
+                let audio_config = match spec {
+                    Some(spec) => cpal::StreamConfig {
+                        channels: spec.channels as u16,
+                        sample_rate: spec.sample_rate,
+                        buffer_size: cpal::BufferSize::Default,
+                    },
+                    None => fallback_audio_config,
+                };
                 PlayerStreamState::build::<i32>(
                     stream_tx,
                     &self.device,
@@ -285,7 +333,15 @@ impl PlayerStream {
                 )
             }
             cpal::SampleFormat::F32 => {
-                let samples = decode_all::<f32>(packet_reader, packet_decoder)?;
+                let (samples, spec) = decode_all::<f32>(packet_reader, packet_decoder)?;
+                let audio_config = match spec {
+                    Some(spec) => cpal::StreamConfig {
+                        channels: spec.channels as u16,
+                        sample_rate: spec.sample_rate,
+                        buffer_size: cpal::BufferSize::Default,
+                    },
+                    None => fallback_audio_config,
+                };
                 PlayerStreamState::build::<f32>(
                     stream_tx,
                     &self.device,
@@ -296,7 +352,15 @@ impl PlayerStream {
                 )
             }
             _ => {
-                let samples = decode_all::<f64>(packet_reader, packet_decoder)?;
+                let (samples, spec) = decode_all::<f64>(packet_reader, packet_decoder)?;
+                let audio_config = match spec {
+                    Some(spec) => cpal::StreamConfig {
+                        channels: spec.channels as u16,
+                        sample_rate: spec.sample_rate,
+                        buffer_size: cpal::BufferSize::Default,
+                    },
+                    None => fallback_audio_config,
+                };
                 PlayerStreamState::build::<f64>(
                     stream_tx,
                     &self.device,

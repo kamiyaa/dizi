@@ -20,7 +20,7 @@ impl JoshutoDirEntry {
     pub fn from(
         direntry: &fs::DirEntry,
         base: &path::Path,
-        options: &DisplayOption,
+        _options: &DisplayOption,
     ) -> io::Result<Self> {
         let path = direntry.path().to_path_buf();
 

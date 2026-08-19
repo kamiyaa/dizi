@@ -1,6 +1,5 @@
 use std::path;
 
-use dirs_next::home_dir;
 use shellexpand::tilde_with_context;
 
 use dizi::error::{DiziError, DiziErrorKind};
@@ -65,7 +64,7 @@ impl std::str::FromStr for Command {
                 },
                 ".." => Ok(Self::ParentDirectory),
                 arg => Ok({
-                    let path_accepts_tilde = tilde_with_context(arg, home_dir);
+                    let path_accepts_tilde = tilde_with_context(arg, dirs::home_dir);
                     Self::ChangeDirectory(path::PathBuf::from(path_accepts_tilde.as_ref()))
                 }),
             }

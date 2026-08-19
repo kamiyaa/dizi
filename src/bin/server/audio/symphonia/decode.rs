@@ -35,6 +35,15 @@ impl Iterator for PacketReader {
     }
 }
 
+/// The channel count and sample rate that symphonia actually produced when
+/// decoding, as opposed to what was reported by the (possibly incomplete)
+/// pre-decode probe metadata.
+#[derive(Clone, Copy, Debug)]
+pub struct DecodedAudioSpec {
+    pub channels: usize,
+    pub sample_rate: u32,
+}
+
 pub struct PacketDecoder {
     decoder: Box<dyn AudioDecoder>,
 }
@@ -44,7 +53,7 @@ impl PacketDecoder {
         Self { decoder }
     }
 
-    pub fn decode<T>(&mut self, packet: Packet) -> DiziResult<Vec<T>>
+    pub fn decode<T>(&mut self, packet: Packet) -> DiziResult<(Vec<T>, Option<DecodedAudioSpec>)>
     where
         T: ConvertibleSample + cpal::Sample + Send + 'static,
     {
@@ -52,15 +61,19 @@ impl PacketDecoder {
         match self.decoder.decode(&packet) {
             Ok(decoded) => {
                 if decoded.frames() > 0 {
+                    let spec = DecodedAudioSpec {
+                        channels: decoded.spec().channels().count(),
+                        sample_rate: decoded.spec().rate(),
+                    };
                     let mut sample_data = Vec::with_capacity(decoded.frames());
                     decoded.copy_to_vec_interleaved(&mut sample_data);
-                    Ok(sample_data)
+                    Ok((sample_data, Some(spec)))
                 } else {
-                    Ok(vec![])
+                    Ok((vec![], None))
                 }
             }
-            Err(SymphoniaError::IoError(_)) => Ok(vec![]),
-            Err(SymphoniaError::DecodeError(_)) => Ok(vec![]),
+            Err(SymphoniaError::IoError(_)) => Ok((vec![], None)),
+            Err(SymphoniaError::DecodeError(_)) => Ok((vec![], None)),
             Err(err) => {
                 tracing::error!(?err, "Symphonia error");
                 Err(DiziError::from(err))
@@ -70,13 +83,29 @@ impl PacketDecoder {
 }
 
 /// Decodes every packet from `reader`, concatenating the resulting samples.
-pub fn decode_all<T>(reader: PacketReader, mut decoder: PacketDecoder) -> DiziResult<Vec<T>>
+///
+/// Also returns the channel count and sample rate symphonia actually decoded
+/// the audio at, taken from the first non-empty decoded packet. This must be
+/// used (rather than pre-decode probe metadata) to configure playback,
+/// since some codecs/containers don't populate channel/sample-rate in their
+/// probed codec parameters until a packet is decoded; using stale or
+/// device-default values there causes the interleaved sample buffer to be
+/// misread (e.g. a mono file misread as stereo plays back at 2x speed).
+pub fn decode_all<T>(
+    reader: PacketReader,
+    mut decoder: PacketDecoder,
+) -> DiziResult<(Vec<T>, Option<DecodedAudioSpec>)>
 where
     T: ConvertibleSample + cpal::Sample + Send + 'static,
 {
     let mut samples = Vec::new();
+    let mut spec = None;
     for packet in reader {
-        samples.extend(decoder.decode::<T>(packet)?);
+        let (packet_samples, packet_spec) = decoder.decode::<T>(packet)?;
+        if spec.is_none() {
+            spec = packet_spec;
+        }
+        samples.extend(packet_samples);
     }
-    Ok(samples)
+    Ok((samples, spec))
 }

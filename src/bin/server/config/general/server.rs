@@ -16,12 +16,12 @@ fn default_playlist_string() -> String {
 
 fn default_socket_path() -> PathBuf {
     let s = default_socket_string();
-    PathBuf::from(tilde_with_context(&s, dirs_next::home_dir).as_ref())
+    PathBuf::from(tilde_with_context(&s, dirs::home_dir).as_ref())
 }
 
 fn default_playlist_path() -> PathBuf {
     let s = default_playlist_string();
-    PathBuf::from(tilde_with_context(&s, dirs_next::home_dir).as_ref())
+    PathBuf::from(tilde_with_context(&s, dirs::home_dir).as_ref())
 }
 
 fn default_audio_system() -> cpal::HostId {
@@ -127,11 +127,11 @@ impl From<ServerConfigRaw> for ServerConfig {
         let audio_system = str_to_cpal_hostid(&raw.audio_system.to_lowercase())
             .unwrap_or_else(default_audio_system);
 
-        let socket = tilde_with_context(&raw.socket, dirs_next::home_dir);
-        let playlist = tilde_with_context(&raw.playlist, dirs_next::home_dir);
+        let socket = tilde_with_context(&raw.socket, dirs::home_dir);
+        let playlist = tilde_with_context(&raw.playlist, dirs::home_dir);
         let on_song_change = raw
             .on_song_change
-            .map(|path| PathBuf::from(tilde_with_context(&path, dirs_next::home_dir).as_ref()));
+            .map(|path| PathBuf::from(tilde_with_context(&path, dirs::home_dir).as_ref()));
 
         Self {
             socket: PathBuf::from(socket.as_ref()),

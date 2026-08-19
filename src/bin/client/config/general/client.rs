@@ -31,9 +31,9 @@ impl std::default::Default for ClientConfigRaw {
 
 impl From<ClientConfigRaw> for ClientConfig {
     fn from(raw: ClientConfigRaw) -> Self {
-        let socket = PathBuf::from(tilde_with_context(&raw.socket, dirs_next::home_dir).as_ref());
+        let socket = PathBuf::from(tilde_with_context(&raw.socket, dirs::home_dir).as_ref());
         let home_dir = raw.home_dir.map(|home_dir| {
-            PathBuf::from(tilde_with_context(&home_dir, dirs_next::home_dir).as_ref())
+            PathBuf::from(tilde_with_context(&home_dir, dirs::home_dir).as_ref())
         });
 
         Self {
@@ -63,7 +63,7 @@ impl ClientConfig {
 impl std::default::Default for ClientConfig {
     fn default() -> Self {
         let socket =
-            PathBuf::from(tilde_with_context("~/dizi-server-socket", dirs_next::home_dir).as_ref());
+            PathBuf::from(tilde_with_context("~/dizi-server-socket", dirs::home_dir).as_ref());
 
         Self {
             socket,
