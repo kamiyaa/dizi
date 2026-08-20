@@ -133,7 +133,7 @@ pub fn process_client_request(
             send_latest_song_info(context)?;
         }
         ClientRequest::PlaylistAppend { path: Some(p) } => {
-            let songs = playlist::playlist_append(context, &p)?;
+            let songs = playlist::playlist_append(context, p)?;
             context
                 .events
                 .broadcast_event(ServerBroadcastEvent::PlaylistAppend { audio_files: songs });
@@ -178,7 +178,7 @@ pub fn process_client_request(
             cwd: Some(cwd),
             path: Some(path),
         } => {
-            playlist::playlist_load(context, &cwd, &path)?;
+            playlist::playlist_load(context, cwd, path)?;
             let state = context.player.player_state();
             context
                 .events

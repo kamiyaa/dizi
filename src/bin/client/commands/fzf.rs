@@ -12,10 +12,8 @@ pub fn fzf(
     backend: &mut AppBackend,
     items: Vec<String>,
 ) -> AppResult<String> {
-    let mut args = Vec::new();
-
     // case insensitive
-    args.push("-i".to_owned());
+    let args = vec!["-i".into()];
     fzf_impl(app_state, backend, items, args)
 }
 
@@ -24,9 +22,7 @@ pub fn fzf_multi(
     backend: &mut AppBackend,
     items: Vec<String>,
 ) -> AppResult<String> {
-    let mut args = Vec::new();
-    args.push("-i".to_owned());
-    args.push("-m".to_owned());
+    let args = vec!["-i".into(), "-m".into()];
     fzf_impl(app_state, backend, items, args)
 }
 
@@ -64,12 +60,11 @@ fn fzf_impl(
     let fzf_output = fzf.wait_with_output();
     backend.terminal_restore()?;
 
-    if let Ok(output) = fzf_output {
-        if output.status.success() {
-            if let Ok(output) = from_utf8(&output.stdout) {
-                return Ok(output.to_owned());
-            }
-        }
+    if let Ok(output) = fzf_output
+        && output.status.success()
+        && let Ok(output) = from_utf8(&output.stdout)
+    {
+        return Ok(output.to_owned());
     }
 
     Ok(String::new())

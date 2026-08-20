@@ -236,8 +236,7 @@ impl<'a> TuiTextField<'a> {
                                 return None;
                             }
 
-                            let res = line_buffer.backspace(1, listener);
-                            res
+                            line_buffer.backspace(1, listener)
                         }
                         Key::Delete => {
                             if line_buffer.is_empty() {
@@ -339,10 +338,7 @@ impl<'a> TuiTextField<'a> {
                         Key::Char('\n') => {
                             break;
                         }
-                        Key::Char(c) => {
-                            let dirty = line_buffer.insert(c, 1, listener).is_some();
-                            dirty
-                        }
+                        Key::Char(c) => line_buffer.insert(c, 1, listener).is_some(),
                         _ => false,
                     };
                     if dirty {
@@ -403,27 +399,25 @@ fn autocomplete(
         }
         None => {
             if let Some((pos, mut candidates)) = get_autocomplete_candidates(completer, line_buffer)
+                && !candidates.is_empty()
             {
-                if !candidates.is_empty() {
-                    candidates.sort_by(|x, y| {
-                        x.display()
-                            .partial_cmp(y.display())
-                            .unwrap_or(std::cmp::Ordering::Less)
-                    });
+                candidates.sort_by(|x, y| {
+                    x.display()
+                        .partial_cmp(y.display())
+                        .unwrap_or(std::cmp::Ordering::Less)
+                });
 
-                    let index = if backwards { candidates.len() - 1 } else { 0 };
-                    let pos = line_buffer.rfind('/').map(|p| p + 1).unwrap_or(pos);
-                    let ct =
-                        CompletionTracker::new(index, pos, candidates, line_buffer.to_string());
-                    let first = ct.candidates[index].display();
+                let index = if backwards { candidates.len() - 1 } else { 0 };
+                let pos = line_buffer.rfind('/').map(|p| p + 1).unwrap_or(pos);
+                let ct = CompletionTracker::new(index, pos, candidates, line_buffer.to_string());
+                let first = ct.candidates[index].display();
 
-                    line_buffer.set_pos(pos);
-                    line_buffer.kill_buffer(listener);
-                    line_buffer.insert_str(pos, first, listener);
-                    line_buffer.move_end();
+                line_buffer.set_pos(pos);
+                line_buffer.kill_buffer(listener);
+                line_buffer.insert_str(pos, first, listener);
+                line_buffer.move_end();
 
-                    *completion_tracker = Some(ct);
-                }
+                *completion_tracker = Some(ct);
             }
         }
     }

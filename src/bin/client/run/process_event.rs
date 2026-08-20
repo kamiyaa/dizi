@@ -179,10 +179,7 @@ pub fn process_server_event(context: &mut AppState, s: &str) -> AppResult {
         }
         ServerBroadcastEvent::PlaylistAppend { audio_files } => {
             let len = audio_files.len();
-            let entries: Vec<_> = audio_files
-                .into_iter()
-                .map(|s| DiziSongEntry::Loaded(s))
-                .collect();
+            let entries: Vec<_> = audio_files.into_iter().map(DiziSongEntry::Loaded).collect();
             context
                 .server_state_mut()
                 .player

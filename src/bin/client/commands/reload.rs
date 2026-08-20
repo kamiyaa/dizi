@@ -7,20 +7,20 @@ use crate::history::create_dirlist_with_history;
 pub fn soft_reload(index: usize, context: &mut AppState) -> std::io::Result<()> {
     let mut paths = Vec::with_capacity(3);
     if let Some(curr_tab) = context.tab_state_ref().tab_ref(index) {
-        if let Some(curr_list) = curr_tab.curr_list_ref() {
-            if curr_list.need_update() {
-                paths.push(curr_list.file_path().to_path_buf());
-            }
+        if let Some(curr_list) = curr_tab.curr_list_ref()
+            && curr_list.need_update()
+        {
+            paths.push(curr_list.file_path().to_path_buf());
         }
-        if let Some(curr_list) = curr_tab.parent_list_ref() {
-            if curr_list.need_update() {
-                paths.push(curr_list.file_path().to_path_buf());
-            }
+        if let Some(curr_list) = curr_tab.parent_list_ref()
+            && curr_list.need_update()
+        {
+            paths.push(curr_list.file_path().to_path_buf());
         }
-        if let Some(curr_list) = curr_tab.child_list_ref() {
-            if curr_list.need_update() {
-                paths.push(curr_list.file_path().to_path_buf());
-            }
+        if let Some(curr_list) = curr_tab.child_list_ref()
+            && curr_list.need_update()
+        {
+            paths.push(curr_list.file_path().to_path_buf());
         }
     }
 

@@ -10,12 +10,18 @@ pub enum PlaylistType {
     PlaylistFile,
 }
 
-impl ToString for PlaylistType {
-    fn to_string(&self) -> String {
+impl PlaylistType {
+    pub fn as_str(&self) -> &str {
         match *self {
-            Self::DirectoryListing => "directory".to_string(),
-            Self::PlaylistFile => "file".to_string(),
+            Self::DirectoryListing => "directory",
+            Self::PlaylistFile => "file",
         }
+    }
+}
+
+impl std::fmt::Display for PlaylistType {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.write_str(self.as_str())
     }
 }
 
@@ -55,10 +61,10 @@ impl FilePlaylist {
     pub fn remove_song(&mut self, index: usize) -> DiziSongEntry {
         let song = self.list_mut().remove(index);
 
-        if let Some(playing_index) = self.playing_index {
-            if playing_index == index {
-                self.set_playing_index(None);
-            }
+        if let Some(playing_index) = self.playing_index
+            && playing_index == index
+        {
+            self.set_playing_index(None);
         }
         if self.list_ref().is_empty() {
             self.set_cursor_index(None);

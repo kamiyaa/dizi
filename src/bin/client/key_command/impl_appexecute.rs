@@ -22,7 +22,7 @@ impl AppExecute for Command {
             Self::ChangeDirectory(p) => {
                 change_directory::change_directory(context, p.as_path())?;
             }
-            Self::CommandLine(p, s) => {
+            Self::CmdLine(p, s) => {
                 command_line::read_and_execute(context, backend, keymap_t, p.as_str(), s.as_str())?
             }
 

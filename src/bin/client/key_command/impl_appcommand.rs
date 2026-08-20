@@ -7,7 +7,7 @@ impl AppCommand for Command {
             Self::Close => CMD_CLOSE,
 
             Self::ChangeDirectory(_) => CMD_CHANGE_DIRECTORY,
-            Self::CommandLine(_, _) => CMD_COMMAND_LINE,
+            Self::CmdLine(_, _) => CMD_COMMAND_LINE,
 
             Self::CursorMoveUp(_) => CMD_CURSOR_MOVE_UP,
             Self::CursorMoveDown(_) => CMD_CURSOR_MOVE_DOWN,

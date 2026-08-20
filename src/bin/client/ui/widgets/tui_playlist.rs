@@ -66,31 +66,32 @@ impl<'a> TuiPlaylist<'a> {
         let skip_dist = playlist.first_index_for_viewport(area.height as usize);
         let curr_index = playlist.get_cursor_index();
 
-        if let Some(curr_index) = curr_index {
-            if curr_index >= skip_dist && curr_index < skip_dist + area.height as usize {
-                let song = &playlist.list_ref()[curr_index];
+        if let Some(curr_index) = curr_index
+            && curr_index >= skip_dist
+            && curr_index < skip_dist + area.height as usize
+        {
+            let song = &playlist.list_ref()[curr_index];
 
-                let x = area.left();
-                let y = area.top();
+            let x = area.left();
+            let y = area.top();
 
-                let drawing_width = area.width as usize;
-                let style = style::playlist_style().add_modifier(Modifier::REVERSED);
+            let drawing_width = area.width as usize;
+            let style = style::playlist_style().add_modifier(Modifier::REVERSED);
 
-                // draw selected entry in a different style
-                let screen_index = curr_index % area.height as usize;
+            // draw selected entry in a different style
+            let screen_index = curr_index % area.height as usize;
 
-                let space_fill = " ".repeat(drawing_width);
-                buf.set_string(x, y + screen_index as u16, space_fill.as_str(), style);
+            let space_fill = " ".repeat(drawing_width);
+            buf.set_string(x, y + screen_index as u16, space_fill.as_str(), style);
 
-                print_entry(
-                    buf,
-                    song,
-                    curr_index,
-                    style,
-                    (x + 1, y + screen_index as u16),
-                    drawing_width - 1,
-                );
-            }
+            print_entry(
+                buf,
+                song,
+                curr_index,
+                style,
+                (x + 1, y + screen_index as u16),
+                drawing_width - 1,
+            );
         }
     }
 
@@ -103,30 +104,29 @@ impl<'a> TuiPlaylist<'a> {
         let skip_dist = playlist.first_index_for_viewport(area.height as usize);
 
         // print currently playing
-        if let Some(playing_index) = playlist.get_playing_index() {
-            if playing_index < playlist.len()
-                && playing_index >= skip_dist
-                && playing_index < skip_dist + area.height as usize
-            {
-                let song = &playlist.list_ref()[playing_index];
+        if let Some(playing_index) = playlist.get_playing_index()
+            && playing_index < playlist.len()
+            && playing_index >= skip_dist
+            && playing_index < skip_dist + area.height as usize
+        {
+            let song = &playlist.list_ref()[playing_index];
 
-                // draw selected entry in a different style
-                let screen_index = playing_index % area.height as usize;
+            // draw selected entry in a different style
+            let screen_index = playing_index % area.height as usize;
 
-                let style = style::playing_style();
+            let style = style::playing_style();
 
-                let space_fill = " ".repeat(drawing_width);
-                buf.set_string(x, y + screen_index as u16, space_fill.as_str(), style);
+            let space_fill = " ".repeat(drawing_width);
+            buf.set_string(x, y + screen_index as u16, space_fill.as_str(), style);
 
-                print_entry(
-                    buf,
-                    song,
-                    playing_index,
-                    style,
-                    (x + 1, y + screen_index as u16),
-                    drawing_width - 1,
-                );
-            }
+            print_entry(
+                buf,
+                song,
+                playing_index,
+                style,
+                (x + 1, y + screen_index as u16),
+                drawing_width - 1,
+            );
         }
     }
 }

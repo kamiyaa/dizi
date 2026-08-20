@@ -37,19 +37,19 @@ impl DirectoryHistory for JoshutoHistory {
         for curr in path.ancestors() {
             if self.contains_key(curr) {
                 let mut new_dirlist = create_dirlist_with_history(self, curr, options)?;
-                if let Some(ancestor) = prev.as_ref() {
-                    if let Some(i) = get_index_of_value(&new_dirlist.contents, ancestor) {
-                        new_dirlist.set_index(Some(i), ui_context, options);
-                    }
+                if let Some(ancestor) = prev.as_ref()
+                    && let Some(i) = get_index_of_value(&new_dirlist.contents, ancestor)
+                {
+                    new_dirlist.set_index(Some(i), ui_context, options);
                 }
                 dirlists.push(new_dirlist);
             } else {
                 let mut new_dirlist =
                     JoshutoDirList::from_path(curr.to_path_buf().clone(), options)?;
-                if let Some(ancestor) = prev.as_ref() {
-                    if let Some(i) = get_index_of_value(&new_dirlist.contents, ancestor) {
-                        new_dirlist.set_index(Some(i), ui_context, options);
-                    }
+                if let Some(ancestor) = prev.as_ref()
+                    && let Some(i) = get_index_of_value(&new_dirlist.contents, ancestor)
+                {
+                    new_dirlist.set_index(Some(i), ui_context, options);
                 }
                 dirlists.push(new_dirlist);
             }
@@ -123,10 +123,10 @@ pub fn create_dirlist_with_history(
     let filter_func = options.filter_func();
     let mut contents = read_directory(path, filter_func, options)?;
     for entry in contents.iter_mut() {
-        if entry.metadata.is_dir() {
-            if let Some(lst) = history.get(entry.file_path()) {
-                entry.metadata.update_directory_size(lst.len());
-            }
+        if entry.metadata.is_dir()
+            && let Some(lst) = history.get(entry.file_path())
+        {
+            entry.metadata.update_directory_size(lst.len());
         }
     }
 

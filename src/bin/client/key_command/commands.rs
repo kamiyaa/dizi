@@ -10,7 +10,7 @@ pub enum Command {
     Close,
 
     ChangeDirectory(path::PathBuf),
-    CommandLine(String, String),
+    CmdLine(String, String),
 
     CursorMoveUp(usize),
     CursorMoveDown(usize),

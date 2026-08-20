@@ -101,10 +101,10 @@ pub fn run_ui(
                         Some(CommandKeybind::CompositeKeybind(m)) => {
                             let cmd = process_event::get_input_while_composite(backend, context, m);
 
-                            if let Some(command) = cmd {
-                                if let Err(e) = command.execute(context, backend, &keymap_t) {
-                                    context.message_queue_mut().push_error(e.to_string());
-                                }
+                            if let Some(command) = cmd
+                                && let Err(e) = command.execute(context, backend, &keymap_t)
+                            {
+                                context.message_queue_mut().push_error(e.to_string());
                             }
                         }
                     },

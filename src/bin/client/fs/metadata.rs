@@ -98,10 +98,10 @@ impl JoshutoMetadata {
         let link_type = if symlink_metadata.file_type().is_symlink() {
             let mut link = "".to_string();
 
-            if let Ok(path) = fs::read_link(path) {
-                if let Some(s) = path.to_str() {
-                    link = s.to_string();
-                }
+            if let Ok(path) = fs::read_link(path)
+                && let Some(s) = path.to_str()
+            {
+                link = s.to_string();
             }
 
             let exists = path.exists();

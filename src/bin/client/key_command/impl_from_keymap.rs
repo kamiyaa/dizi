@@ -25,7 +25,7 @@ impl Command {
     pub fn from_keymap(keymap: &CommandKeymap) -> AppResult<Self> {
         // command line keys
         if let Some(stripped) = keymap.command.strip_prefix(':') {
-            return Ok(Self::CommandLine(stripped.to_owned(), "".to_owned()));
+            return Ok(Self::CmdLine(stripped.to_owned(), "".to_owned()));
         }
 
         let (command, arg): (&str, &str) = match keymap.command.find(' ') {

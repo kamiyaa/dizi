@@ -125,7 +125,7 @@ impl Events {
                 );
             }
         }
-        for (_, server_tx) in self.server_broadcast_listeners.iter() {
+        for server_tx in self.server_broadcast_listeners.values() {
             let _ = server_tx.send(event.clone());
         }
     }

@@ -43,7 +43,6 @@ fn set_curr_dirlist_index(context: &mut AppState, new_index: usize) {
     let ui_context = context.ui_context_ref().clone();
     let display_options = context.config_ref().display_options_ref().clone();
 
-    let new_index = new_index;
     if let Some(curr_list) = context.tab_state_mut().curr_tab_mut().curr_list_mut() {
         if curr_list.is_empty() {
             return;

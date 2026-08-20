@@ -25,7 +25,7 @@ impl std::str::FromStr for Command {
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         if let Some(stripped) = s.strip_prefix(':') {
-            return Ok(Self::CommandLine(stripped.to_owned(), "".to_owned()));
+            return Ok(Self::CmdLine(stripped.to_owned(), "".to_owned()));
         }
 
         let (command, arg) = match s.find(' ') {

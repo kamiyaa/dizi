@@ -41,11 +41,11 @@ fn fzf_search_playlist(
     let fzf_output = fzf::fzf(app_state, backend, items)?;
     let selected_idx_str = fzf_output.split_once(' ');
 
-    if let Some((selected_idx_str, _)) = selected_idx_str {
-        if let Ok(index) = selected_idx_str.parse::<usize>() {
-            let index = index.saturating_sub(1);
-            cursor_move::cursor_move_for_widget(app_state, widget, index);
-        }
+    if let Some((selected_idx_str, _)) = selected_idx_str
+        && let Ok(index) = selected_idx_str.parse::<usize>()
+    {
+        let index = index.saturating_sub(1);
+        cursor_move::cursor_move_for_widget(app_state, widget, index);
     }
     Ok(())
 }
@@ -79,11 +79,11 @@ fn fzf_search_directory(
     let fzf_output = fzf::fzf(app_state, backend, items)?;
     let selected_idx_str = fzf_output.split_once(' ');
 
-    if let Some((selected_idx_str, _)) = selected_idx_str {
-        if let Ok(index) = selected_idx_str.parse::<usize>() {
-            let index = index.saturating_sub(1);
-            cursor_move::cursor_move_for_widget(app_state, widget, index);
-        }
+    if let Some((selected_idx_str, _)) = selected_idx_str
+        && let Ok(index) = selected_idx_str.parse::<usize>()
+    {
+        let index = index.saturating_sub(1);
+        cursor_move::cursor_move_for_widget(app_state, widget, index);
     }
     Ok(())
 }

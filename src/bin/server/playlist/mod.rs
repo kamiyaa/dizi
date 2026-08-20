@@ -8,7 +8,7 @@ use dizi::error::AppResult;
 use dizi::playlist::FilePlaylist;
 use dizi::song::{DiziFile, DiziSongEntry};
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Default)]
 pub struct DiziPlaylist {
     pub contents: Vec<DiziSongEntry>,
     pub order: Vec<usize>,
@@ -99,15 +99,5 @@ impl DiziPlaylist {
             .copied()
             .collect();
         self.order = new_order;
-    }
-}
-
-impl std::default::Default for DiziPlaylist {
-    fn default() -> Self {
-        Self {
-            contents: Vec::new(),
-            order: Vec::new(),
-            order_index: None,
-        }
     }
 }

@@ -54,7 +54,7 @@ impl JoshutoDirList {
             metadata,
             _need_update: false,
             index,
-            viewport_index: if let Some(ix) = index { ix } else { 0 },
+            viewport_index: index.unwrap_or_default(),
         })
     }
 

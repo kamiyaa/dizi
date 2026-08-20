@@ -25,11 +25,11 @@ impl<'a> Widget for TuiTopBar<'a> {
         let mut ellipses = None;
         let mut curr_path_str = self.path.to_string_lossy().into_owned();
 
-        if curr_path_str.len() > area.width as usize {
-            if let Some(s) = self.path.file_name() {
-                curr_path_str = s.to_string_lossy().into_owned();
-                ellipses = Some(Span::styled("…", path_style));
-            }
+        if curr_path_str.len() > area.width as usize
+            && let Some(s) = self.path.file_name()
+        {
+            curr_path_str = s.to_string_lossy().into_owned();
+            ellipses = Some(Span::styled("…", path_style));
         }
 
         let text = match ellipses {
