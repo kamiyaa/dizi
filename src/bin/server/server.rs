@@ -9,7 +9,7 @@ use dizi::response::server::ServerBroadcastEvent;
 use crate::audio::symphonia::player::SymphoniaPlayer;
 use crate::config::AppConfig;
 use crate::context::{AppContext, QuitType};
-use crate::events::{AppEvent, Events, ServerEvent, ServerEventSender};
+use crate::events::{AppEvent, AppEventSender, Events, ServerEvent};
 use crate::server_util;
 
 /// Setup a unix socket
@@ -27,8 +27,8 @@ pub fn run(config: AppConfig) -> AppResult {
     let events = Events::new();
 
     let player = {
-        let server_event_tx = events.server_event_sender().clone();
-        SymphoniaPlayer::new(&config, server_event_tx)?
+        let event_tx = events.app_event_tx.clone();
+        SymphoniaPlayer::new(&config, event_tx)?
     };
 
     let mut context = AppContext {
@@ -41,8 +41,8 @@ pub fn run(config: AppConfig) -> AppResult {
     let listener = setup_socket(context.config_ref())?;
     // thread for listening to new client connections
     {
-        let server_event_tx = context.events.server_event_sender().clone();
-        thread::spawn(|| listen_for_clients(listener, server_event_tx));
+        let event_tx = context.events.app_event_tx.clone();
+        thread::spawn(|| listen_for_clients(listener, event_tx));
     }
 
     while context.quit == QuitType::DoNot {
@@ -94,9 +94,9 @@ pub fn run(config: AppConfig) -> AppResult {
     Ok(())
 }
 
-pub fn listen_for_clients(listener: UnixListener, event_tx: ServerEventSender) -> AppResult {
+pub fn listen_for_clients(listener: UnixListener, event_tx: AppEventSender) -> AppResult {
     for stream in listener.incoming().flatten() {
-        let _ = event_tx.send(ServerEvent::NewClient(stream));
+        let _ = event_tx.send(ServerEvent::NewClient(stream).into());
     }
     Ok(())
 }

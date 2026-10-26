@@ -20,18 +20,21 @@ use crate::traits::AudioPlayer;
 pub fn process_server_event(context: &mut AppContext, event: ServerEvent) -> AppResult {
     match event {
         ServerEvent::NewClient(stream) => {
-            let client_tx = context.events.client_request_sender().clone();
-            let (server_tx, server_rx) = mpsc::channel();
+            let event_tx = context.events.app_event_tx.clone();
+            let (client_tx, client_rx) = mpsc::channel();
 
             // assign a uuid for client
             let client_uuid = Uuid::new_v4();
             let uuid_string = client_uuid.to_string();
 
             // thread to listen to client requests
-            thread::spawn(move || client::handle_client(client_uuid, stream, client_tx, server_rx));
+            let client_tx_clone = client_tx.clone();
+            thread::spawn(move || {
+                client::handle_client(client_uuid, stream, event_tx, client_tx_clone, client_rx)
+            });
             context
                 .events
-                .add_broadcast_listener(uuid_string, server_tx);
+                .add_broadcast_listener(uuid_string, client_tx);
         }
         ServerEvent::PlayerProgressUpdate(elapsed) => {
             context.player.set_elapsed(elapsed);

@@ -151,25 +151,19 @@ impl AudioPlayer for SymphoniaPlayer {
     }
 
     fn pause(&mut self) -> AppResult {
-        self.player_stream_req().send(PlayerRequest::Pause)?;
-
-        self.player_stream_res().recv()??;
+        self.stream_request(PlayerRequest::Pause)?;
         self.state.status = PlayerStatus::Paused;
         Ok(())
     }
 
     fn resume(&mut self) -> AppResult {
-        self.player_stream_req().send(PlayerRequest::Resume)?;
-
-        self.player_stream_res().recv()??;
+        self.stream_request(PlayerRequest::Resume)?;
         self.state.status = PlayerStatus::Playing;
         Ok(())
     }
 
     fn stop(&mut self) -> AppResult {
-        self.player_stream_req().send(PlayerRequest::Stop)?;
-
-        self.player_stream_res().recv()??;
+        self.stream_request(PlayerRequest::Stop)?;
         self.state.status = PlayerStatus::Stopped;
         Ok(())
     }
@@ -188,13 +182,11 @@ impl AudioPlayer for SymphoniaPlayer {
         }
     }
     fn fast_forward(&mut self, offset: time::Duration) -> AppResult {
-        self.player_stream_req()
-            .send(PlayerRequest::FastForward { offset })?;
+        self.control.seek_by(offset.as_millis() as i64);
         Ok(())
     }
     fn rewind(&mut self, offset: time::Duration) -> AppResult {
-        self.player_stream_req()
-            .send(PlayerRequest::Rewind { offset })?;
+        self.control.seek_by(-(offset.as_millis() as i64));
         Ok(())
     }
 
@@ -202,11 +194,7 @@ impl AudioPlayer for SymphoniaPlayer {
         self.state.volume
     }
     fn set_volume(&mut self, volume: usize) -> AppResult {
-        self.player_stream_req().send(PlayerRequest::SetVolume {
-            volume: volume as f32 / 100.0,
-        })?;
-
-        self.player_stream_res().recv()??;
+        self.control.set_volume(volume as f32 / 100.0);
         self.state.volume = volume;
         Ok(())
     }

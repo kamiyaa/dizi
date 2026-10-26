@@ -1,7 +1,7 @@
-use std::sync::mpsc;
-use std::time::Duration;
+use std::sync::{Arc, mpsc};
 
 use cpal::traits::{DeviceTrait, StreamTrait};
+use cpal::{FromSample, SampleFormat};
 use symphonia::core::codecs::CodecParameters;
 use symphonia::core::codecs::audio::AudioDecoderOptions;
 
@@ -10,30 +10,35 @@ use dizi::song::DiziAudioFile;
 
 use crate::audio::request::PlayerRequest;
 use crate::audio::symphonia::stream::{
-    PlayerStreamEvent, PlayerStreamEventListener, PlayerStreamState, StreamEvent,
+    PlayableSample, PlaybackControl, PlayerStreamEvent, StreamEvent, build_stream,
 };
-use crate::events::{ServerEvent, ServerEventSender};
+use crate::events::{AppEventSender, ServerEvent};
 
 use super::super::decode::{PacketDecoder, PacketReader, decode_all};
 
-/// Stream
+/// Owns the audio output stream. Runs on its own thread, since `cpal::Stream` can't be sent
+/// between threads on every platform.
 pub struct PlayerStream {
-    event_tx: ServerEventSender,
-    event_poller: PlayerStreamEventListener,
+    event_tx: AppEventSender,
+    /// Handed to each output stream, to report progress back to this thread
+    stream_event_tx: mpsc::Sender<PlayerStreamEvent>,
+    stream_event_rx: mpsc::Receiver<PlayerStreamEvent>,
+    player_res_tx: mpsc::Sender<AppResult>,
+    control: Arc<PlaybackControl>,
     device: cpal::Device,
     stream_config: cpal::SupportedStreamConfig,
-    state: Option<PlayerStreamState>,
+    stream: Option<cpal::Stream>,
 }
 
 impl PlayerStream {
     pub fn new(
-        event_tx: ServerEventSender,
+        event_tx: AppEventSender,
+        stream_event_tx: mpsc::Sender<PlayerStreamEvent>,
+        stream_event_rx: mpsc::Receiver<PlayerStreamEvent>,
         player_res_tx: mpsc::Sender<AppResult>,
-        player_req_rx: mpsc::Receiver<PlayerRequest>,
+        control: Arc<PlaybackControl>,
         device: cpal::Device,
     ) -> AppResult<Self> {
-        let event_poller = PlayerStreamEventListener::new(player_res_tx, player_req_rx);
-
         let stream_config = device.default_output_config().map_err(|err| {
             let error_msg = "Failed to get default output config";
             tracing::error!(?err, "{error_msg}");
@@ -44,58 +49,23 @@ impl PlayerStream {
 
         Ok(Self {
             event_tx,
-            event_poller,
+            stream_event_tx,
+            stream_event_rx,
+            player_res_tx,
+            control,
             device,
             stream_config,
-            state: None,
+            stream: None,
         })
     }
 
-    pub fn pause(&mut self) -> AppResult {
-        if let Some(state) = self.state.as_ref() {
-            state.stream.pause()?;
-        }
-        Ok(())
-    }
-    pub fn resume(&mut self) -> AppResult {
-        if let Some(state) = self.state.as_ref() {
-            state.stream.play()?;
-        }
-        Ok(())
-    }
-    pub fn stop(&mut self) -> AppResult {
-        self.state.take();
-        Ok(())
-    }
-    pub fn fast_forward(&mut self, offset: Duration) -> AppResult {
-        if let Some(state) = self.state.as_ref() {
-            state
-                .playback_loop_tx
-                .send(PlayerRequest::FastForward { offset })?;
-        }
-        Ok(())
-    }
-    pub fn rewind(&mut self, offset: Duration) -> AppResult {
-        if let Some(state) = self.state.as_ref() {
-            state
-                .playback_loop_tx
-                .send(PlayerRequest::Rewind { offset })?;
-        }
-        Ok(())
-    }
-
-    pub fn set_volume(&mut self, volume: f32) {
-        if let Some(state) = self.state.as_ref() {
-            let _ = state
-                .playback_loop_tx
-                .send(PlayerRequest::SetVolume { volume });
-        }
-    }
-
     pub fn listen_for_events(&mut self) -> AppResult {
-        while let Ok(msg) = self.event_poller.next() {
+        while let Ok(msg) = self.stream_event_rx.recv() {
             match msg {
-                PlayerStreamEvent::Player(req) => self.process_player_req(req)?,
+                PlayerStreamEvent::Player(req) => {
+                    let res = self.process_player_req(req);
+                    self.player_res_tx.send(res)?;
+                }
                 PlayerStreamEvent::Stream(event) => self.process_stream_event(event)?,
             }
         }
@@ -104,38 +74,24 @@ impl PlayerStream {
 
     fn process_player_req(&mut self, req: PlayerRequest) -> AppResult {
         match req {
-            PlayerRequest::Play { song, volume } => {
-                let stream_state = self.build_player_stream_state(song.clone(), volume);
-                match stream_state {
-                    Ok(stream_state) => {
-                        stream_state.stream.play()?;
-                        self.state = Some(stream_state);
-                        self.event_poller.player_res().send(Ok(()))?;
-                    }
-                    Err(e) => self.event_poller.player_res().send(Err(e))?,
-                };
+            PlayerRequest::Play { song } => {
+                self.control.clear_seek();
+                let stream = self.build_stream(&song)?;
+                stream.play()?;
+                self.stream = Some(stream);
             }
             PlayerRequest::Pause => {
-                self.pause()?;
-                self.event_poller.player_res().send(Ok(()))?;
-            }
-            PlayerRequest::Stop => {
-                self.stop()?;
-                self.event_poller.player_res().send(Ok(()))?;
+                if let Some(stream) = self.stream.as_ref() {
+                    stream.pause()?;
+                }
             }
             PlayerRequest::Resume => {
-                self.resume()?;
-                self.event_poller.player_res().send(Ok(()))?;
+                if let Some(stream) = self.stream.as_ref() {
+                    stream.play()?;
+                }
             }
-            PlayerRequest::SetVolume { volume } => {
-                self.set_volume(volume);
-                self.event_poller.player_res().send(Ok(()))?;
-            }
-            PlayerRequest::FastForward { offset } => {
-                self.fast_forward(offset)?;
-            }
-            PlayerRequest::Rewind { offset } => {
-                self.rewind(offset)?;
+            PlayerRequest::Stop => {
+                self.stream = None;
             }
         }
         Ok(())
@@ -144,22 +100,18 @@ impl PlayerStream {
     fn process_stream_event(&mut self, event: StreamEvent) -> AppResult {
         match event {
             StreamEvent::StreamEnded => {
-                self.stop()?;
-                self.event_tx.send(ServerEvent::PlayerDone)?;
+                self.stream = None;
+                self.event_tx.send(ServerEvent::PlayerDone.into())?;
             }
             StreamEvent::Progress(duration) => {
                 self.event_tx
-                    .send(ServerEvent::PlayerProgressUpdate(duration))?;
+                    .send(ServerEvent::PlayerProgressUpdate(duration).into())?;
             }
         }
         Ok(())
     }
 
-    pub fn build_player_stream_state(
-        &self,
-        audio_file: Box<DiziAudioFile>,
-        volume: f32,
-    ) -> AppResult<PlayerStreamState> {
+    fn build_stream(&self, audio_file: &DiziAudioFile) -> AppResult<cpal::Stream> {
         let track_id = audio_file.audio_metadata.track_id;
 
         let format_reader = audio_file.file.get_probe_result()?;
@@ -197,8 +149,6 @@ impl PlayerStream {
         let decoder =
             symphonia::default::get_codecs().make_audio_decoder(audio_codec_params, &dec_opts)?;
 
-        let stream_tx = self.event_poller.stream_tx.clone();
-
         let packet_reader = PacketReader::new(format_reader, track_id);
         let packet_decoder = PacketDecoder::new(decoder);
 
@@ -218,158 +168,55 @@ impl PlayerStream {
         };
 
         match self.stream_config.sample_format() {
-            cpal::SampleFormat::U8 => {
-                let (samples, spec) = decode_all::<u8>(packet_reader, packet_decoder)?;
-                let audio_config = match spec {
-                    Some(spec) => cpal::StreamConfig {
-                        channels: spec.channels as u16,
-                        sample_rate: spec.sample_rate,
-                        buffer_size: cpal::BufferSize::Default,
-                    },
-                    None => fallback_audio_config,
-                };
-                PlayerStreamState::build::<u8>(
-                    stream_tx,
-                    &self.device,
-                    &audio_config,
-                    samples,
-                    volume,
-                    |packet, volume| ((packet as f32) * volume) as u8,
-                )
+            SampleFormat::U8 => {
+                self.decode_and_build::<u8>(packet_reader, packet_decoder, fallback_audio_config)
             }
-            cpal::SampleFormat::U16 => {
-                let (samples, spec) = decode_all::<u16>(packet_reader, packet_decoder)?;
-                let audio_config = match spec {
-                    Some(spec) => cpal::StreamConfig {
-                        channels: spec.channels as u16,
-                        sample_rate: spec.sample_rate,
-                        buffer_size: cpal::BufferSize::Default,
-                    },
-                    None => fallback_audio_config,
-                };
-                PlayerStreamState::build::<u16>(
-                    stream_tx,
-                    &self.device,
-                    &audio_config,
-                    samples,
-                    volume,
-                    |packet, volume| ((packet as f32) * volume) as u16,
-                )
+            SampleFormat::U16 => {
+                self.decode_and_build::<u16>(packet_reader, packet_decoder, fallback_audio_config)
             }
-            cpal::SampleFormat::U32 => {
-                let (samples, spec) = decode_all::<u32>(packet_reader, packet_decoder)?;
-                let audio_config = match spec {
-                    Some(spec) => cpal::StreamConfig {
-                        channels: spec.channels as u16,
-                        sample_rate: spec.sample_rate,
-                        buffer_size: cpal::BufferSize::Default,
-                    },
-                    None => fallback_audio_config,
-                };
-                PlayerStreamState::build::<u32>(
-                    stream_tx,
-                    &self.device,
-                    &audio_config,
-                    samples,
-                    volume,
-                    |packet, volume| ((packet as f32) * volume) as u32,
-                )
+            SampleFormat::U32 => {
+                self.decode_and_build::<u32>(packet_reader, packet_decoder, fallback_audio_config)
             }
-            cpal::SampleFormat::I8 => {
-                let (samples, spec) = decode_all::<i8>(packet_reader, packet_decoder)?;
-                let audio_config = match spec {
-                    Some(spec) => cpal::StreamConfig {
-                        channels: spec.channels as u16,
-                        sample_rate: spec.sample_rate,
-                        buffer_size: cpal::BufferSize::Default,
-                    },
-                    None => fallback_audio_config,
-                };
-                PlayerStreamState::build::<i8>(
-                    stream_tx,
-                    &self.device,
-                    &audio_config,
-                    samples,
-                    volume,
-                    |packet, volume| ((packet as f32) * volume) as i8,
-                )
+            SampleFormat::I8 => {
+                self.decode_and_build::<i8>(packet_reader, packet_decoder, fallback_audio_config)
             }
-            cpal::SampleFormat::I16 => {
-                let (samples, spec) = decode_all::<i16>(packet_reader, packet_decoder)?;
-                let audio_config = match spec {
-                    Some(spec) => cpal::StreamConfig {
-                        channels: spec.channels as u16,
-                        sample_rate: spec.sample_rate,
-                        buffer_size: cpal::BufferSize::Default,
-                    },
-                    None => fallback_audio_config,
-                };
-                PlayerStreamState::build::<i16>(
-                    stream_tx,
-                    &self.device,
-                    &audio_config,
-                    samples,
-                    volume,
-                    |packet, volume| ((packet as f32) * volume) as i16,
-                )
+            SampleFormat::I16 => {
+                self.decode_and_build::<i16>(packet_reader, packet_decoder, fallback_audio_config)
             }
-            cpal::SampleFormat::I32 => {
-                let (samples, spec) = decode_all::<i32>(packet_reader, packet_decoder)?;
-                let audio_config = match spec {
-                    Some(spec) => cpal::StreamConfig {
-                        channels: spec.channels as u16,
-                        sample_rate: spec.sample_rate,
-                        buffer_size: cpal::BufferSize::Default,
-                    },
-                    None => fallback_audio_config,
-                };
-                PlayerStreamState::build::<i32>(
-                    stream_tx,
-                    &self.device,
-                    &audio_config,
-                    samples,
-                    volume,
-                    |packet, volume| ((packet as f32) * volume) as i32,
-                )
+            SampleFormat::I32 => {
+                self.decode_and_build::<i32>(packet_reader, packet_decoder, fallback_audio_config)
             }
-            cpal::SampleFormat::F32 => {
-                let (samples, spec) = decode_all::<f32>(packet_reader, packet_decoder)?;
-                let audio_config = match spec {
-                    Some(spec) => cpal::StreamConfig {
-                        channels: spec.channels as u16,
-                        sample_rate: spec.sample_rate,
-                        buffer_size: cpal::BufferSize::Default,
-                    },
-                    None => fallback_audio_config,
-                };
-                PlayerStreamState::build::<f32>(
-                    stream_tx,
-                    &self.device,
-                    &audio_config,
-                    samples,
-                    volume,
-                    |packet, volume| packet * volume,
-                )
+            SampleFormat::F32 => {
+                self.decode_and_build::<f32>(packet_reader, packet_decoder, fallback_audio_config)
             }
-            _ => {
-                let (samples, spec) = decode_all::<f64>(packet_reader, packet_decoder)?;
-                let audio_config = match spec {
-                    Some(spec) => cpal::StreamConfig {
-                        channels: spec.channels as u16,
-                        sample_rate: spec.sample_rate,
-                        buffer_size: cpal::BufferSize::Default,
-                    },
-                    None => fallback_audio_config,
-                };
-                PlayerStreamState::build::<f64>(
-                    stream_tx,
-                    &self.device,
-                    &audio_config,
-                    samples,
-                    volume,
-                    |packet, volume| packet * volume as f64,
-                )
-            }
+            _ => self.decode_and_build::<f64>(packet_reader, packet_decoder, fallback_audio_config),
         }
+    }
+
+    fn decode_and_build<T: PlayableSample>(
+        &self,
+        packet_reader: PacketReader,
+        packet_decoder: PacketDecoder,
+        fallback_audio_config: cpal::StreamConfig,
+    ) -> AppResult<cpal::Stream>
+    where
+        f32: FromSample<T>,
+    {
+        let (samples, spec) = decode_all::<T>(packet_reader, packet_decoder)?;
+        let audio_config = match spec {
+            Some(spec) => cpal::StreamConfig {
+                channels: spec.channels as u16,
+                sample_rate: spec.sample_rate,
+                buffer_size: cpal::BufferSize::Default,
+            },
+            None => fallback_audio_config,
+        };
+        build_stream(
+            self.stream_event_tx.clone(),
+            &self.device,
+            &audio_config,
+            samples,
+            self.control.clone(),
+        )
     }
 }

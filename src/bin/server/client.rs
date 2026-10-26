@@ -8,7 +8,7 @@ use dizi::request::client::ClientRequest;
 use dizi::response::server::ServerBroadcastEvent;
 use dizi::utils;
 
-use crate::events::{ClientRequestSender, ServerBroadcastEventReceiver};
+use crate::events::{AppEvent, AppEventSender, ClientMessageSender};
 
 #[derive(Clone, Debug)]
 pub enum ClientMessage {
@@ -19,24 +19,11 @@ pub enum ClientMessage {
 pub fn handle_client(
     uuid: uuid::Uuid,
     mut stream: UnixStream,
-    client_request_tx: ClientRequestSender,
-    server_event_rx: ServerBroadcastEventReceiver,
+    app_event_tx: AppEventSender,
+    event_tx: ClientMessageSender,
+    event_rx: mpsc::Receiver<ClientMessage>,
 ) -> AppResult {
-    let (event_tx, event_rx) = mpsc::channel();
-
-    // listen for events broadcasted by the server
-    let event_tx_clone = event_tx.clone();
-    let _ = thread::spawn(move || {
-        while let Ok(server_event) = server_event_rx.recv() {
-            if event_tx_clone
-                .send(ClientMessage::Server(Box::new(server_event)))
-                .is_err()
-            {
-                return;
-            }
-        }
-    });
-
+    // the server broadcasts to this client over another clone of `event_tx`
     let uuid_string = uuid.to_string();
 
     // listen for requests sent by client
@@ -68,21 +55,20 @@ pub fn handle_client(
                 if line.is_empty() {
                     continue;
                 }
-                forward_client_request(&client_request_tx, &uuid_string, &line)?;
+                forward_client_request(&app_event_tx, &uuid_string, &line)?;
             }
         }
     }
     Ok(())
 }
 
-/// Forwards client requests to the server via `ClientRequestSender`
-pub fn forward_client_request(
-    client_request_tx: &ClientRequestSender,
-    uuid: &str,
-    line: &str,
-) -> AppResult {
+/// Forwards client requests to the server's main loop
+pub fn forward_client_request(app_event_tx: &AppEventSender, uuid: &str, line: &str) -> AppResult {
     let request: ClientRequest = serde_json::from_str(line)?;
-    client_request_tx.send((uuid.to_string(), request))?;
+    app_event_tx.send(AppEvent::Client {
+        uuid: uuid.to_string(),
+        request,
+    })?;
     Ok(())
 }
 
