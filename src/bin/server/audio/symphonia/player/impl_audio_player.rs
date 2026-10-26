@@ -23,7 +23,7 @@ impl SymphoniaPlayer {
         if let Some(entry) = entry
             && let DiziSongEntry::Loaded(audio_file) = entry.entry
         {
-            self.play(&audio_file)?;
+            self.play(audio_file)?;
         }
         Ok(())
     }

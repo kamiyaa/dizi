@@ -1,4 +1,5 @@
 use std::sync::{Arc, mpsc};
+use std::time::Duration;
 
 use cpal::traits::{DeviceTrait, StreamTrait};
 use cpal::{FromSample, SampleFormat};
@@ -10,11 +11,11 @@ use dizi::song::DiziAudioFile;
 
 use crate::audio::request::PlayerRequest;
 use crate::audio::symphonia::stream::{
-    PlayableSample, PlaybackControl, PlayerStreamEvent, StreamEvent, build_stream,
+    PlayableSample, PlaybackControl, PlayerStreamEvent, StreamEvent, StreamSource, build_stream,
 };
 use crate::events::{AppEventSender, ServerEvent};
 
-use super::super::decode::{PacketDecoder, PacketReader, decode_all};
+use super::super::decode::TrackDecoder;
 
 /// Owns the audio output stream. Runs on its own thread, since `cpal::Stream` can't be sent
 /// between threads on every platform.
@@ -28,6 +29,8 @@ pub struct PlayerStream {
     device: cpal::Device,
     stream_config: cpal::SupportedStreamConfig,
     stream: Option<cpal::Stream>,
+    /// Identifies `stream`, so events from streams since replaced or stopped are ignored
+    stream_id: u64,
 }
 
 impl PlayerStream {
@@ -56,6 +59,7 @@ impl PlayerStream {
             device,
             stream_config,
             stream: None,
+            stream_id: 0,
         })
     }
 
@@ -66,7 +70,11 @@ impl PlayerStream {
                     let res = self.process_player_req(req);
                     self.player_res_tx.send(res)?;
                 }
-                PlayerStreamEvent::Stream(event) => self.process_stream_event(event)?,
+                PlayerStreamEvent::Stream { id, event } => {
+                    if id == self.stream_id && self.stream.is_some() {
+                        self.process_stream_event(event)?;
+                    }
+                }
             }
         }
         Ok(())
@@ -75,6 +83,8 @@ impl PlayerStream {
     fn process_player_req(&mut self, req: PlayerRequest) -> AppResult {
         match req {
             PlayerRequest::Play { song } => {
+                self.stream = None;
+                self.stream_id += 1;
                 self.control.clear_seek();
                 let stream = self.build_stream(&song)?;
                 stream.play()?;
@@ -149,8 +159,8 @@ impl PlayerStream {
         let decoder =
             symphonia::default::get_codecs().make_audio_decoder(audio_codec_params, &dec_opts)?;
 
-        let packet_reader = PacketReader::new(format_reader, track_id);
-        let packet_decoder = PacketDecoder::new(decoder);
+        let track_decoder = TrackDecoder::new(format_reader, decoder, track_id);
+        let total_duration = audio_file.audio_metadata.total_duration;
 
         // Fallback used only if decoding produced no packets at all (e.g. an
         // empty file), in which case there's no audio to misconfigure anyway.
@@ -169,40 +179,43 @@ impl PlayerStream {
 
         match self.stream_config.sample_format() {
             SampleFormat::U8 => {
-                self.decode_and_build::<u8>(packet_reader, packet_decoder, fallback_audio_config)
+                self.start_stream::<u8>(track_decoder, total_duration, fallback_audio_config)
             }
             SampleFormat::U16 => {
-                self.decode_and_build::<u16>(packet_reader, packet_decoder, fallback_audio_config)
+                self.start_stream::<u16>(track_decoder, total_duration, fallback_audio_config)
             }
             SampleFormat::U32 => {
-                self.decode_and_build::<u32>(packet_reader, packet_decoder, fallback_audio_config)
+                self.start_stream::<u32>(track_decoder, total_duration, fallback_audio_config)
             }
             SampleFormat::I8 => {
-                self.decode_and_build::<i8>(packet_reader, packet_decoder, fallback_audio_config)
+                self.start_stream::<i8>(track_decoder, total_duration, fallback_audio_config)
             }
             SampleFormat::I16 => {
-                self.decode_and_build::<i16>(packet_reader, packet_decoder, fallback_audio_config)
+                self.start_stream::<i16>(track_decoder, total_duration, fallback_audio_config)
             }
             SampleFormat::I32 => {
-                self.decode_and_build::<i32>(packet_reader, packet_decoder, fallback_audio_config)
+                self.start_stream::<i32>(track_decoder, total_duration, fallback_audio_config)
             }
             SampleFormat::F32 => {
-                self.decode_and_build::<f32>(packet_reader, packet_decoder, fallback_audio_config)
+                self.start_stream::<f32>(track_decoder, total_duration, fallback_audio_config)
             }
-            _ => self.decode_and_build::<f64>(packet_reader, packet_decoder, fallback_audio_config),
+            _ => self.start_stream::<f64>(track_decoder, total_duration, fallback_audio_config),
         }
     }
 
-    fn decode_and_build<T: PlayableSample>(
+    /// Decodes the first packet, to configure the output stream from what was actually
+    /// decoded, then starts the stream; the rest is decoded as it plays.
+    fn start_stream<T: PlayableSample>(
         &self,
-        packet_reader: PacketReader,
-        packet_decoder: PacketDecoder,
+        mut decoder: TrackDecoder,
+        total_duration: Option<Duration>,
         fallback_audio_config: cpal::StreamConfig,
     ) -> AppResult<cpal::Stream>
     where
         f32: FromSample<T>,
     {
-        let (samples, spec) = decode_all::<T>(packet_reader, packet_decoder)?;
+        let mut first_samples = Vec::new();
+        let spec = decoder.decode_next::<T>(&mut first_samples)?;
         let audio_config = match spec {
             Some(spec) => cpal::StreamConfig {
                 channels: spec.channels as u16,
@@ -211,11 +224,17 @@ impl PlayerStream {
             },
             None => fallback_audio_config,
         };
+        let source = StreamSource {
+            decoder,
+            first_samples,
+            total_duration,
+        };
         build_stream(
             self.stream_event_tx.clone(),
+            self.stream_id,
             &self.device,
             &audio_config,
-            samples,
+            source,
             self.control.clone(),
         )
     }

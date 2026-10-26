@@ -18,6 +18,10 @@ pub enum StreamEvent {
 /// Everything the stream thread reacts to, sent over a single channel
 #[derive(Clone, Debug)]
 pub enum PlayerStreamEvent {
-    Stream(StreamEvent),
+    /// From the output stream with the given id
+    Stream {
+        id: u64,
+        event: StreamEvent,
+    },
     Player(PlayerRequest),
 }

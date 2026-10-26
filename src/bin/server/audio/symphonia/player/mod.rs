@@ -99,7 +99,7 @@ impl SymphoniaPlayer {
         self.player_res_rx.recv()?
     }
 
-    fn play(&mut self, song: &DiziAudioFile) -> AppResult {
+    fn play(&mut self, song: DiziAudioFile) -> AppResult {
         tracing::debug!(?song, "Playing song");
 
         self.stream_request(PlayerRequest::Play {
@@ -107,7 +107,7 @@ impl SymphoniaPlayer {
         })?;
 
         self.state.status = PlayerStatus::Playing;
-        self.state.song = Some(song.clone());
+        self.state.song = Some(song);
         Ok(())
     }
 
