@@ -1,12 +1,12 @@
 use dizi::error::AppResult;
 
 use crate::context::AppState;
-use crate::history::create_dirlist_with_history;
+use crate::fs::create_dirlist_with_history;
 
 // reload only if we have a queued reload
 pub fn soft_reload(index: usize, context: &mut AppState) -> std::io::Result<()> {
     let mut paths = Vec::with_capacity(3);
-    if let Some(curr_tab) = context.tab_state_ref().tab_ref(index) {
+    if let Some(curr_tab) = context.tab_state.tab_ref(index) {
         if let Some(curr_list) = curr_tab.curr_list_ref()
             && curr_list.need_update()
         {
@@ -25,12 +25,8 @@ pub fn soft_reload(index: usize, context: &mut AppState) -> std::io::Result<()> 
     }
 
     if !paths.is_empty() {
-        let options = context.config_ref().display_options_ref().clone();
-        if let Some(history) = context
-            .tab_state_mut()
-            .tab_mut(index)
-            .map(|t| t.history_mut())
-        {
+        let options = context.config.client.display_options.clone();
+        if let Some(history) = context.tab_state.tab_mut(index).map(|t| &mut t.history) {
             for path in paths {
                 let new_dirlist = create_dirlist_with_history(history, path.as_path(), &options)?;
                 history.insert(path, new_dirlist);
@@ -42,7 +38,7 @@ pub fn soft_reload(index: usize, context: &mut AppState) -> std::io::Result<()> 
 
 pub fn reload(context: &mut AppState, index: usize) -> std::io::Result<()> {
     let mut paths = Vec::with_capacity(3);
-    if let Some(curr_tab) = context.tab_state_ref().tab_ref(index) {
+    if let Some(curr_tab) = context.tab_state.tab_ref(index) {
         if let Some(curr_list) = curr_tab.curr_list_ref() {
             paths.push(curr_list.file_path().to_path_buf());
         }
@@ -55,12 +51,8 @@ pub fn reload(context: &mut AppState, index: usize) -> std::io::Result<()> {
     }
 
     if !paths.is_empty() {
-        let options = context.config_ref().display_options_ref().clone();
-        if let Some(history) = context
-            .tab_state_mut()
-            .tab_mut(index)
-            .map(|t| t.history_mut())
-        {
+        let options = context.config.client.display_options.clone();
+        if let Some(history) = context.tab_state.tab_mut(index).map(|t| &mut t.history) {
             for path in paths {
                 let new_dirlist = create_dirlist_with_history(history, path.as_path(), &options)?;
                 history.insert(path, new_dirlist);
@@ -68,12 +60,12 @@ pub fn reload(context: &mut AppState, index: usize) -> std::io::Result<()> {
         }
     }
     context
-        .message_queue_mut()
+        .message_queue
         .push_success("Directory listing reloaded!".to_string());
     Ok(())
 }
 
 pub fn reload_dirlist(context: &mut AppState) -> AppResult {
-    reload(context, context.tab_state_ref().index)?;
+    reload(context, context.tab_state.index)?;
     Ok(())
 }

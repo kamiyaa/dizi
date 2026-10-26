@@ -1,14 +1,14 @@
 use std::{fs, io, path};
 
 use crate::config::option::DisplayOption;
-use crate::fs::metadata::JoshutoMetadata;
+use crate::fs::metadata::AppFileMetadata;
 
 #[derive(Clone, Debug)]
-pub struct JoshutoDirEntry {
+pub struct AppDirEntry {
     pub name: String,
     pub ext: Option<String>,
     pub path: path::PathBuf,
-    pub metadata: JoshutoMetadata,
+    pub metadata: AppFileMetadata,
     /// Directly selected by the user, _not_ by a current visual mode selection
     permanent_selected: bool,
     /// Temporarily selected by the visual mode range
@@ -16,7 +16,7 @@ pub struct JoshutoDirEntry {
     _marked: bool,
 }
 
-impl JoshutoDirEntry {
+impl AppDirEntry {
     pub fn from(
         direntry: &fs::DirEntry,
         base: &path::Path,
@@ -37,7 +37,7 @@ impl JoshutoDirEntry {
             .and_then(|s| s.to_str())
             .map(|s| s.to_string());
 
-        let metadata = JoshutoMetadata::from(&path)?;
+        let metadata = AppFileMetadata::from(&path)?;
 
         Ok(Self {
             name,
@@ -87,32 +87,32 @@ impl JoshutoDirEntry {
     }
 }
 
-impl std::fmt::Display for JoshutoDirEntry {
+impl std::fmt::Display for AppDirEntry {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> Result<(), std::fmt::Error> {
         write!(f, "{}", self.file_name())
     }
 }
 
-impl std::convert::AsRef<str> for JoshutoDirEntry {
+impl std::convert::AsRef<str> for AppDirEntry {
     fn as_ref(&self) -> &str {
         self.file_name()
     }
 }
 
-impl std::cmp::PartialEq for JoshutoDirEntry {
+impl std::cmp::PartialEq for AppDirEntry {
     fn eq(&self, other: &Self) -> bool {
         self.file_path() == other.file_path()
     }
 }
-impl std::cmp::Eq for JoshutoDirEntry {}
+impl std::cmp::Eq for AppDirEntry {}
 
-impl std::cmp::PartialOrd for JoshutoDirEntry {
+impl std::cmp::PartialOrd for AppDirEntry {
     fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
         Some(self.cmp(other))
     }
 }
 
-impl std::cmp::Ord for JoshutoDirEntry {
+impl std::cmp::Ord for AppDirEntry {
     fn cmp(&self, other: &Self) -> std::cmp::Ordering {
         self.file_path().cmp(other.file_path())
     }

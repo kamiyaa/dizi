@@ -8,7 +8,7 @@ use ratatui::widgets::Widget;
 use unicode_width::UnicodeWidthStr;
 
 use crate::config::option::DisplayOption;
-use crate::fs::{FileType, JoshutoDirEntry, JoshutoDirList, LinkType};
+use crate::fs::{AppDirEntry, AppDirectoryList, AppFileType, AppLinkType};
 use crate::utils::format;
 use crate::utils::string::UnicodeTruncate;
 use crate::utils::style;
@@ -18,14 +18,14 @@ const MIN_LEFT_LABEL_WIDTH: i32 = 15;
 const ELLIPSIS: &str = "…";
 
 pub struct TuiDirListDetailed<'a> {
-    dirlist: &'a JoshutoDirList,
+    dirlist: &'a AppDirectoryList,
     display_options: &'a DisplayOption,
     currently_playing: Option<&'a DiziAudioFile>,
     focused: bool,
 }
 impl<'a> TuiDirListDetailed<'a> {
     pub fn new(
-        dirlist: &'a JoshutoDirList,
+        dirlist: &'a AppDirectoryList,
         display_options: &'a DisplayOption,
         currently_playing: Option<&'a DiziAudioFile>,
         focused: bool,
@@ -100,9 +100,9 @@ impl<'a> Widget for TuiDirListDetailed<'a> {
     }
 }
 
-fn get_entry_size_string(entry: &JoshutoDirEntry) -> String {
+fn get_entry_size_string(entry: &AppDirEntry) -> String {
     match entry.metadata.file_type() {
-        FileType::Directory => entry
+        AppFileType::Directory => entry
             .metadata
             .directory_size()
             .map(|n| n.to_string())
@@ -113,7 +113,7 @@ fn get_entry_size_string(entry: &JoshutoDirEntry) -> String {
 
 fn print_entry(
     buf: &mut Buffer,
-    entry: &JoshutoDirEntry,
+    entry: &AppDirEntry,
     style: Style,
     (x, y): (u16, u16),
     drawing_width: usize,
@@ -121,8 +121,8 @@ fn print_entry(
 ) {
     let size_string = get_entry_size_string(entry);
     let symlink_string = match entry.metadata.link_type() {
-        LinkType::Normal => "",
-        LinkType::Symlink { .. } => "-> ",
+        AppLinkType::Normal => "",
+        AppLinkType::Symlink { .. } => "-> ",
     };
     let left_label_original = entry.file_name();
     let right_label_original = format!(" {}{} ", symlink_string, size_string);

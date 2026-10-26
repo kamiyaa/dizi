@@ -1,12 +1,11 @@
 use std::borrow;
-use std::io;
 use std::sync;
 use std::thread;
 
 use ratatui::crossterm::event::KeyCode;
 use skim::prelude::*;
 
-use dizi::error::{AppResult, DiziError, DiziErrorKind};
+use dizi::error::{AppError, AppErrorCode, AppResult};
 
 use crate::commands::cursor_move;
 use crate::config::option::WidgetType;
@@ -49,7 +48,7 @@ fn skim_search_playlist(
         .unwrap();
 
     let items: Vec<DiziSkimItem> = context
-        .server_state_ref()
+        .server_state
         .player
         .playlist
         .list_ref()
@@ -62,8 +61,8 @@ fn skim_search_playlist(
         .collect();
 
     if items.is_empty() {
-        return Err(DiziError::new(
-            DiziErrorKind::IoError(io::ErrorKind::InvalidData),
+        return Err(AppError::new(
+            AppErrorCode::Io,
             "no files to select".to_string(),
         ));
     }
@@ -101,10 +100,7 @@ fn skim_search_playlist(
                     cursor_move::cursor_move_for_widget(context, widget, item.idx);
                 }
                 None => {
-                    return Err(DiziError::new(
-                        DiziErrorKind::IoError(io::ErrorKind::InvalidData),
-                        "Error casting".to_string(),
-                    ));
+                    return Err(AppError::new(AppErrorCode::Io, "Error casting".to_string()));
                 }
             }
         }
@@ -125,7 +121,7 @@ fn skim_search_directory(
         .unwrap();
 
     let items = context
-        .tab_state_ref()
+        .tab_state
         .curr_tab_ref()
         .curr_list_ref()
         .map(|list| {
@@ -142,8 +138,8 @@ fn skim_search_directory(
         .unwrap_or_default();
 
     if items.is_empty() {
-        return Err(DiziError::new(
-            DiziErrorKind::IoError(io::ErrorKind::InvalidData),
+        return Err(AppError::new(
+            AppErrorCode::Io,
             "no files to select".to_string(),
         ));
     }
@@ -181,10 +177,7 @@ fn skim_search_directory(
                     cursor_move::cursor_move_for_widget(context, widget, item.idx);
                 }
                 None => {
-                    return Err(DiziError::new(
-                        DiziErrorKind::IoError(io::ErrorKind::InvalidData),
-                        "Error casting".to_string(),
-                    ));
+                    return Err(AppError::new(AppErrorCode::Io, "Error casting".to_string()));
                 }
             }
         }

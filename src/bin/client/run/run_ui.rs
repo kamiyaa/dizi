@@ -69,8 +69,8 @@ pub fn run_ui(
                 context.flush_event();
             }
             AppEvent::TerminalEvent(key) => {
-                if context.message_queue_ref().current_message().is_some() {
-                    context.message_queue_mut().pop_front();
+                if context.message_queue.current_message().is_some() {
+                    context.message_queue.pop_front();
                 }
                 match key {
                     // in the event where mouse input is not supported
@@ -78,24 +78,24 @@ pub fn run_ui(
                     Event::Unsupported(s) if s.as_slice() == [27, 79, 65] => {
                         let command = Command::CursorMoveUp(1);
                         if let Err(e) = command.execute(context, backend, &keymap_t) {
-                            context.message_queue_mut().push_error(e.to_string());
+                            context.message_queue.push_error(e.to_string());
                         }
                     }
                     Event::Unsupported(s) if s.as_slice() == [27, 79, 66] => {
                         let command = Command::CursorMoveDown(1);
                         if let Err(e) = command.execute(context, backend, &keymap_t) {
-                            context.message_queue_mut().push_error(e.to_string());
+                            context.message_queue.push_error(e.to_string());
                         }
                     }
                     key => match keymap_t.as_ref().get(&key) {
                         None => {
                             context
-                                .message_queue_mut()
+                                .message_queue
                                 .push_info(format!("Unmapped input: {}", key.to_key_string()));
                         }
                         Some(CommandKeybind::SimpleKeybind(command)) => {
                             if let Err(e) = command.execute(context, backend, &keymap_t) {
-                                context.message_queue_mut().push_error(e.to_string());
+                                context.message_queue.push_error(e.to_string());
                             }
                         }
                         Some(CommandKeybind::CompositeKeybind(m)) => {
@@ -104,7 +104,7 @@ pub fn run_ui(
                             if let Some(command) = cmd
                                 && let Err(e) = command.execute(context, backend, &keymap_t)
                             {
-                                context.message_queue_mut().push_error(e.to_string());
+                                context.message_queue.push_error(e.to_string());
                             }
                         }
                     },
@@ -114,7 +114,7 @@ pub fn run_ui(
             }
             AppEvent::Server(message) => {
                 if let Err(err) = process_event::process_server_event(context, message.as_str()) {
-                    context.message_queue_mut().push_error(err.to_string());
+                    context.message_queue.push_error(err.to_string());
                 }
             }
             event => process_event::process_noninteractive(event, context),
@@ -139,5 +139,5 @@ fn calculate_ui_context(context: &mut AppState, area: Rect) {
     ];
 
     let layout = views::calculate_layout_with_borders(area, &constraints);
-    context.ui_context_mut().layout = layout;
+    context.ui_state.layout = layout;
 }

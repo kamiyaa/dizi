@@ -21,7 +21,7 @@ pub enum QuitType {
 }
 
 #[derive(Clone, Debug, PartialEq, Eq)]
-pub struct UiContext {
+pub struct UiState {
     pub layout: Vec<Rect>,
 }
 
@@ -33,20 +33,20 @@ pub struct AppState {
     pub stream: UnixStream,
     pub view_widget: WidgetType,
     // app config
-    config: config::AppConfig,
+    pub config: config::AppConfig,
 
     // context related to tabs
-    tab_state: TabState,
+    pub tab_state: TabState,
 
-    commandline_state: CommandLineState,
+    pub commandline_state: CommandLineState,
     // user interface context; data which is input to both, the UI rendering and the app state
-    ui_context: UiContext,
+    pub ui_state: UiState,
     // context related to searching
     search_context: Option<SearchPattern>,
     // message queue for displaying messages
-    message_queue: MessageQueue,
+    pub message_queue: MessageQueue,
     // server state
-    server_state: ServerState,
+    pub server_state: ServerState,
 }
 
 impl AppState {
@@ -63,7 +63,7 @@ impl AppState {
             commandline_state,
             search_context: None,
             tab_state: TabState::new(),
-            ui_context: UiContext { layout: vec![] },
+            ui_state: UiState { layout: vec![] },
             message_queue: MessageQueue::new(),
             server_state: ServerState::new(),
         }
@@ -88,53 +88,11 @@ impl AppState {
         self.event_listener.event_tx.clone()
     }
 
-    pub fn config_ref(&self) -> &config::AppConfig {
-        &self.config
-    }
-    pub fn config_mut(&mut self) -> &mut config::AppConfig {
-        &mut self.config
-    }
-
-    pub fn message_queue_ref(&self) -> &MessageQueue {
-        &self.message_queue
-    }
-    pub fn message_queue_mut(&mut self) -> &mut MessageQueue {
-        &mut self.message_queue
-    }
-
-    pub fn server_state_ref(&self) -> &ServerState {
-        &self.server_state
-    }
-    pub fn server_state_mut(&mut self) -> &mut ServerState {
-        &mut self.server_state
-    }
-
-    pub fn tab_state_ref(&self) -> &TabState {
-        &self.tab_state
-    }
-    pub fn tab_state_mut(&mut self) -> &mut TabState {
-        &mut self.tab_state
-    }
-
     pub fn get_search_context(&self) -> Option<&SearchPattern> {
         self.search_context.as_ref()
     }
     pub fn set_search_context(&mut self, pattern: SearchPattern) {
         self.search_context = Some(pattern);
-    }
-
-    pub fn ui_context_ref(&self) -> &UiContext {
-        &self.ui_context
-    }
-    pub fn ui_context_mut(&mut self) -> &mut UiContext {
-        &mut self.ui_context
-    }
-
-    pub fn commandline_state_ref(&self) -> &CommandLineState {
-        &self.commandline_state
-    }
-    pub fn commandline_state_mut(&mut self) -> &mut CommandLineState {
-        &mut self.commandline_state
     }
 
     pub fn get_view_widget(&self) -> WidgetType {

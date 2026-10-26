@@ -2,10 +2,10 @@ use std::path;
 
 use shellexpand::tilde_with_context;
 
-use dizi::error::{DiziError, DiziErrorKind};
+use dizi::error::{AppError, AppErrorCode};
 
 use crate::config::option::SelectOption;
-use crate::config::option::SortType;
+use crate::config::option::SortMethod;
 
 use crate::HOME_DIR;
 
@@ -21,7 +21,7 @@ macro_rules! simple_command_conversion_case {
 }
 
 impl std::str::FromStr for Command {
-    type Err = DiziError;
+    type Err = AppError;
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         if let Some(stripped) = s.strip_prefix(':') {
@@ -57,8 +57,8 @@ impl std::str::FromStr for Command {
             match arg {
                 "" => match HOME_DIR.as_ref() {
                     Some(s) => Ok(Self::ChangeDirectory(s.clone())),
-                    None => Err(DiziError::new(
-                        DiziErrorKind::EnvVarNotPresent,
+                    None => Err(AppError::new(
+                        AppErrorCode::EnvVar,
                         format!("{}: Cannot find home directory", command),
                     )),
                 },
@@ -74,7 +74,7 @@ impl std::str::FromStr for Command {
                 "" => Ok(Self::CursorMoveDown(1)),
                 arg => match arg.trim().parse::<usize>() {
                     Ok(s) => Ok(Self::CursorMoveDown(s)),
-                    Err(e) => Err(DiziError::new(DiziErrorKind::ParseError, e.to_string())),
+                    Err(e) => Err(AppError::new(AppErrorCode::Parse, e.to_string())),
                 },
             }
         } else if command == CMD_CURSOR_MOVE_UP {
@@ -82,23 +82,23 @@ impl std::str::FromStr for Command {
                 "" => Ok(Self::CursorMoveUp(1)),
                 arg => match arg.trim().parse::<usize>() {
                     Ok(s) => Ok(Self::CursorMoveUp(s)),
-                    Err(e) => Err(DiziError::new(DiziErrorKind::ParseError, e.to_string())),
+                    Err(e) => Err(AppError::new(AppErrorCode::Parse, e.to_string())),
                 },
             }
         } else if command == CMD_RELOAD_DIRECTORY_LIST {
             Ok(Self::ReloadDirList)
         } else if command == CMD_SEARCH_STRING {
             match arg {
-                "" => Err(DiziError::new(
-                    DiziErrorKind::InvalidParameters,
+                "" => Err(AppError::new(
+                    AppErrorCode::InvalidParameters,
                     format!("{}: Expected 1, got 0", command),
                 )),
                 arg => Ok(Self::SearchString(arg.to_string())),
             }
         } else if command == CMD_SEARCH_GLOB {
             match arg {
-                "" => Err(DiziError::new(
-                    DiziErrorKind::InvalidParameters,
+                "" => Err(AppError::new(
+                    AppErrorCode::InvalidParameters,
                     format!("{}: Expected 1, got 0", command),
                 )),
                 arg => Ok(Self::SearchGlob(arg.to_string())),
@@ -121,25 +121,25 @@ impl std::str::FromStr for Command {
                     }
                     Ok(Self::SelectFiles(pattern.to_string(), options))
                 }
-                Err(e) => Err(DiziError::new(
-                    DiziErrorKind::InvalidParameters,
+                Err(e) => Err(AppError::new(
+                    AppErrorCode::InvalidParameters,
                     format!("{}: {}", arg, e),
                 )),
             }
         } else if command == CMD_SORT {
             match arg {
                 "reverse" => Ok(Self::SortReverse),
-                arg => match SortType::parse(arg) {
+                arg => match SortMethod::parse(arg) {
                     Some(s) => Ok(Self::Sort(s)),
-                    None => Err(DiziError::new(
-                        DiziErrorKind::InvalidParameters,
+                    None => Err(AppError::new(
+                        AppErrorCode::InvalidParameters,
                         format!("{}: Unknown option '{}'", command, arg),
                     )),
                 },
             }
         } else {
-            Err(DiziError::new(
-                DiziErrorKind::UnrecognizedCommand,
+            Err(AppError::new(
+                AppErrorCode::UnrecognizedCommand,
                 format!("Unrecognized command '{}'", command),
             ))
         }

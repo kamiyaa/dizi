@@ -19,12 +19,11 @@ impl<'a> TuiFolderView<'a> {
 
 impl<'a> Widget for TuiFolderView<'a> {
     fn render(self, area: Rect, buf: &mut Buffer) {
-        let curr_list = self.context.tab_state_ref().curr_tab_ref().curr_list_ref();
+        let curr_list = self.context.tab_state.curr_tab_ref().curr_list_ref();
         let _curr_entry = curr_list.and_then(|c| c.curr_entry_ref());
 
-        let config = self.context.config_ref();
-        let display_options = config.display_options_ref();
-        let currently_playing = self.context.server_state_ref().player.song.as_ref();
+        let display_options = &self.context.config.client.display_options;
+        let currently_playing = self.context.server_state.player.song.as_ref();
 
         // render current view
         if let Some(list) = curr_list.as_ref() {

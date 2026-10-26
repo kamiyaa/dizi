@@ -1,4 +1,4 @@
-use dizi::error::{AppResult, DiziError, DiziErrorKind};
+use dizi::error::{AppError, AppErrorCode, AppResult};
 
 use crate::commands::{cursor_move, fzf};
 use crate::config::option::WidgetType;
@@ -22,7 +22,7 @@ fn fzf_search_playlist(
     widget: WidgetType,
 ) -> AppResult {
     let items: Vec<String> = app_state
-        .server_state_ref()
+        .server_state
         .player
         .playlist
         .list_ref()
@@ -32,8 +32,8 @@ fn fzf_search_playlist(
         .collect();
 
     if items.is_empty() {
-        return Err(DiziError::new(
-            DiziErrorKind::ParseError,
+        return Err(AppError::new(
+            AppErrorCode::Parse,
             "no files to select".to_string(),
         ));
     }
@@ -56,7 +56,7 @@ fn fzf_search_directory(
     widget: WidgetType,
 ) -> AppResult {
     let items = app_state
-        .tab_state_ref()
+        .tab_state
         .curr_tab_ref()
         .curr_list_ref()
         .map(|list| {
@@ -70,8 +70,8 @@ fn fzf_search_directory(
         .unwrap_or_default();
 
     if items.is_empty() {
-        return Err(DiziError::new(
-            DiziErrorKind::ParseError,
+        return Err(AppError::new(
+            AppErrorCode::Parse,
             "no files to select".to_string(),
         ));
     }

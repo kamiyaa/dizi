@@ -2,7 +2,7 @@ use std::io::{BufWriter, Write};
 use std::process::{Command, Stdio};
 use std::str::from_utf8;
 
-use dizi::error::{AppResult, DiziError};
+use dizi::error::{AppError, AppResult};
 
 use crate::context::AppState;
 use crate::ui::AppBackend;
@@ -45,7 +45,7 @@ fn fzf_impl(
         Ok(child) => child,
         Err(e) => {
             backend.terminal_restore()?;
-            return Err(DiziError::from(e));
+            return Err(AppError::from(e));
         }
     };
 

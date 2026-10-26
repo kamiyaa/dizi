@@ -5,8 +5,8 @@ use std::time::Duration;
 use cpal::Stream;
 use cpal::StreamConfig;
 use cpal::traits::DeviceTrait;
-use dizi::error::DiziError;
-use dizi::error::DiziErrorKind;
+use dizi::error::AppError;
+use dizi::error::AppErrorCode;
 use symphonia::core::audio::conv::ConvertibleSample;
 use symphonia::core::units::TimeBase;
 
@@ -58,7 +58,7 @@ where
 
     let denom = NonZero::new(config.sample_rate * config.channels as u32).ok_or_else(|| {
         let error_msg = "Failed to create non zero value";
-        DiziError::new(DiziErrorKind::InvalidParameters, error_msg.to_string())
+        AppError::new(AppErrorCode::InvalidParameters, error_msg.to_string())
     })?;
     let time_base = TimeBase { numer, denom };
 
@@ -143,7 +143,7 @@ where
                 .calc_time(Timestamp::new(new_sample_offset as i64))
                 .ok_or_else(|| {
                     let error_msg = "Failed to calculate time";
-                    DiziError::new(DiziErrorKind::InvalidParameters, error_msg.to_string())
+                    AppError::new(AppErrorCode::InvalidParameters, error_msg.to_string())
                 })
                 .unwrap_or_default()
                 .as_secs() as u64;

@@ -6,7 +6,7 @@ use symphonia::core::errors::Error as SymphoniaError;
 use symphonia::core::formats::FormatReader;
 use symphonia::core::packet::Packet;
 
-use dizi::error::{AppResult, DiziError};
+use dizi::error::{AppError, AppResult};
 
 pub struct PacketReader {
     format: Box<dyn FormatReader>,
@@ -76,7 +76,7 @@ impl PacketDecoder {
             Err(SymphoniaError::DecodeError(_)) => Ok((vec![], None)),
             Err(err) => {
                 tracing::error!(?err, "Symphonia error");
-                Err(DiziError::from(err))
+                Err(AppError::from(err))
             }
         }
     }

@@ -3,7 +3,7 @@ use std::path;
 use dizi::request::client::ClientRequest;
 
 use crate::config::option::SelectOption;
-use crate::config::option::SortType;
+use crate::config::option::SortMethod;
 
 #[derive(Clone, Debug)]
 pub enum Command {
@@ -37,7 +37,7 @@ pub enum Command {
 
     SelectFiles(String, SelectOption),
 
-    Sort(SortType),
+    Sort(SortMethod),
     SortReverse,
 
     ToggleView,

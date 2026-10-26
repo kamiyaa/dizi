@@ -20,7 +20,6 @@ path = "src/bin/client/main.rs"
 
 [dependencies]
 alphanumeric-sort = "^1"
-chrono = "^0"
 clap = { version = "^4", features = ["derive"] }
 dirs = "^6"
 globset = "^0"

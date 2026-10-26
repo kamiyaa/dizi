@@ -27,60 +27,52 @@ pub fn cursor_index(context: &mut AppState, widget: WidgetType) -> Option<usize>
 
 fn get_curr_dirlist_index(context: &AppState) -> Option<usize> {
     context
-        .tab_state_ref()
+        .tab_state
         .curr_tab_ref()
         .curr_list_ref()
         .and_then(|list| list.get_index())
 }
 fn get_curr_dirlist_len(context: &AppState) -> Option<usize> {
     context
-        .tab_state_ref()
+        .tab_state
         .curr_tab_ref()
         .curr_list_ref()
         .map(|list| list.len())
 }
 fn set_curr_dirlist_index(context: &mut AppState, new_index: usize) {
-    let ui_context = context.ui_context_ref().clone();
-    let display_options = context.config_ref().display_options_ref().clone();
+    let ui_state = context.ui_state.clone();
+    let display_options = context.config.client.display_options.clone();
 
-    if let Some(curr_list) = context.tab_state_mut().curr_tab_mut().curr_list_mut() {
+    if let Some(curr_list) = context.tab_state.curr_tab_mut().curr_list_mut() {
         if curr_list.is_empty() {
             return;
         }
         let dir_len = curr_list.len();
         if dir_len <= new_index {
-            curr_list.set_index(
-                Some(dir_len.saturating_sub(1)),
-                &ui_context,
-                &display_options,
-            );
+            curr_list.set_index(Some(dir_len.saturating_sub(1)), &ui_state, &display_options);
         } else {
-            curr_list.set_index(Some(new_index), &ui_context, &display_options);
+            curr_list.set_index(Some(new_index), &ui_state, &display_options);
         }
     }
 }
 
 pub fn get_playlist_index(context: &AppState) -> Option<usize> {
-    context
-        .server_state_ref()
-        .player
-        .playlist
-        .get_cursor_index()
+    context.server_state.player.playlist.get_cursor_index()
 }
 fn get_playlist_len(context: &AppState) -> usize {
-    context.server_state_ref().player.playlist.len()
+    context.server_state.player.playlist.len()
 }
 pub fn set_playlist_index(context: &mut AppState, new_index: usize) {
-    let playlist_len = context.server_state_ref().player.playlist.len();
+    let playlist_len = context.server_state.player.playlist.len();
     if playlist_len <= new_index {
         context
-            .server_state_mut()
+            .server_state
             .player
             .playlist
             .set_cursor_index(Some(playlist_len.saturating_sub(1)));
     } else {
         context
-            .server_state_mut()
+            .server_state
             .player
             .playlist
             .set_cursor_index(Some(new_index));

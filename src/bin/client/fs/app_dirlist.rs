@@ -3,56 +3,39 @@ use std::path;
 use std::slice::Iter;
 
 use crate::config::option::DisplayOption;
-use crate::context::UiContext;
-use crate::fs::{JoshutoDirEntry, JoshutoMetadata};
-use crate::history::read_directory;
+use crate::context::UiState;
+use crate::fs::read_directory;
+use crate::fs::{AppDirEntry, AppFileMetadata};
 
 #[derive(Clone, Debug)]
-pub struct JoshutoDirList {
-    path: path::PathBuf,
-    pub contents: Vec<JoshutoDirEntry>,
-    pub metadata: JoshutoMetadata,
+pub struct AppDirectoryList {
+    pub path: path::PathBuf,
+    pub contents: Vec<AppDirEntry>,
+    pub metadata: AppFileMetadata,
     /// The cursor position in this dir list
-    index: Option<usize>,
+    pub index: Option<usize>,
     /// The index in this dir list to start with when rendering the list
-    viewport_index: usize,
-    _need_update: bool,
+    pub viewport_index: usize,
+    pub need_update: bool,
 }
 
-impl JoshutoDirList {
-    pub fn new(
-        path: path::PathBuf,
-        contents: Vec<JoshutoDirEntry>,
-        index: Option<usize>,
-        viewport_index: usize,
-        metadata: JoshutoMetadata,
-    ) -> Self {
-        Self {
-            path,
-            contents,
-            metadata,
-            index,
-            viewport_index,
-            _need_update: false,
-        }
-    }
-
+impl AppDirectoryList {
     pub fn from_path(path: path::PathBuf, options: &DisplayOption) -> std::io::Result<Self> {
         let filter_func = options.filter_func();
         let mut contents = read_directory(path.as_path(), filter_func, options)?;
 
-        let sort_options = options.sort_options_ref();
+        let sort_options = &options.sort_options;
         contents.sort_by(|f1, f2| sort_options.compare(f1, f2));
 
         let index = if contents.is_empty() { None } else { Some(0) };
 
-        let metadata = JoshutoMetadata::from(&path)?;
+        let metadata = AppFileMetadata::from(&path)?;
 
         Ok(Self {
             path,
             contents,
             metadata,
-            _need_update: false,
+            need_update: false,
             index,
             viewport_index: index.unwrap_or_default(),
         })
@@ -62,17 +45,17 @@ impl JoshutoDirList {
         self.index
     }
 
-    fn update_viewport(&mut self, ui_context: &UiContext, options: &DisplayOption) {
+    fn update_viewport(&mut self, ui_state: &UiState, options: &DisplayOption) {
         if let Some(ix) = self.index {
-            let height = ui_context.layout[0].height as usize;
+            let height = ui_state.layout[0].height as usize;
 
             // get scroll buffer size, corrected in case of too small terminal
             let scroll_offset = if height < 4 {
                 0
-            } else if options.scroll_offset() * 2 > height - 1 {
+            } else if options.scroll_offset * 2 > height - 1 {
                 height / 2 - 1
             } else {
-                options.scroll_offset()
+                options.scroll_offset
             };
 
             // calculate viewport
@@ -89,22 +72,17 @@ impl JoshutoDirList {
         }
     }
 
-    pub fn set_index(
-        &mut self,
-        index: Option<usize>,
-        ui_context: &UiContext,
-        options: &DisplayOption,
-    ) {
+    pub fn set_index(&mut self, index: Option<usize>, ui_state: &UiState, options: &DisplayOption) {
         if index == self.index {
             return;
         }
         self.index = index;
-        if !ui_context.layout.is_empty() {
-            self.update_viewport(ui_context, options);
+        if !ui_state.layout.is_empty() {
+            self.update_viewport(ui_state, options);
         }
     }
 
-    pub fn iter<'a>(&'a self) -> Iter<'a, JoshutoDirEntry> {
+    pub fn iter<'a>(&'a self) -> Iter<'a, AppDirEntry> {
         self.contents.iter()
     }
 
@@ -117,29 +95,27 @@ impl JoshutoDirList {
     }
 
     pub fn modified(&self) -> bool {
-        let metadata = std::fs::symlink_metadata(self.file_path());
-        match metadata {
-            Ok(m) => match m.modified() {
-                Ok(s) => s > self.metadata.modified(),
-                _ => false,
-            },
-            _ => false,
-        }
+        // follow symlinks, like `AppFileMetadata::from` does for `self.metadata`
+        let metadata = std::fs::metadata(self.file_path());
+        metadata
+            .and_then(|m| m.modified())
+            .map(|m| m > self.metadata.modified())
+            .unwrap_or(false)
     }
 
     pub fn depreciate(&mut self) {
-        self._need_update = true;
+        self.need_update = true;
     }
 
     pub fn need_update(&self) -> bool {
-        self._need_update || self.modified()
+        self.need_update || self.modified()
     }
 
     pub fn file_path(&self) -> &path::PathBuf {
         &self.path
     }
 
-    pub fn curr_entry_ref(&self) -> Option<&JoshutoDirEntry> {
+    pub fn curr_entry_ref(&self) -> Option<&AppDirEntry> {
         self.get_curr_ref_(self.index?)
     }
 
@@ -148,7 +124,7 @@ impl JoshutoDirList {
         self.viewport_index
     }
 
-    fn get_curr_ref_(&self, index: usize) -> Option<&JoshutoDirEntry> {
+    fn get_curr_ref_(&self, index: usize) -> Option<&AppDirEntry> {
         if index < self.contents.len() {
             Some(&self.contents[index])
         } else {

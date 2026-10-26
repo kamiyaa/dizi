@@ -1,7 +1,7 @@
 use std::path;
 use std::time;
 
-use dizi::error::{AppResult, DiziError, DiziErrorKind};
+use dizi::error::{AppError, AppErrorCode, AppResult};
 use dizi::player::{PlayerState, PlayerStatus};
 use dizi::playlist::PlaylistType;
 use dizi::song::DiziAudioFile;
@@ -40,8 +40,8 @@ impl AudioPlayer for SymphoniaPlayer {
     fn play_directory(&mut self, path: &path::Path) -> AppResult {
         let mimetype = get_mimetype(path)?;
         if !is_mimetype_audio(&mimetype) && !is_mimetype_video(&mimetype) {
-            return Err(DiziError::new(
-                DiziErrorKind::NotAudioFile,
+            return Err(AppError::new(
+                AppErrorCode::NotAudioFile,
                 format!("File mimetype is not of type audio: '{}'", mimetype),
             ));
         }
@@ -110,9 +110,9 @@ impl AudioPlayer for SymphoniaPlayer {
         // keep going through playlist until we find a song that can
         // be parsed and played
         loop {
-            let song_entry = playlist.next_song_peak().ok_or_else(|| {
-                DiziError::new(DiziErrorKind::ParseError, "Playlist error".to_string())
-            })?;
+            let song_entry = playlist
+                .next_song_peak()
+                .ok_or_else(|| AppError::new(AppErrorCode::Parse, "Playlist error".to_string()))?;
             playlist.order_index = Some(song_entry.order_index);
 
             if playlist.load_current_entry_metadata().is_ok() {
@@ -133,9 +133,9 @@ impl AudioPlayer for SymphoniaPlayer {
         // keep going through playlist until we find a song that can
         // be parsed and played
         loop {
-            let song_entry = playlist.previous_song_peak().ok_or_else(|| {
-                DiziError::new(DiziErrorKind::ParseError, "Playlist error".to_string())
-            })?;
+            let song_entry = playlist
+                .previous_song_peak()
+                .ok_or_else(|| AppError::new(AppErrorCode::Parse, "Playlist error".to_string()))?;
             playlist.order_index = Some(song_entry.order_index);
 
             if playlist.load_current_entry_metadata().is_ok() {

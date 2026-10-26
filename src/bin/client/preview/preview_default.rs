@@ -1,7 +1,7 @@
 use std::path;
 
 use crate::context::AppState;
-use crate::fs::JoshutoMetadata;
+use crate::fs::AppFileMetadata;
 use crate::preview::preview_dir;
 use crate::ui::AppBackend;
 
@@ -9,19 +9,14 @@ pub fn load_preview_path(
     context: &mut AppState,
     _backend: &mut AppBackend,
     p: path::PathBuf,
-    metadata: JoshutoMetadata,
+    metadata: AppFileMetadata,
 ) {
     if metadata.is_dir() {
-        let need_to_load = context
-            .tab_state_ref()
-            .curr_tab_ref()
-            .history_ref()
-            .get(p.as_path())
-            .map(|e| e.need_update())
-            .unwrap_or(true);
-
-        if need_to_load {
-            preview_dir::Background::load_preview(context, p);
+        let tab = context.tab_state.curr_tab_ref();
+        // only if there isn't already a loading thread or a failed load; whether a cached
+        // listing is out of date is checked by the loading thread, to keep IO off this one
+        if !tab.history_metadata.contains_key(p.as_path()) {
+            preview_dir::Background::refresh(context, p);
         }
     }
 }
@@ -29,7 +24,7 @@ pub fn load_preview_path(
 pub fn load_preview(context: &mut AppState, backend: &mut AppBackend) {
     let mut load_list = Vec::with_capacity(2);
 
-    match context.tab_state_ref().curr_tab_ref().curr_list_ref() {
+    match context.tab_state.curr_tab_ref().curr_list_ref() {
         Some(curr_list) => {
             if let Some(index) = curr_list.get_index() {
                 let entry = &curr_list.contents[index];
@@ -37,8 +32,8 @@ pub fn load_preview(context: &mut AppState, backend: &mut AppBackend) {
             }
         }
         None => {
-            let cwd = context.tab_state_mut().curr_tab_mut().cwd();
-            if let Ok(metadata) = JoshutoMetadata::from(cwd) {
+            let cwd = context.tab_state.curr_tab_mut().get_cwd();
+            if let Ok(metadata) = AppFileMetadata::from(cwd) {
                 load_list.push((cwd.to_path_buf(), metadata));
             }
         }

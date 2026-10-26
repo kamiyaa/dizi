@@ -5,7 +5,7 @@ use cpal::traits::{DeviceTrait, StreamTrait};
 use symphonia::core::codecs::CodecParameters;
 use symphonia::core::codecs::audio::AudioDecoderOptions;
 
-use dizi::error::{AppResult, DiziError, DiziErrorKind};
+use dizi::error::{AppError, AppErrorCode, AppResult};
 use dizi::song::DiziAudioFile;
 
 use crate::audio::request::PlayerRequest;
@@ -37,7 +37,7 @@ impl PlayerStream {
         let stream_config = device.default_output_config().map_err(|err| {
             let error_msg = "Failed to get default output config";
             tracing::error!(?err, "{error_msg}");
-            DiziError::new(DiziErrorKind::Symphonia, error_msg.to_string())
+            AppError::new(AppErrorCode::Symphonia, error_msg.to_string())
         })?;
 
         tracing::debug!(?stream_config, "stream config");
@@ -170,14 +170,14 @@ impl PlayerStream {
             .ok_or_else(|| {
                 let error_msg = "No tracks found";
                 tracing::error!(?audio_file.file, "{error_msg}");
-                DiziError::new(DiziErrorKind::Symphonia, error_msg.to_string())
+                AppError::new(AppErrorCode::Symphonia, error_msg.to_string())
             })?
             .codec_params
             .as_ref()
             .ok_or_else(|| {
                 let error_msg = "Failed to get default track codec_params";
                 tracing::error!("{error_msg}");
-                DiziError::new(DiziErrorKind::Symphonia, error_msg.to_string())
+                AppError::new(AppErrorCode::Symphonia, error_msg.to_string())
             })?;
 
         let audio_codec_params = match codec_params {
@@ -185,7 +185,7 @@ impl PlayerStream {
             _ => {
                 let error_msg = "Codec not audio";
                 tracing::error!("{error_msg}");
-                let err = DiziError::new(DiziErrorKind::ParseError, error_msg.to_string());
+                let err = AppError::new(AppErrorCode::Parse, error_msg.to_string());
                 return Err(err);
             }
         };

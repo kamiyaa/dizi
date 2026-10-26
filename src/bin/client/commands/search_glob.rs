@@ -41,7 +41,7 @@ pub fn search_glob(context: &mut AppState, pattern: &str) -> AppResult {
         .build()?
         .compile_matcher();
 
-    let index = search_glob_fwd(context.tab_state_ref().curr_tab_ref(), &glob);
+    let index = search_glob_fwd(context.tab_state.curr_tab_ref(), &glob);
     if let Some(index) = index {
         cursor_move::cursor_move(context, index);
     }

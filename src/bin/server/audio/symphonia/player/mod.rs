@@ -6,7 +6,7 @@ use std::thread::{self, JoinHandle};
 
 use cpal::traits::HostTrait;
 
-use dizi::error::{AppResult, DiziError, DiziErrorKind};
+use dizi::error::{AppError, AppErrorCode, AppResult};
 use dizi::player::{PlayerState, PlayerStatus};
 use dizi::playlist::PlaylistType;
 use dizi::song::DiziAudioFile;
@@ -37,7 +37,7 @@ impl SymphoniaPlayer {
         let audio_device = audio_host.default_output_device().ok_or_else(|| {
             let error_msg = "Failed to get default output device";
             tracing::error!("{error_msg}");
-            DiziError::new(DiziErrorKind::Symphonia, error_msg.to_string())
+            AppError::new(AppErrorCode::Symphonia, error_msg.to_string())
         })?;
 
         let (player_req_tx, player_req_rx) = mpsc::channel();

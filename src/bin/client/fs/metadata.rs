@@ -6,7 +6,7 @@ use nix::sys::stat::{Mode, SFlag};
 use nix::sys::stat::mode_t;
 
 #[derive(Copy, Clone, Debug, PartialEq, Eq)]
-pub enum FileType {
+pub enum AppFileType {
     Directory,
     File,
     // Unix specific
@@ -17,54 +17,60 @@ pub enum FileType {
     Pipe,
 }
 
-impl From<SFlag> for FileType {
+impl From<SFlag> for AppFileType {
     fn from(value: SFlag) -> Self {
         Self::from_mode(value)
     }
 }
 
-impl FileType {
+impl AppFileType {
     pub fn from_mode(mode: SFlag) -> Self {
         match mode {
-            SFlag::S_IFBLK => FileType::Block,
-            SFlag::S_IFCHR => FileType::Character,
-            SFlag::S_IFDIR => FileType::Directory,
-            SFlag::S_IFIFO => FileType::Pipe,
-            SFlag::S_IFLNK => FileType::Link,
-            SFlag::S_IFSOCK => FileType::Socket,
-            _ => FileType::File,
+            SFlag::S_IFBLK => AppFileType::Block,
+            SFlag::S_IFCHR => AppFileType::Character,
+            SFlag::S_IFDIR => AppFileType::Directory,
+            SFlag::S_IFIFO => AppFileType::Pipe,
+            SFlag::S_IFLNK => AppFileType::Link,
+            SFlag::S_IFSOCK => AppFileType::Socket,
+            _ => AppFileType::File,
         }
     }
 }
 
 #[derive(Clone, Debug)]
-pub enum LinkType {
+pub enum AppLinkType {
     Normal,
     Symlink { target: String, valid: bool },
 }
 
 #[derive(Clone, Debug)]
-pub struct JoshutoMetadata {
+pub struct AppFileMetadata {
     pub len: u64,
     pub directory_size: Option<usize>,
     pub modified: time::SystemTime,
     pub accessed: time::SystemTime,
     pub mode: Mode,
-    pub file_type: FileType,
-    pub link_type: LinkType,
+    pub file_type: AppFileType,
+    pub link_type: AppLinkType,
     #[cfg(unix)]
     pub uid: u32,
     #[cfg(unix)]
     pub gid: u32,
 }
 
-impl JoshutoMetadata {
+impl AppFileMetadata {
     pub fn from(path: &path::Path) -> io::Result<Self> {
         #[cfg(unix)]
         use std::os::unix::fs::MetadataExt;
 
         let symlink_metadata = fs::symlink_metadata(path)?;
-        let metadata = fs::metadata(path);
+        let is_symlink = symlink_metadata.file_type().is_symlink();
+        // only symlinks need a second stat to resolve their target
+        let metadata = if is_symlink {
+            fs::metadata(path)
+        } else {
+            Ok(symlink_metadata.clone())
+        };
         let (len, modified, accessed) = match metadata.as_ref() {
             Ok(m) => (m.len(), m.modified()?, m.accessed()?),
             Err(_) => (
@@ -90,12 +96,12 @@ impl JoshutoMetadata {
                 #[cfg(not(target_os = "macos"))]
                 let mode = Mode::from_bits_truncate(metadata_mode);
 
-                (FileType::from_mode(sflag), mode)
+                (AppFileType::from_mode(sflag), mode)
             }
-            _ => (FileType::File, Mode::empty()),
+            _ => (AppFileType::File, Mode::empty()),
         };
 
-        let link_type = if symlink_metadata.file_type().is_symlink() {
+        let link_type = if is_symlink {
             let mut link = "".to_string();
 
             if let Ok(path) = fs::read_link(path)
@@ -104,13 +110,12 @@ impl JoshutoMetadata {
                 link = s.to_string();
             }
 
-            let exists = path.exists();
-            LinkType::Symlink {
+            AppLinkType::Symlink {
                 target: link,
-                valid: exists,
+                valid: metadata.is_ok(),
             }
         } else {
-            LinkType::Normal
+            AppLinkType::Normal
         };
 
         #[cfg(unix)]
@@ -153,15 +158,15 @@ impl JoshutoMetadata {
         self.accessed
     }
 
-    pub fn file_type(&self) -> FileType {
+    pub fn file_type(&self) -> AppFileType {
         self.file_type
     }
 
-    pub fn link_type(&self) -> &LinkType {
+    pub fn link_type(&self) -> &AppLinkType {
         &self.link_type
     }
 
     pub fn is_dir(&self) -> bool {
-        self.file_type == FileType::Directory
+        self.file_type == AppFileType::Directory
     }
 }

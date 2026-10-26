@@ -4,14 +4,14 @@ use std::io;
 use std::path::{Path, PathBuf};
 
 use crate::config::option::DisplayOption;
-use crate::context::UiContext;
-use crate::fs::{JoshutoDirEntry, JoshutoDirList, JoshutoMetadata};
+use crate::context::UiState;
+use crate::fs::{AppDirEntry, AppDirectoryList};
 
 pub trait DirectoryHistory {
     fn populate_to_root(
         &mut self,
         path: &Path,
-        ui_context: &UiContext,
+        ui_state: &UiState,
         options: &DisplayOption,
     ) -> io::Result<()>;
     fn create_or_soft_update(&mut self, path: &Path, options: &DisplayOption) -> io::Result<()>;
@@ -22,13 +22,13 @@ pub trait DirectoryHistory {
     fn depreciate_entry(&mut self, path: &Path);
 }
 
-pub type JoshutoHistory = HashMap<PathBuf, JoshutoDirList>;
+pub type AppDirectoryHistory = HashMap<PathBuf, AppDirectoryList>;
 
-impl DirectoryHistory for JoshutoHistory {
+impl DirectoryHistory for AppDirectoryHistory {
     fn populate_to_root(
         &mut self,
         path: &Path,
-        ui_context: &UiContext,
+        ui_state: &UiState,
         options: &DisplayOption,
     ) -> io::Result<()> {
         let mut dirlists = Vec::new();
@@ -40,16 +40,16 @@ impl DirectoryHistory for JoshutoHistory {
                 if let Some(ancestor) = prev.as_ref()
                     && let Some(i) = get_index_of_value(&new_dirlist.contents, ancestor)
                 {
-                    new_dirlist.set_index(Some(i), ui_context, options);
+                    new_dirlist.set_index(Some(i), ui_state, options);
                 }
                 dirlists.push(new_dirlist);
             } else {
                 let mut new_dirlist =
-                    JoshutoDirList::from_path(curr.to_path_buf().clone(), options)?;
+                    AppDirectoryList::from_path(curr.to_path_buf().clone(), options)?;
                 if let Some(ancestor) = prev.as_ref()
                     && let Some(i) = get_index_of_value(&new_dirlist.contents, ancestor)
                 {
-                    new_dirlist.set_index(Some(i), ui_context, options);
+                    new_dirlist.set_index(Some(i), ui_state, options);
                 }
                 dirlists.push(new_dirlist);
             }
@@ -71,7 +71,7 @@ impl DirectoryHistory for JoshutoHistory {
             let dirlist = if contains_key {
                 create_dirlist_with_history(self, path, options)?
             } else {
-                JoshutoDirList::from_path(path.to_path_buf(), options)?
+                AppDirectoryList::from_path(path.to_path_buf(), options)?
             };
             self.insert(path.to_path_buf(), dirlist);
         }
@@ -82,7 +82,7 @@ impl DirectoryHistory for JoshutoHistory {
         let dirlist = if self.contains_key(path) {
             create_dirlist_with_history(self, path, options)?
         } else {
-            JoshutoDirList::from_path(path.to_path_buf(), options)?
+            AppDirectoryList::from_path(path.to_path_buf(), options)?
         };
         self.insert(path.to_path_buf(), dirlist);
         Ok(())
@@ -105,7 +105,7 @@ impl DirectoryHistory for JoshutoHistory {
     }
 }
 
-fn get_index_of_value(arr: &[JoshutoDirEntry], val: &Path) -> Option<usize> {
+fn get_index_of_value(arr: &[AppDirEntry], val: &Path) -> Option<usize> {
     arr.iter().enumerate().find_map(|(i, dir)| {
         if dir.file_path() == val {
             Some(i)
@@ -116,12 +116,26 @@ fn get_index_of_value(arr: &[JoshutoDirEntry], val: &Path) -> Option<usize> {
 }
 
 pub fn create_dirlist_with_history(
-    history: &JoshutoHistory,
+    history: &AppDirectoryHistory,
     path: &Path,
     options: &DisplayOption,
-) -> io::Result<JoshutoDirList> {
-    let filter_func = options.filter_func();
-    let mut contents = read_directory(path, filter_func, options)?;
+) -> io::Result<AppDirectoryList> {
+    let dirlist = AppDirectoryList::from_path(path.to_path_buf(), options)?;
+    Ok(merge_dirlist_with_history(history, dirlist, options))
+}
+
+/// Carries cached state from `history` over to a freshly read `dirlist`: directory sizes,
+/// cursor and viewport. Does no IO, so it's safe to call on the main thread with a listing
+/// read in the background.
+pub fn merge_dirlist_with_history(
+    history: &AppDirectoryHistory,
+    mut dirlist: AppDirectoryList,
+    options: &DisplayOption,
+) -> AppDirectoryList {
+    let path = dirlist.path.as_path();
+    let contents = &mut dirlist.contents;
+
+    // re-use directory size information on reload
     for entry in contents.iter_mut() {
         if entry.metadata.is_dir()
             && let Some(lst) = history.get(entry.file_path())
@@ -130,18 +144,21 @@ pub fn create_dirlist_with_history(
         }
     }
 
-    let sort_options = options.sort_options_ref();
+    // sizes may have changed, which matters when sorting by size
+    let sort_options = &options.sort_options;
     contents.sort_by(|f1, f2| sort_options.compare(f1, f2));
+
+    let former_dir_list = history.get(path);
 
     let contents_len = contents.len();
     let index: Option<usize> = if contents_len == 0 {
         None
     } else {
-        match history.get(path) {
-            Some(dirlist) => match dirlist.get_index() {
+        match former_dir_list {
+            Some(former) => match former.get_index() {
                 Some(i) if i >= contents_len => Some(contents_len - 1),
                 Some(i) => {
-                    let entry = &dirlist.contents[i];
+                    let entry = &former.contents[i];
                     contents
                         .iter()
                         .enumerate()
@@ -157,8 +174,8 @@ pub fn create_dirlist_with_history(
     let viewport_index: usize = if contents_len == 0 {
         0
     } else {
-        match history.get(path) {
-            Some(dirlist) => match dirlist.first_index_for_viewport() {
+        match former_dir_list {
+            Some(former) => match former.first_index_for_viewport() {
                 i if i >= contents_len => contents_len - 1,
                 i => i,
             },
@@ -166,29 +183,23 @@ pub fn create_dirlist_with_history(
         }
     };
 
-    let metadata = JoshutoMetadata::from(path)?;
-    let dirlist = JoshutoDirList::new(
-        path.to_path_buf(),
-        contents,
-        index,
-        viewport_index,
-        metadata,
-    );
-
-    Ok(dirlist)
+    dirlist.index = index;
+    dirlist.viewport_index = viewport_index;
+    dirlist.need_update = false;
+    dirlist
 }
 
 pub fn read_directory<F>(
     path: &Path,
     filter_func: F,
     options: &DisplayOption,
-) -> io::Result<Vec<JoshutoDirEntry>>
+) -> io::Result<Vec<AppDirEntry>>
 where
     F: Fn(&Result<fs::DirEntry, io::Error>) -> bool,
 {
-    let results: Vec<JoshutoDirEntry> = fs::read_dir(path)?
+    let results: Vec<AppDirEntry> = fs::read_dir(path)?
         .filter(filter_func)
-        .filter_map(|res| JoshutoDirEntry::from(&res.ok()?, path, options).ok())
+        .filter_map(|res| AppDirEntry::from(&res.ok()?, path, options).ok())
         .collect();
 
     Ok(results)

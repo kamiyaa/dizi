@@ -3,7 +3,6 @@ mod config;
 mod context;
 mod event;
 mod fs;
-mod history;
 mod key_command;
 mod preview;
 mod run;
@@ -125,7 +124,7 @@ fn run_app(args: CommandArgs) -> AppResult {
     }
 
     let config = AppConfig::get_config(CONFIG_FILE);
-    if let Some(home_dir) = config.client_ref().home_dir.as_ref() {
+    if let Some(home_dir) = config.client.home_dir.as_ref() {
         std::env::set_current_dir(home_dir)?;
     }
     let cwd = std::env::current_dir()?;
@@ -133,13 +132,13 @@ fn run_app(args: CommandArgs) -> AppResult {
     // query
     if args.query_all {
         // connect to stream
-        let stream = UnixStream::connect(config.client_ref().socket_ref())?;
+        let stream = UnixStream::connect(&config.client.socket)?;
         let mut context = create_context(config, &cwd, stream);
         run::run_query_all(&mut context)?;
         return Ok(());
     } else if let Some(query) = args.query {
         // connect to stream
-        let stream = UnixStream::connect(config.client_ref().socket_ref())?;
+        let stream = UnixStream::connect(&config.client.socket)?;
         let mut context = create_context(config, &cwd, stream);
         run::run_query(&mut context, query)?;
         return Ok(());
@@ -151,7 +150,7 @@ fn run_app(args: CommandArgs) -> AppResult {
         || args.toggle_play
     {
         // connect to stream
-        let stream = UnixStream::connect(config.client_ref().socket_ref())?;
+        let stream = UnixStream::connect(&config.client.socket)?;
         let mut context = create_context(config, &cwd, stream);
         run::run_control(&mut context, &args)?;
     } else {
@@ -159,13 +158,13 @@ fn run_app(args: CommandArgs) -> AppResult {
         lazy_static::initialize(&THEME_T);
         lazy_static::initialize(&LAYOUT_T);
 
-        let mut stream = UnixStream::connect(config.client_ref().socket_ref());
+        let mut stream = UnixStream::connect(&config.client.socket);
         if stream.is_err() {
             start_server()?;
         }
         println!("Connecting to server ...");
         for i in 1..11 {
-            stream = UnixStream::connect(config.client_ref().socket_ref());
+            stream = UnixStream::connect(&config.client.socket);
             if stream.is_ok() {
                 break;
             }
@@ -184,10 +183,10 @@ fn run_app(args: CommandArgs) -> AppResult {
 
                 let tab = JoshutoTab::new(
                     cwd,
-                    context.ui_context_ref(),
-                    context.config_ref().display_options_ref(),
+                    &context.ui_state,
+                    &context.config.client.display_options,
                 )?;
-                context.tab_state_mut().push_tab(tab);
+                context.tab_state.push_tab(tab);
 
                 let mut backend: ui::AppBackend = ui::AppBackend::new(false)?;
                 run::run_ui(&mut backend, &mut context, keymap)?;

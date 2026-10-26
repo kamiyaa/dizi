@@ -1,5 +1,5 @@
 use std::convert::From;
-use std::path::{Path, PathBuf};
+use std::path::PathBuf;
 
 use serde::Deserialize;
 use shellexpand::tilde_with_context;
@@ -52,15 +52,6 @@ pub struct ClientConfig {
     pub socket: PathBuf,
     pub home_dir: Option<PathBuf>,
     pub display_options: DisplayOption,
-}
-
-impl ClientConfig {
-    pub fn socket_ref(&self) -> &Path {
-        self.socket.as_path()
-    }
-    pub fn display_options_ref(&self) -> &DisplayOption {
-        &self.display_options
-    }
 }
 
 impl std::default::Default for ClientConfig {

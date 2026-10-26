@@ -2,10 +2,9 @@ pub mod general;
 
 pub use self::general::*;
 
-use dizi::error::{AppResult, DiziError, DiziErrorKind};
+use dizi::error::{AppError, AppErrorCode, AppResult};
 use serde::de::DeserializeOwned;
 use std::fs;
-use std::io;
 use std::path::{Path, PathBuf};
 
 use crate::CONFIG_HIERARCHY;
@@ -41,11 +40,7 @@ where
             Ok(S::from(config))
         }
         None => {
-            let error_kind = io::ErrorKind::NotFound;
-            let error = DiziError::new(
-                DiziErrorKind::IoError(error_kind),
-                "No config directory found".to_string(),
-            );
+            let error = AppError::new(AppErrorCode::Io, "No config directory found".to_string());
             Err(error)
         }
     }

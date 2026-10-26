@@ -6,7 +6,7 @@ use serde::{Deserialize, Serialize};
 
 use strfmt::strfmt;
 
-use crate::error::{AppResult, DiziError, DiziErrorKind};
+use crate::error::{AppError, AppErrorCode, AppResult};
 use crate::playlist::{FilePlaylist, PlaylistType};
 use crate::song::DiziAudioFile;
 
@@ -56,8 +56,8 @@ impl PlayerState {
 
         match strfmt(query, &vars) {
             Ok(s) => Ok(s),
-            Err(e) => Err(DiziError::new(
-                DiziErrorKind::InvalidParameters,
+            Err(e) => Err(AppError::new(
+                AppErrorCode::InvalidParameters,
                 format!("Failed to process query '{}', Reason: '{}'", query, e,),
             )),
         }

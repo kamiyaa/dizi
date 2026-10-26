@@ -1,6 +1,7 @@
 use std::str::FromStr;
 
 use dizi::error::AppResult;
+use rustyline::history::History;
 
 use crate::config::AppKeyMapping;
 use crate::context::AppState;
@@ -26,7 +27,7 @@ pub fn read_and_execute(
 
     if let Some(s) = user_input {
         let trimmed = s.trim_start();
-        let _ = app_state.commandline_state_mut().history_mut().add(trimmed);
+        let _ = app_state.commandline_state.history.add(trimmed);
 
         let command = Command::from_str(trimmed)?;
         command.execute(app_state, backend, keymap_t)

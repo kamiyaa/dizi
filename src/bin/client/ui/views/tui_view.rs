@@ -41,7 +41,7 @@ impl<'a> Widget for TuiView<'a> {
 
         render_widget(self.context, &LAYOUT_T.layout, layout_rect[0], buf);
 
-        if let Some(msg) = self.context.message_queue_ref().current_message() {
+        if let Some(msg) = self.context.message_queue.current_message() {
             let rect = Rect {
                 x: 0,
                 y: area.height - 1,
@@ -60,7 +60,7 @@ impl<'a> Widget for TuiView<'a> {
                 width: area.width,
                 height: 1,
             };
-            TuiFooter::new(&self.context.server_state_ref().player).render(rect, buf);
+            TuiFooter::new(&self.context.server_state.player).render(rect, buf);
         }
 
         let topbar_width = area.width;
@@ -70,7 +70,7 @@ impl<'a> Widget for TuiView<'a> {
             width: topbar_width,
             height: 1,
         };
-        let cwd = self.context.tab_state_ref().curr_tab_ref().cwd();
+        let cwd = self.context.tab_state.curr_tab_ref().get_cwd();
         TuiTopBar::new(cwd).render(rect, buf);
     }
 }
@@ -113,10 +113,10 @@ pub fn render_widget(context: &AppState, layout: &LayoutComposition, area: Rect,
             match widget {
                 WidgetType::FileBrowser => TuiFolderView::new(context, focused).render(rect, buf),
                 WidgetType::MusicPlayer => {
-                    TuiPlayer::new(&context.server_state_ref().player).render(rect, buf)
+                    TuiPlayer::new(&context.server_state.player).render(rect, buf)
                 }
                 WidgetType::Playlist => {
-                    TuiPlaylist::new(&context.server_state_ref().player, focused).render(rect, buf)
+                    TuiPlaylist::new(&context.server_state.player, focused).render(rect, buf)
                 }
             }
         }

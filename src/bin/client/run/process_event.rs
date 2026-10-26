@@ -14,8 +14,9 @@ use crate::config::KeyMapping;
 use crate::config::option::WidgetType;
 use crate::context::{AppState, QuitType};
 use crate::event::AppEvent;
-use crate::fs::JoshutoDirList;
+use crate::fs::{AppDirectoryList, merge_dirlist_with_history};
 use crate::key_command::{Command, CommandKeybind};
+use crate::preview::PreviewDirState;
 use crate::ui;
 use crate::ui::views::TuiCommandMenu;
 
@@ -62,15 +63,13 @@ pub fn process_server_event(context: &mut AppState, s: &str) -> AppResult {
             context.quit = QuitType::Server;
         }
         ServerBroadcastEvent::ServerError { msg } => {
-            context
-                .message_queue_mut()
-                .push_error(format!("Server: {}", msg));
+            context.message_queue.push_error(format!("Server: {}", msg));
         }
         ServerBroadcastEvent::ServerQuery { .. } => {}
         ServerBroadcastEvent::ServerQueryAll { .. } => {}
         ServerBroadcastEvent::PlayerState { mut state } => {
             if !state.playlist.is_empty() {
-                let old_state = &context.server_state_ref().player;
+                let old_state = &context.server_state.player;
 
                 let playlist_len = state.playlist.len();
                 let new_cursor_index = old_state
@@ -86,11 +85,11 @@ pub fn process_server_event(context: &mut AppState, s: &str) -> AppResult {
                     .unwrap_or_else(|| 0);
                 state.playlist.set_cursor_index(Some(new_cursor_index));
             }
-            context.server_state_mut().player = state;
+            context.server_state.player = state;
         }
         ServerBroadcastEvent::PlaylistOpen { mut state } => {
             if !state.playlist.is_empty() {
-                let old_state = &context.server_state_ref().player;
+                let old_state = &context.server_state.player;
 
                 let playlist_len = state.playlist.len();
                 let new_cursor_index = old_state
@@ -106,58 +105,58 @@ pub fn process_server_event(context: &mut AppState, s: &str) -> AppResult {
                     .unwrap_or_else(|| 0);
                 state.playlist.set_cursor_index(Some(new_cursor_index));
             }
-            context.server_state_mut().player = state;
-            let len = context.server_state_ref().player.playlist.len();
+            context.server_state.player = state;
+            let len = context.server_state.player.playlist.len();
             context
-                .message_queue_mut()
+                .message_queue
                 .push_success(format!("Loaded {} songs to playlist", len));
         }
         ServerBroadcastEvent::PlayerFilePlay { file: song } => {
-            context.server_state_mut().player.song = Some(song);
-            context.server_state_mut().player.status = PlayerStatus::Playing;
-            context.server_state_mut().player.playlist_status = PlaylistType::DirectoryListing;
+            context.server_state.player.song = Some(song);
+            context.server_state.player.status = PlayerStatus::Playing;
+            context.server_state.player.playlist_status = PlaylistType::DirectoryListing;
         }
         ServerBroadcastEvent::PlayerPause => {
-            context.server_state_mut().player.status = PlayerStatus::Paused;
+            context.server_state.player.status = PlayerStatus::Paused;
         }
         ServerBroadcastEvent::PlayerResume => {
-            context.server_state_mut().player.status = PlayerStatus::Playing;
+            context.server_state.player.status = PlayerStatus::Playing;
         }
         ServerBroadcastEvent::PlayerStop => {
-            context.server_state_mut().player.status = PlayerStatus::Stopped;
+            context.server_state.player.status = PlayerStatus::Stopped;
         }
         ServerBroadcastEvent::PlayerShuffle { on } => {
-            context.server_state_mut().player.shuffle = on;
+            context.server_state.player.shuffle = on;
             let setting = "Shuffle";
             let status = if on { "ON" } else { "OFF" };
             context
-                .message_queue_mut()
+                .message_queue
                 .push_success(format!("{} {}", setting, status));
         }
         ServerBroadcastEvent::PlayerRepeat { on } => {
-            context.server_state_mut().player.repeat = on;
+            context.server_state.player.repeat = on;
             let setting = "Repeat";
             let status = if on { "ON" } else { "OFF" };
             context
-                .message_queue_mut()
+                .message_queue
                 .push_success(format!("{} {}", setting, status));
         }
         ServerBroadcastEvent::PlayerNext { on } => {
-            context.server_state_mut().player.next = on;
+            context.server_state.player.next = on;
             let setting = "Next";
             let status = if on { "ON" } else { "OFF" };
             context
-                .message_queue_mut()
+                .message_queue
                 .push_success(format!("{} {}", setting, status));
         }
         ServerBroadcastEvent::PlayerVolumeUpdate { volume } => {
-            context.server_state_mut().player.volume = volume;
+            context.server_state.player.volume = volume;
         }
         ServerBroadcastEvent::PlayerProgressUpdate { elapsed } => {
-            context.server_state_mut().player.elapsed = elapsed;
+            context.server_state.player.elapsed = elapsed;
         }
         ServerBroadcastEvent::PlaylistSwapMove { index1, index2 } => {
-            let playlist = &mut context.server_state_mut().player.playlist;
+            let playlist = &mut context.server_state.player.playlist;
             playlist.list_mut().swap(index1, index2);
             playlist.set_cursor_index(Some(index2));
             if let Some(playing_index) = playlist.get_playing_index() {
@@ -170,50 +169,46 @@ pub fn process_server_event(context: &mut AppState, s: &str) -> AppResult {
             }
         }
         ServerBroadcastEvent::PlaylistClear => {
-            let playlist_len = context.server_state_mut().player.playlist.len();
-            context.server_state_mut().player.playlist.clear();
+            let playlist_len = context.server_state.player.playlist.len();
+            context.server_state.player.playlist.clear();
             context.set_view_widget(WidgetType::FileBrowser);
             context
-                .message_queue_mut()
+                .message_queue
                 .push_success(format!("Removed {playlist_len} songs from playlist"));
         }
         ServerBroadcastEvent::PlaylistAppend { audio_files } => {
             let len = audio_files.len();
             let entries: Vec<_> = audio_files.into_iter().map(DiziSongEntry::Loaded).collect();
             context
-                .server_state_mut()
+                .server_state
                 .player
                 .playlist
                 .list_mut()
                 .extend_from_slice(&entries);
             if context
-                .server_state_ref()
+                .server_state
                 .player
                 .playlist
                 .get_cursor_index()
                 .is_none()
             {
                 context
-                    .server_state_mut()
+                    .server_state
                     .player
                     .playlist
                     .set_cursor_index(Some(0));
             }
             context
-                .message_queue_mut()
+                .message_queue
                 .push_success(format!("Added {len} songs to playlist"));
         }
         ServerBroadcastEvent::PlaylistRemove { index } => {
-            context
-                .server_state_mut()
-                .player
-                .playlist
-                .remove_song(index);
+            context.server_state.player.playlist.remove_song(index);
         }
         ServerBroadcastEvent::PlaylistPlay { index } => {
-            let len = context.server_state_ref().player.playlist.len();
+            let len = context.server_state.player.playlist.len();
             if index < len {
-                let player = &mut context.server_state_mut().player;
+                let player = &mut context.server_state.player;
                 player.status = PlayerStatus::Playing;
                 player.playlist_status = PlaylistType::PlaylistFile;
                 let cursor_index = player.playlist.get_cursor_index();
@@ -238,13 +233,29 @@ pub fn process_noninteractive(event: AppEvent, context: &mut AppState) {
 
 pub fn process_dir_preview(
     context: &mut AppState,
-    _path: path::PathBuf,
-    res: io::Result<JoshutoDirList>,
+    path: path::PathBuf,
+    res: io::Result<Option<AppDirectoryList>>,
 ) {
-    if let Ok(dirlist) = res {
-        let history = context.tab_state_mut().curr_tab_mut().history_mut();
+    let options = &context.config.client.display_options;
+    let tab = context.tab_state.curr_tab_mut();
+    match res {
+        Ok(None) => {
+            // unchanged on disk; the cached listing is still current
+            tab.history_metadata.remove(path.as_path());
+        }
+        Ok(Some(dirlist)) => {
+            // remove from loading state
+            tab.history_metadata.remove(dirlist.file_path());
 
-        let dir_path = dirlist.file_path().to_path_buf();
-        history.insert(dir_path, dirlist);
+            // merge now rather than in the loading thread, so cursor moves made while it was
+            // loading are kept
+            let dirlist = merge_dirlist_with_history(&tab.history, dirlist, options);
+            let dir_path = dirlist.file_path().to_path_buf();
+            tab.history.insert(dir_path, dirlist);
+        }
+        Err(_) => {
+            // keep the error so we don't load again
+            tab.history_metadata.insert(path, PreviewDirState::Error);
+        }
     }
 }

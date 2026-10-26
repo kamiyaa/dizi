@@ -2,7 +2,7 @@ use std::cmp::Ordering;
 use std::fs;
 use std::path::{Path, PathBuf};
 
-use dizi::error::{AppResult, DiziError, DiziErrorKind};
+use dizi::error::{AppError, AppErrorCode, AppResult};
 use dizi::song::{DiziAudioFile, DiziFile, DiziSongEntry};
 
 use crate::context::AppContext;
@@ -19,8 +19,8 @@ pub fn playlist_play(context: &mut AppContext, index: usize) -> AppResult {
 
 pub fn playlist_load(context: &mut AppContext, cwd: &Path, path: &Path) -> AppResult {
     if !context.player.playlist_context.file_playlist.is_empty() {
-        return Err(DiziError::new(
-            DiziErrorKind::InvalidParameters,
+        return Err(AppError::new(
+            AppErrorCode::InvalidParameters,
             "playlist cannot be loaded because current playlist is not empty".to_string(),
         ));
     }
@@ -55,8 +55,8 @@ pub fn playlist_append(context: &mut AppContext, path: &Path) -> AppResult<Vec<D
         playlist.push_entry(entry);
         Ok(vec![audio_file])
     } else {
-        Err(DiziError::new(
-            DiziErrorKind::InvalidParameters,
+        Err(AppError::new(
+            AppErrorCode::InvalidParameters,
             "File not playable".to_string(),
         ))
     }
@@ -65,8 +65,8 @@ pub fn playlist_append(context: &mut AppContext, path: &Path) -> AppResult<Vec<D
 pub fn playlist_remove(context: &mut AppContext, index: usize) -> AppResult {
     let playlist = &mut context.player.playlist_context_mut().file_playlist;
     if index >= playlist.len() {
-        return Err(DiziError::new(
-            DiziErrorKind::InvalidParameters,
+        return Err(AppError::new(
+            AppErrorCode::InvalidParameters,
             "Playlist index out of range".to_string(),
         ));
     }
@@ -76,16 +76,16 @@ pub fn playlist_remove(context: &mut AppContext, index: usize) -> AppResult {
 
 pub fn playlist_move_up(context: &mut AppContext, index: usize) -> AppResult {
     if index == 0 {
-        return Err(DiziError::new(
-            DiziErrorKind::InvalidParameters,
+        return Err(AppError::new(
+            AppErrorCode::InvalidParameters,
             "song is already at the start of playlist".to_string(),
         ));
     }
 
     let playlist = &mut context.player.playlist_context_mut().file_playlist;
     if index >= playlist.len() {
-        return Err(DiziError::new(
-            DiziErrorKind::InvalidParameters,
+        return Err(AppError::new(
+            AppErrorCode::InvalidParameters,
             "index out of range".to_string(),
         ));
     }
@@ -99,8 +99,8 @@ pub fn playlist_move_down(context: &mut AppContext, index: usize) -> AppResult {
     let playlist = &mut context.player.playlist_context_mut().file_playlist;
 
     if index + 1 >= playlist.len() {
-        return Err(DiziError::new(
-            DiziErrorKind::InvalidParameters,
+        return Err(AppError::new(
+            AppErrorCode::InvalidParameters,
             "song is already at the end of playlist".to_string(),
         ));
     }

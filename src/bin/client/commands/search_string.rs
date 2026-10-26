@@ -20,7 +20,7 @@ fn _search_exact(curr_tab: &JoshutoTab, pattern: &str) -> Option<usize> {
 }
 
 pub fn search_exact(context: &mut AppState, pattern: &str) -> AppResult {
-    let index = _search_exact(context.tab_state_ref().curr_tab_ref(), pattern);
+    let index = _search_exact(context.tab_state.curr_tab_ref(), pattern);
     if let Some(index) = index {
         cursor_move::cursor_move(context, index);
     }
@@ -60,7 +60,7 @@ pub fn search_string_rev(curr_tab: &JoshutoTab, pattern: &str) -> Option<usize> 
 
 pub fn search_string(context: &mut AppState, pattern: &str) -> AppResult {
     let pattern = pattern.to_lowercase();
-    let index = search_string_fwd(context.tab_state_ref().curr_tab_ref(), pattern.as_str());
+    let index = search_string_fwd(context.tab_state.curr_tab_ref(), pattern.as_str());
     if let Some(index) = index {
         cursor_move::cursor_move(context, index);
     }

@@ -16,11 +16,4 @@ impl CommandLineState {
     pub fn new() -> Self {
         Self::default()
     }
-
-    pub fn history_ref(&self) -> &dyn History {
-        &self.history
-    }
-    pub fn history_mut(&mut self) -> &mut dyn History {
-        &mut self.history
-    }
 }

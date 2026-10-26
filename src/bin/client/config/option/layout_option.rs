@@ -2,7 +2,7 @@ use std::str::FromStr;
 
 use ratatui::layout::Direction;
 
-use dizi::error::{AppResult, DiziError, DiziErrorKind};
+use dizi::error::{AppError, AppErrorCode, AppResult};
 
 use crate::config::general::LayoutCompositionRaw;
 
@@ -14,14 +14,14 @@ pub enum WidgetType {
 }
 
 impl FromStr for WidgetType {
-    type Err = DiziError;
+    type Err = AppError;
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         match s {
             "file_browser" => Ok(Self::FileBrowser),
             "music_player" => Ok(Self::MusicPlayer),
             "playlist" => Ok(Self::Playlist),
-            s => Err(DiziError::new(
-                DiziErrorKind::ParseError,
+            s => Err(AppError::new(
+                AppErrorCode::Parse,
                 format!("Unknown widget type: '{}'", s),
             )),
         }
@@ -128,8 +128,8 @@ pub fn str_to_direction(s: &str) -> AppResult<Direction> {
     match s {
         "horizontal" => Ok(Direction::Horizontal),
         "vertical" => Ok(Direction::Vertical),
-        s => Err(DiziError::new(
-            DiziErrorKind::ParseError,
+        s => Err(AppError::new(
+            AppErrorCode::Parse,
             format!("Unknown direction: '{}'", s),
         )),
     }

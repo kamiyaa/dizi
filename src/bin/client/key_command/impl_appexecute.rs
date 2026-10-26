@@ -83,7 +83,7 @@ pub fn execute_request(
         }
         ClientRequest::PlaylistAppend { path: None } => {
             let entry_file_path = context
-                .tab_state_ref()
+                .tab_state
                 .curr_tab_ref()
                 .curr_list_ref()
                 .and_then(|s| s.curr_entry_ref())
@@ -121,12 +121,12 @@ pub fn execute_request(
             path: None,
         } => {
             if let Some(entry) = context
-                .tab_state_ref()
+                .tab_state
                 .curr_tab_ref()
                 .curr_list_ref()
                 .and_then(|s| s.curr_entry_ref())
             {
-                let cwd = context.tab_state_ref().curr_tab_ref().cwd().to_path_buf();
+                let cwd = context.tab_state.curr_tab_ref().get_cwd().to_path_buf();
                 let request = ClientRequest::PlaylistOpen {
                     cwd: Some(cwd),
                     path: Some(entry.file_path().to_path_buf()),
@@ -135,7 +135,7 @@ pub fn execute_request(
             }
         }
         ClientRequest::PlaylistPlay { index: None } => {
-            let playlist = &context.server_state_ref().player.playlist;
+            let playlist = &context.server_state.player.playlist;
             if let Some(index) = playlist.get_cursor_index() {
                 let request = ClientRequest::PlaylistPlay { index: Some(index) };
                 send_client_request(context, &request)?;
@@ -145,7 +145,7 @@ pub fn execute_request(
             if context.get_view_widget() != WidgetType::Playlist {
                 return Ok(());
             }
-            let playlist = &context.server_state_ref().player.playlist;
+            let playlist = &context.server_state.player.playlist;
             if let Some(index) = playlist.get_cursor_index() {
                 let request = ClientRequest::PlaylistRemove { index: Some(index) };
                 send_client_request(context, &request)?;
@@ -155,7 +155,7 @@ pub fn execute_request(
             if context.get_view_widget() != WidgetType::Playlist {
                 return Ok(());
             }
-            let playlist = &context.server_state_ref().player.playlist;
+            let playlist = &context.server_state.player.playlist;
             if let Some(index) = playlist.get_cursor_index() {
                 let request = ClientRequest::PlaylistMoveUp { index: Some(index) };
                 send_client_request(context, &request)?;
@@ -165,7 +165,7 @@ pub fn execute_request(
             if context.get_view_widget() != WidgetType::Playlist {
                 return Ok(());
             }
-            let playlist = &context.server_state_ref().player.playlist;
+            let playlist = &context.server_state.player.playlist;
             if let Some(index) = playlist.get_cursor_index() {
                 let request = ClientRequest::PlaylistMoveDown { index: Some(index) };
                 send_client_request(context, &request)?;

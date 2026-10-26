@@ -1,6 +1,6 @@
 use ratatui::style::Style;
 
-use crate::fs::{FileType, JoshutoDirEntry, LinkType};
+use crate::fs::{AppDirEntry, AppFileType, AppLinkType};
 use crate::utils::unix;
 
 use crate::THEME_T;
@@ -19,7 +19,7 @@ pub fn playlist_style() -> Style {
         .add_modifier(THEME_T.playlist.modifier)
 }
 
-pub fn entry_style(entry: &JoshutoDirEntry) -> Style {
+pub fn entry_style(entry: &AppDirEntry) -> Style {
     let metadata = &entry.metadata;
     let filetype = metadata.file_type();
     let linktype = metadata.link_type();
@@ -27,23 +27,23 @@ pub fn entry_style(entry: &JoshutoDirEntry) -> Style {
     default_style(entry, linktype, filetype)
 }
 
-fn default_style(entry: &JoshutoDirEntry, linktype: &LinkType, filetype: FileType) -> Style {
+fn default_style(entry: &AppDirEntry, linktype: &AppLinkType, filetype: AppFileType) -> Style {
     match linktype {
-        LinkType::Symlink { valid: true, .. } => Style::default()
+        AppLinkType::Symlink { valid: true, .. } => Style::default()
             .fg(THEME_T.link.fg)
             .bg(THEME_T.link.bg)
             .add_modifier(THEME_T.link.modifier),
-        LinkType::Symlink { valid: false, .. } => Style::default()
+        AppLinkType::Symlink { valid: false, .. } => Style::default()
             .fg(THEME_T.link_invalid.fg)
             .bg(THEME_T.link_invalid.bg)
             .add_modifier(THEME_T.link_invalid.modifier),
-        LinkType::Normal => match filetype {
-            FileType::Directory => Style::default()
+        AppLinkType::Normal => match filetype {
+            AppFileType::Directory => Style::default()
                 .fg(THEME_T.directory.fg)
                 .bg(THEME_T.directory.bg)
                 .add_modifier(THEME_T.directory.modifier),
-            FileType::File => file_style(entry),
-            FileType::Link => Style::default()
+            AppFileType::File => file_style(entry),
+            AppFileType::Link => Style::default()
                 .fg(THEME_T.link.fg)
                 .bg(THEME_T.link.bg)
                 .add_modifier(THEME_T.link.modifier),
@@ -55,7 +55,7 @@ fn default_style(entry: &JoshutoDirEntry, linktype: &LinkType, filetype: FileTyp
     }
 }
 
-fn file_style(entry: &JoshutoDirEntry) -> Style {
+fn file_style(entry: &AppDirEntry) -> Style {
     let metadata = &entry.metadata;
     if unix::is_executable(metadata.mode) {
         Style::default()

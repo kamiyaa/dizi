@@ -1,25 +1,25 @@
 use std::cmp;
 
-use crate::config::option::{SortType, SortTypes};
-use crate::fs::JoshutoDirEntry;
+use crate::config::option::{SortMethod, SortMethodList};
+use crate::fs::AppDirEntry;
 
 #[derive(Clone, Debug)]
-pub struct SortOption {
+pub struct FileSortConfig {
     pub directories_first: bool,
     pub case_sensitive: bool,
     pub reverse: bool,
-    pub sort_methods: SortTypes,
+    pub sort_methods: SortMethodList,
 }
 
-impl SortOption {
-    pub fn set_sort_method(&mut self, method: SortType) {
+impl FileSortConfig {
+    pub fn set_sort_method(&mut self, method: SortMethod) {
         self.sort_methods.reorganize(method);
     }
 
-    pub fn compare(&self, f1: &JoshutoDirEntry, f2: &JoshutoDirEntry) -> cmp::Ordering {
+    pub fn compare(&self, f1: &AppDirEntry, f2: &AppDirEntry) -> cmp::Ordering {
         if self.directories_first {
-            let f1_isdir = f1.file_path().is_dir();
-            let f2_isdir = f2.file_path().is_dir();
+            let f1_isdir = f1.metadata.is_dir();
+            let f2_isdir = f2.metadata.is_dir();
 
             if f1_isdir && !f2_isdir {
                 return cmp::Ordering::Less;
@@ -41,13 +41,13 @@ impl SortOption {
     }
 }
 
-impl std::default::Default for SortOption {
+impl std::default::Default for FileSortConfig {
     fn default() -> Self {
-        SortOption {
+        FileSortConfig {
             directories_first: true,
             case_sensitive: false,
             reverse: false,
-            sort_methods: SortTypes::default(),
+            sort_methods: SortMethodList::default(),
         }
     }
 }

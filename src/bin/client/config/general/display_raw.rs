@@ -4,7 +4,7 @@ use serde::Deserialize;
 
 use crate::config::option::DisplayOption;
 
-use super::sort_raw::SortOptionRaw;
+use super::file_sort_option_raw::FileSortConfigRaw;
 
 const fn default_scroll_offset() -> usize {
     4
@@ -22,16 +22,16 @@ pub struct DisplayOptionRaw {
     show_icons: bool,
 
     #[serde(default, rename = "sort")]
-    sort_options: SortOptionRaw,
+    sort_options: FileSortConfigRaw,
 }
 
 impl From<DisplayOptionRaw> for DisplayOption {
     fn from(raw: DisplayOptionRaw) -> Self {
         Self {
-            _show_hidden: raw.show_hidden,
-            _show_icons: raw.show_icons,
-            _sort_options: raw.sort_options.into(),
-            _scroll_offset: raw.scroll_offset,
+            show_hidden: raw.show_hidden,
+            show_icons: raw.show_icons,
+            sort_options: raw.sort_options.into(),
+            scroll_offset: raw.scroll_offset,
         }
     }
 }
@@ -41,7 +41,7 @@ impl std::default::Default for DisplayOptionRaw {
         Self {
             show_hidden: false,
             show_icons: false,
-            sort_options: SortOptionRaw::default(),
+            sort_options: FileSortConfigRaw::default(),
             scroll_offset: default_scroll_offset(),
         }
     }

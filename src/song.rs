@@ -10,7 +10,7 @@ use symphonia::core::meta::{MetadataOptions, MetadataRevision, RawValue};
 
 use serde::{Deserialize, Serialize};
 
-use crate::error::{AppResult, DiziError, DiziErrorKind};
+use crate::error::{AppError, AppErrorCode, AppResult};
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
 pub enum DiziSongEntry {
@@ -93,7 +93,7 @@ pub struct DiziAudioFile {
 }
 
 impl TryFrom<DiziFile> for DiziAudioFile {
-    type Error = DiziError;
+    type Error = AppError;
     fn try_from(value: DiziFile) -> Result<Self, Self::Error> {
         tracing::debug!(file_path=?value.file_path, "Loading metadata");
         let mut hint = Hint::new();
@@ -170,7 +170,7 @@ impl AudioMetadata {
                 let unit_time = time_base.calc_time(end_timestamp).ok_or_else(|| {
                     let error_msg = "Failed to calculate time";
                     tracing::error!(?time_base, ?start_timestamp, ?duration, "{error_msg}");
-                    DiziError::new(DiziErrorKind::ParseError, error_msg.to_string())
+                    AppError::new(AppErrorCode::Parse, error_msg.to_string())
                 })?;
                 let duration = time::Duration::from_secs(unit_time.as_secs() as u64);
                 Some(duration)
@@ -181,14 +181,14 @@ impl AudioMetadata {
         let track = reader.tracks().first().ok_or_else(|| {
             let error_msg = "No tracks found";
             tracing::error!("{error_msg}");
-            DiziError::new(DiziErrorKind::ParseError, error_msg.to_string())
+            AppError::new(AppErrorCode::Parse, error_msg.to_string())
         })?;
 
         let track_id = track.id;
         let codec_parameters = track.codec_params.as_ref().ok_or_else(|| {
             let error_msg = "No codec parameters found";
             tracing::error!("{error_msg}");
-            DiziError::new(DiziErrorKind::ParseError, error_msg.to_string())
+            AppError::new(AppErrorCode::Parse, error_msg.to_string())
         })?;
 
         let audio_codec_params = match codec_parameters {
@@ -196,7 +196,7 @@ impl AudioMetadata {
             _ => {
                 let error_msg = "Codec not audio";
                 tracing::error!("{error_msg}");
-                let err = DiziError::new(DiziErrorKind::ParseError, error_msg.to_string());
+                let err = AppError::new(AppErrorCode::Parse, error_msg.to_string());
                 return Err(err);
             }
         };

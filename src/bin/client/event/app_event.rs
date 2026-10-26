@@ -8,7 +8,7 @@ use ratatui::termion::event::Event;
 
 use crate::event::SignalListener;
 use crate::event::input_listener::TerminalInputListener;
-use crate::fs::JoshutoDirList;
+use crate::fs::AppDirectoryList;
 
 pub type AppEventSender = Sender<AppEvent>;
 
@@ -16,9 +16,11 @@ pub type AppEventSender = Sender<AppEvent>;
 pub enum AppEvent {
     TerminalEvent(Event),
     // preview thread events
+    /// A background directory read finished. `Ok(None)` means the directory hadn't changed
+    /// since the cached listing was read, so it wasn't re-read.
     PreviewDir {
         path: path::PathBuf,
-        res: Box<io::Result<JoshutoDirList>>,
+        res: Box<io::Result<Option<AppDirectoryList>>>,
     },
     Signal(i32),
     Server(String),
